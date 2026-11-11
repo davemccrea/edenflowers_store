@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# wt's status line plus a clickable link to this worktree's dev server.
-# Worktree .env files append their own PORT and PHX_HOST (see .config/wt.toml), so the last value wins.
+# Add a clickable link to this worktree's dev server beside Worktrunk's status line.
+# Worktree setup appends PORT and PHX_HOST to .env (see .config/wt.toml).
+# Read the last occurrence of each variable so the link uses the worktree's values.
 input=$(cat)
 dir=$(git -C "$(jq -r '.workspace.current_dir' <<<"$input")" rev-parse --show-toplevel)
 port=$(grep -oE '^export PORT=[0-9]+' "$dir/.env" 2>/dev/null | tail -1 | cut -d= -f2)

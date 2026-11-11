@@ -42,8 +42,8 @@ defmodule Edenflowers.Orders.LineItem.Validations.WithinStock do
     end
   end
 
-  # Every bow of a size draws on the same stock, so all its lines count, the
-  # one being added to or incremented among them.
+  # All bow colours of a variant share stock. Count every existing line for
+  # that variant, then add the additional quantity requested by this action.
   defp quantity_after(changeset) do
     order_id = Ash.Changeset.get_attribute(changeset, :order_id)
     variant_id = Ash.Changeset.get_attribute(changeset, :product_variant_id)

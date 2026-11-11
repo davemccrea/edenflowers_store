@@ -214,7 +214,8 @@ defmodule Edenflowers.Catalog.ProductTest do
       generate(product_variant(product_id: product.id, size: :small, own_photo_slug: "shared.jpg"))
       generate(product_variant(product_id: product.id, size: :large, own_photo_slug: "shared.jpg"))
 
-      # A photo two sizes share, or one no size uses, pictures no known size.
+      # Only photos associated with exactly one size belong in pictured_sizes.
+      # A shared photo or a photo unused by any size cannot identify a specific size.
       assert Ash.load!(product, :pictured_sizes).pictured_sizes == %{"main.jpg" => :medium, "large.jpg" => :large}
     end
 

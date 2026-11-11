@@ -3,10 +3,10 @@ defmodule EdenflowersWeb.Admin.SubscriptionLog do
   Turns a subscription's paper trail versions into the log on its admin page,
   newest first.
 
-  Each Occurrence the job creates is an order, already listed on the page, so
-  the job's versions show only when it holds the subscription for a refused
-  card. A version names its user when a person made the change; the job's and
-  webhook's changes are made by the system and name no one.
+  Each scheduled occurrence creates an order that is already listed on the page.
+  Omit routine occurrence versions to avoid duplicating that list, but retain
+  versions that put the subscription on hold after a payment failure. Changes
+  made by a person name that user; system changes from jobs and webhooks do not.
   """
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
@@ -58,7 +58,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionLog do
   defp event(%{version_action_name: :cancel}), do: dpgettext("admin", "subscription", "Cancelled")
   defp event(%{version_action_name: other}), do: to_string(other)
 
-  # A creation's fields are the whole subscription, already on the page.
+  # Omit creation details because they repeat the subscription fields already shown on the page.
   defp details(%{version_action_type: :create}, _sizes, _locale), do: []
 
   defp details(%{version_action_name: :replace_card, changes: changes}, _sizes, _locale) do

@@ -1,11 +1,12 @@
 defmodule EdenflowersWeb.Admin.EmailDrawer do
   @moduledoc """
-  The state behind `EdenflowersWeb.Admin.Drawers.email_drawer`, shared by
-  the order, course and invoice pages: an AshPhoenix form on the action that
-  sends each kind, the preview built when it opens, and what each kind is
-  called. A failed send keeps the drawer open with her edits, and an address
-  the action refuses marked on its field. The pages flash what happened, in
-  their words for each kind: a failed send's own error is for the log.
+  Manages the state for `EdenflowersWeb.Admin.Drawers.email_drawer`, shared by
+  order, course and invoice pages. It selects the sending action, builds its
+  AshPhoenix form and initial preview, and supplies labels for each email kind.
+
+  Failed sends preserve Jennie's edits and show address validation errors beside
+  the field. The calling page supplies the outcome flash; detailed send failures
+  are logged here rather than shown to the admin.
   """
 
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
@@ -65,7 +66,7 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
   """
   def submit(socket, params) do
     case AshPhoenix.Form.submit(socket.assigns.email_form, params: params) do
-      # An earlier try's failure no longer stands.
+      # Clear any error flash from an earlier failed attempt after a successful send.
       {:ok, _record} ->
         {:ok, clear_flash(socket, :error)}
 

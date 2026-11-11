@@ -1,5 +1,5 @@
 defmodule Edenflowers.ErrorAlerts.SendErrorAlertEmailTest do
-  # Sync because the tests toggle the global :error_tracker, :enabled env
+  # Run synchronously because these tests change the global :error_tracker enabled setting.
   use Edenflowers.DataCase, async: false
 
   import Swoosh.TestAssertions

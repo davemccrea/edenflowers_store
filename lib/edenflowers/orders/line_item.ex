@@ -287,9 +287,9 @@ defmodule Edenflowers.Orders.LineItem do
   end
 
   identities do
-    # Only a catalogue size merges into its line; Custom Order items it
-    # describes are never merged. Nils must not be distinct, or a line for a
-    # product without a bow would stop merging too.
+    # Merge matching catalogue variants, but keep separately described custom items apart.
+    # Treat nil bow colours as equal so repeated additions of a product without
+    # a bow still merge into one line.
     identity :unique_product_variant, [:order_id, :product_variant_id, :bow_colour],
       where: expr(not is_nil(product_variant_id)),
       nils_distinct?: false

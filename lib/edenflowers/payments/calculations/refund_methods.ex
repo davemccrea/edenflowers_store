@@ -1,9 +1,11 @@
 defmodule Edenflowers.Payments.Calculations.RefundMethods do
   @moduledoc """
-  The methods Jennie can hand money back by: Stripe while money paid through
-  it is still held, the Gift voucher while money it paid is, and any method
-  Jennie takes in person while money paid that way is. Nothing when nothing
-  is held. `Validations.Refundable` refuses the rest.
+  Lists the refund methods available for the money still held on a purchase.
+  Stripe and Gift voucher refunds require a remaining payment balance for
+  that method. Money paid outside Stripe and vouchers can be returned by any
+  of Jennie's in-person methods, not just the method originally recorded.
+  Returns an empty list when no money remains. `Validations.Refundable`
+  enforces these limits when a refund is submitted.
   """
   use Ash.Resource.Calculation
 

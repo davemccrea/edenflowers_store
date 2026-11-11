@@ -27,8 +27,8 @@ RUN mkdir config
 COPY config/config.exs config/${MIX_ENV}.exs config/
 RUN mix deps.compile
 
-# Localize ships only en/und CLDR data; fetch fi.etf, sv-FI.etf, etc. at
-# build time so display_name lookups don't crash when the customer switches.
+# Localize ships only English and undetermined-locale CLDR data. Download the
+# configured locales at build time so display_name lookups work when customers change language.
 RUN mix localize.download_locales
 
 RUN mix assets.setup
@@ -43,8 +43,9 @@ COPY assets assets
 
 RUN mix assets.deploy
 
-# Brotli copies beside the digester's .gz ones; the render-blocking CSS is about a
-# fifth smaller than gzip. Plug.Static serves them (endpoint.ex).
+# Add Brotli-compressed copies alongside the .gz files produced by phx.digest.
+# Brotli makes the render-blocking CSS about a fifth smaller than gzip;
+# Plug.Static serves these copies as configured in endpoint.ex.
 RUN find priv/static -name '*.gz' -exec sh -c 'brotli --best --keep "${1%.gz}"' _ {} \;
 
 # Changes to config/runtime.exs don't require recompiling the code
@@ -60,10 +61,11 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends libstdc++6 openssl libncurses6 locales ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-# Pinned for deterministic layout/fonts vs local dev (scripts/install-typst.sh,
-# ci.yml; bump all three together). `typst --version`
-# smoke-tests install: `tar` can exit 0 with nothing extracted if the
-# filter arg drifts past a release rename. curl/xz purged same layer.
+# Pin Typst so PDF layout and fonts match local development and CI. Update
+# scripts/install-typst.sh and .github/workflows/ci.yml when changing this version.
+# Running `typst --version` checks that extraction produced an executable, rather
+# than trusting tar's exit status if the archive layout changes. Remove the
+# download tools in the same layer so they do not increase the final image size.
 ARG TYPST_VERSION=0.14.2
 RUN apt-get update \
   && apt-get install -y --no-install-recommends curl xz-utils \

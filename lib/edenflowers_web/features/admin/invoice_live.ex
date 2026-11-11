@@ -55,7 +55,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
      )}
   end
 
-  # Already showing it: a draft saved on the way to a failed issue moved here without reloading.
+  # Keep the current form when issuing saved the draft but then failed. The URL
+  # has changed to the saved invoice, but reloading would discard its form state.
   @impl true
   def handle_params(%{"id" => id}, _uri, %{assigns: %{invoice: %{id: id}}} = socket),
     do: {:noreply, subscribe_invoice(socket, id)}
@@ -869,7 +870,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
 
   defp back(_invoice), do: {~t"Invoices", ~p"/admin/invoices"}
 
-  # An invoice for an order can be refused for the order's sake, which no field shows.
+  # Issuing can fail because of the linked order rather than an invoice input.
+  # Show fieldless errors in the page message so the reason is not lost.
   defp issue_message(error) do
     error
     |> Ash.Error.to_error_class()
@@ -1077,7 +1079,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   defp normalize_decimal(%Decimal{} = value), do: value |> Decimal.normalize() |> Decimal.to_string(:normal)
   defp normalize_decimal(value), do: value
 
-  # Shown as Jennie types it, the Finnish way, once the form has read it as a number.
+  # Display parsed decimals with the Finnish decimal comma, but leave partially
+  # typed strings unchanged so formatting does not interfere with editing.
   defp decimal_comma(%Decimal{} = value), do: value |> Decimal.to_string(:normal) |> String.replace(".", ",")
   defp decimal_comma(value), do: value
 

@@ -64,7 +64,8 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
         for {rate, gross} <- [{"0.10", "10.00"}, {"0.255", "10.01"}, {"0.135", "10.00"}],
             do: %VatRow{rate: Decimal.new(rate), base: Decimal.new(0), vat: Decimal.new(0), gross: Decimal.new(gross)}
 
-      # Each share rounds to 3.33, so the 0.01 left over goes on the 10.01 rate.
+      # Each share rounds to 3.33. Allocate the remaining cent to the VAT rate
+      # whose gross amount is 10.01, the largest of the three shares.
       assert split("10.00", thirds) == [{"0.10", "3.33"}, {"0.255", "3.34"}, {"0.135", "3.33"}]
       assert split("-10.00", thirds) == [{"0.10", "-3.33"}, {"0.255", "-3.34"}, {"0.135", "-3.33"}]
     end
@@ -539,7 +540,8 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
       assert {:ok, _, zip, _} = MonthlyReport.build(2026, 9)
       rows = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(1)
 
-      # 50 paid at 23:30 on the last day, 20 part-paid, and 50 paid then undone; never the invoices' amounts.
+      # Count payments, not invoice totals: 50 paid before month end plus a 20
+      # partial payment. The other 50 payment and its reversal cancel each other out.
       assert List.last(List.last(rows)) == "70.0"
     end
   end
@@ -598,7 +600,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
            ]
   end
 
-  # A consumer's invoice when business_details is empty.
+  # Passing empty business_details creates a consumer invoice instead of a company invoice.
   defp invoice(admin, amount, invoice_date, business_details \\ @company) do
     attrs =
       Map.merge(

@@ -867,7 +867,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     end
 
     test "editing an Online Order returns its old lines and takes its new ones", ctx do
-      # As if placing it had already taken 1 of 4.
+      # The fixture's stock of three represents four items minus the one already sold.
       order = generate(order(origin: :online, state: :placed))
       line_item = generate(line_item(order_id: order.id, product_variant_id: ctx.wreath.id, quantity: 1))
 

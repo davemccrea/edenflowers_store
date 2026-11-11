@@ -273,7 +273,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
 
     ~H"""
     <div phx-drop-target={@upload.ref} class="group/drop">
-      <%!-- The blank value lets an empty list through, which sends no inputs otherwise. --%>
+      <%!-- Submit a blank value even when the list is empty, so removing every entry still updates the field. --%>
       <input type="hidden" name={@hidden_field.name <> "[]"} value="" />
       <input :for={slug <- @hidden} type="hidden" name={@hidden_field.name <> "[]"} value={slug} />
       <ul id="product-photos" class="grid grid-cols-3 gap-3 sm:grid-cols-5">
@@ -373,9 +373,10 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   attr :photo_slugs, :list, required: true
   attr :show_errors, :boolean, required: true
 
-  # One line per size once the list is wide enough; the side panel keeps it narrow
-  # on most laptops. Narrower, the photo spans two lines: size, then price, stock
-  # and draft over the product type's details (such as height and stems) and remove.
+  # Use one row per size only when the list itself is wide enough; the side panel
+  # leaves too little room on most laptops. In the narrow layout, the photo spans
+  # two rows beside the size selector and the remaining fields. Product details
+  # such as height and stems sit below price and stock, beside the remove button.
   defp size_row(assigns) do
     variant = assigns.variant
     [main | others] = assigns.photo_slugs ++ [nil]
@@ -430,9 +431,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           options={Enum.map(ProductVariantSize.values(), &{variant_size_label(&1), &1})}
           class="select w-full"
         />
-        <%!-- Narrower, one grid so the details line up under price and stock; they're first
-             in source for the one-line order, so they're placed on the second line. One line or
-             two, they share the width of two columns, however many the product type has. --%>
+        <%!-- Keep the product-detail fields first in source order for the wide layout, but place
+             them below price and stock in the narrow layout. They share the width of two columns
+             regardless of how many detail fields this product type has. --%>
         <div class="grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] col-start-2 row-start-2 mt-3 grid items-end gap-3 @3xl:contents">
           <div class="col-span-2 grid auto-cols-fr grid-flow-col items-end gap-3 @max-3xl:row-start-2">
             <.input
@@ -450,8 +451,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             label={~t"Price (€)"}
             class="input w-full tabular-nums"
           />
-          <%!-- ponytail: saving sends the count shown when the form opened, so a sale made
-               meanwhile is undone and may oversell later. Send only changed counts if that bites. --%>
+          <%!-- ponytail: Saving resubmits the stock count from when the form opened. This can
+               overwrite a sale's stock deduction and allow overselling. If concurrent sales
+               become a problem, submit stock counts only when Jennie has changed them. --%>
           <.input
             field={@variant[:stock_quantity]}
             type="number"
@@ -515,7 +517,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     """
   end
 
-  # Follows the category select like attribute_keys. The count is of saved cards, as saving reloads the page.
+  # Read the current category selection, as attribute_keys/2 does. Count only saved
+  # favourite cards; saving reloads the page and refreshes that count.
   defp favourite_help(form, categories, fan_card_count) do
     min = StoreLive.min_fan_cards()
     max = Product.max_fan_cards()
@@ -678,7 +681,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   defp update_photos(socket, fun) do
     form = socket.assigns.form
     slugs = fun.(photo_slugs(form))
-    # From the whole form, as its own params miss the size a new form starts with.
+    # Extract all form values, including nested defaults. Reading form.params
+    # directly would omit the initial size on a new product.
     params = form |> AshPhoenix.Form.params() |> Map.put("photo_slugs", slugs)
     assign(socket, form: AshPhoenix.Form.validate(form, params))
   end

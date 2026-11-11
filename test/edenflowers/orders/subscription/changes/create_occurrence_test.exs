@@ -60,7 +60,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
     {:ok, %{id: "pi_occurrence", status: "succeeded", amount_received: cents, metadata: metadata}}
   end
 
-  # A gift delivery, so each Occurrence has the recipient's details to copy.
+  # Use a gift subscription so each generated delivery order has recipient details to copy.
   defp subscription_for(ctx, attrs \\ []) do
     defaults = [
       user_id: ctx.user.id,
@@ -230,7 +230,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
 
       assert {:ok, _} = run(subscription)
 
-      # As if moving the date on had failed after the order was placed.
+      # Restore the old next date to simulate a failure to advance the schedule after placing the order.
       SQL.query!(
         Edenflowers.Repo,
         "UPDATE subscriptions SET next_fulfillment_date = $1, delivery_day = lower(to_char($1::date, 'FMDay')) WHERE id = $2",
@@ -364,7 +364,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
         assert_email_sent(fn email ->
           assert email.to == [{"", "ada@example.com"}]
           assert email.subject =~ "Kukkatilauksesi maksu ei onnistunut"
-          # Where to update the saved card.
+          # The account link lets the customer update the saved card.
           assert email.text_body =~ "/account"
           assert email.text_body =~ "/pay/orders/#{order.payment_link_token}"
         end)
@@ -405,7 +405,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
       assert_email_sent()
       assert_email_sent()
 
-      # As if moving the subscription on had failed after the order was placed.
+      # Restore the previous schedule and active state to simulate a failure after placing the order.
       SQL.query!(
         Edenflowers.Repo,
         "UPDATE subscriptions SET next_fulfillment_date = $1, state = 'active' WHERE id = $2",
@@ -495,8 +495,9 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
       assert subscription.next_fulfillment_date == Date.add(passed, 14)
     end
 
-    # Otherwise the occurrence job would book and charge it at once, giving
-    # Jennie no notice and the customer no chance to change it.
+    # After a late payment, the next delivery must still allow time for changes.
+    # Otherwise the occurrence job would immediately book and charge that delivery,
+    # giving Jennie no notice and the customer no chance to change it.
     test "paid just before its next date, skips to one still open to changes", ctx do
       refuse(:card_declined)
       run_refused(ctx.subscription)

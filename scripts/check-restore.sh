@@ -15,13 +15,14 @@ DUMP=$1
 section "Starting a scratch Postgres"
 container=$(docker run -d --rm -e POSTGRES_HOST_AUTH_METHOD=trust postgres:16)
 trap 'docker stop "$container" >/dev/null' EXIT
-# The image's init server only listens on the socket, so TCP means the real server is up
+# The image's temporary initialization server only listens on a Unix socket.
+# Wait for TCP so the restore starts after the final server is ready.
 until docker exec "$container" pg_isready -q -h 127.0.0.1 -U postgres; do sleep 1; done
 ok "started"
 
 section "Restoring $DUMP"
 docker cp -q "$DUMP" "$container:/tmp/rollback.dump"
-# On production the roles already exist
+# Recreate the dump's owner roles because this scratch server, unlike production, starts without them.
 for role in $(pg_restore -f - --schema-only "$DUMP" | sed -n 's/.* OWNER TO \(.*\);$/\1/p' | sort -u); do
   docker exec -u postgres "$container" sh -c "createuser '$role' 2>/dev/null || true"
 done

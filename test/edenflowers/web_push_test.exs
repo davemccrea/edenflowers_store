@@ -153,7 +153,7 @@ defmodule Edenflowers.WebPushTest do
 
   defp push_subscription, do: %{endpoint: "https://push.example.com/send/abc", p256dh: @ua_public, auth: @auth_secret}
 
-  # What the browser does with a message for the RFC's user agent keys.
+  # Decrypt the push message as a browser would, using the RFC example's user-agent keys.
   defp decrypt(<<salt::binary-size(16), _rs::32, 65, as_public::binary-size(65), sealed::binary>>) do
     ua_public = decode(@ua_public)
     ecdh_secret = :crypto.compute_key(:ecdh, as_public, decode(@ua_private), :prime256v1)

@@ -18,7 +18,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
   @impl true
   def mount(_params, _session, socket) do
     categories = Catalog.list_categories!()
-    # Found before translating, as translation replaces the English slug.
+    # Identify the bouquets category before translation replaces its English slug.
     bouquets_id = Enum.find_value(categories, &(&1.slug == "bouquets" && &1.id))
     categories = Translations.translate(categories)
     bouquets = Enum.find(categories, &(&1.id == bouquets_id))

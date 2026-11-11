@@ -46,7 +46,7 @@ ssh -T edenflowers-production bash -s -- "${TAG#v}" <<'EOF'
 set -euo pipefail
 version=$1
 cd /opt/edenflowers_store
-# Compose runs a moving tag (latest), so point it at the old release's image
+# Retag the old release's image with the tag Compose uses so restarting the app runs that release.
 image=$(docker compose config --images app)
 docker pull "${image%:*}:$version"
 docker tag "${image%:*}:$version" "$image"

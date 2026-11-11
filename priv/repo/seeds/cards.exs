@@ -1,5 +1,5 @@
-# The greeting cards from the old site, with their photos in images/cards/.
-# Safe to rerun: a card is matched by its English name and updated in place.
+# This script imports the old site's greeting cards, whose photos are in images/cards/.
+# It is safe to rerun because cards are matched by English name and updated in place.
 #
 # Dev:  priv/repo/seeds.exs runs it, or mix run priv/repo/seeds/cards.exs alone
 # Prod: `just push-images` and `just backup` first, then
@@ -29,7 +29,7 @@ descriptions = %{
   }
 }
 
-# {name, size, price, photo}
+# Each tuple contains the card's name, size, price and photo filename.
 cards = [
   {"Red oak leaves", :small, "2.90", "red_oak_leaves.png"},
   {"Flower heart", :small, "2.90", "flower_heart.png"},
@@ -95,7 +95,7 @@ Edenflowers.Repo.transaction(fn ->
         |> Ash.create!(authorize?: false)
 
       product ->
-        # Keeps the size's id, so past order lines still point at it.
+        # Preserve the existing variant's ID so past order lines still point to it.
         variants =
           case product.product_variants do
             [current | _] -> [Map.put(variant, :id, current.id)]

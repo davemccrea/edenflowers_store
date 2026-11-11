@@ -24,6 +24,6 @@ defmodule Edenflowers.Catalog.Validations.SizePhotosAreProducts do
     if errors == [], do: :ok, else: {:error, errors}
   end
 
-  # Forms submit string keys, code atom keys.
+  # Accept string keys from forms and atom keys from callers in Elixir.
   defp own_photo_slug(size), do: Map.get(size, :own_photo_slug, Map.get(size, "own_photo_slug"))
 end

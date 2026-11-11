@@ -5,7 +5,7 @@ defmodule Edenflowers.Fulfillment.Changes.ToggleDateTest do
 
   describe "toggle_date/2" do
     test "closes a date when its weekday is currently available" do
-      # All weekdays available, no overrides
+      # Every weekday is open, and no individual date overrides that rule.
       calendar = %ShopCalendar{}
 
       # 2024-04-10 is a Wednesday
@@ -14,7 +14,7 @@ defmodule Edenflowers.Fulfillment.Changes.ToggleDateTest do
     end
 
     test "opens a date when its weekday is currently disabled" do
-      # Sunday off, no overrides
+      # Sundays are closed, and no individual date overrides that rule.
       calendar =
         struct!(ShopCalendar, available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday])
 

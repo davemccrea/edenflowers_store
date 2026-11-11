@@ -10,8 +10,8 @@ const source = readFileSync(
   .replace(/^import [^;]*;\n/m, "")
   .replace("export const customerLiveSelect", "globalThis.customerLiveSelect");
 
-// LiveSelect's own hook, as far as this contract goes: the server's "select"
-// event sets the selection and writes current_text into the box.
+// Stub only the LiveSelect behaviour this contract needs: the server's "select"
+// event updates the selection and writes current_text into the input.
 const liveSelect = {
   LiveSelect: {
     mounted() {

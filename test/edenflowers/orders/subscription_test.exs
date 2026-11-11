@@ -190,7 +190,7 @@ defmodule Edenflowers.Orders.SubscriptionTest do
 
   test "paying a subscription cart saves the card to a Stripe Customer", ctx do
     order = subscription_cart(ctx, state: :payment, payment_intent_id: nil)
-    # Without `subscription?` loaded: setup finds that out for itself.
+    # Deliberately leave subscription? unloaded so Payments.setup must determine it itself.
     order = Ash.load!(order, :stripe_amount, authorize?: false)
     order_id = order.id
 

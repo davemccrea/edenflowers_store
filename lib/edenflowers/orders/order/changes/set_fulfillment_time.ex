@@ -1,8 +1,9 @@
 defmodule Edenflowers.Orders.Order.Changes.SetFulfillmentTime do
   @moduledoc """
-  Sets a Custom Order's time from Jennie's choice of any time, an exact time
-  or a window, so neither time field means something by being blank.
-  Without a choice the times are left as they are.
+  Sets a Custom Order's time from Jennie's explicit choice of any time, an exact
+  time or a time window. The choice determines which time fields are required
+  and which are cleared, rather than inferring her intent from blank fields.
+  If no choice is supplied, the existing times are left unchanged.
   """
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]

@@ -1,5 +1,5 @@
-/* Square, unlike radios, which share --radius-selector. The frame is darker
-   than daisyUI's faint default so an empty box still reads as a box. */
+/* Make checkboxes square without changing --radius-selector, which also shapes
+   radio buttons. Darken the border so unchecked boxes remain visible. */
 .checkbox {
   border-radius: 0;
   border-color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
@@ -41,7 +41,8 @@ button:is(.btn, [type="submit"]):is(
   animation: button-content-hide 0s 300ms forwards;
 }
 
-/* In a layer so Tailwind's absolute on a positioned button still wins. */
+/* Use the components layer so the spinner's relative positioning does not
+   override Tailwind's absolute positioning utility on the button. */
 @layer components {
   button:is(.btn, [type="submit"]):is(
       .phx-submit-loading,

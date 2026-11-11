@@ -108,7 +108,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
         }
       }
 
-      # First delivery — finalizes + enqueues.
+      # The first webhook delivery places the order and enqueues its emails.
       assert :ok = StripeHandler.handle_event(event)
       # Stripe redelivers the same event after we've already processed it. The
       # handler must still return :ok so Stripe stops retrying, and the order,

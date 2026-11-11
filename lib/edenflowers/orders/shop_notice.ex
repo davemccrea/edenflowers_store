@@ -13,7 +13,7 @@ defmodule Edenflowers.Orders.ShopNotice do
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Subscription
 
-  @doc "Worker args naming `notice`."
+  @doc "Serializes the notice kind and record ID into arguments for the notification workers."
   def args({kind, %Order{id: id}}), do: %{"notice" => to_string(kind), "order_id" => id}
   def args({kind, %Subscription{id: id}}), do: %{"notice" => to_string(kind), "subscription_id" => id}
 
@@ -22,7 +22,7 @@ defmodule Edenflowers.Orders.ShopNotice do
   defp record!(%{"order_id" => id}), do: Orders.get_order_by_id!(id, authorize?: false)
   defp record!(%{"subscription_id" => id}), do: Orders.get_subscription!(id, authorize?: false)
 
-  @doc "In `locale`, which must also be the current Gettext locale."
+  @doc "Builds the notification title in `locale`; the caller must also set Gettext to that locale."
   def title(notice, locale)
 
   def title({:new, %Order{} = order}, _locale) do

@@ -90,7 +90,7 @@ defmodule Edenflowers.Payments.GiftVoucherTest do
       voucher = voucher("500.00")
       order = Orders.add_gift_voucher_with_code!(order, voucher.code, actor: nil)
 
-      # The PaymentIntent opened before the voucher went on.
+      # Preparing payment must cancel the earlier PaymentIntent now that the voucher covers the full balance.
       %{payment_intent_id: pi} = order
       expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: ^pi} -> {:ok, %{id: pi, status: "canceled"}} end)
 
@@ -334,7 +334,7 @@ defmodule Edenflowers.Payments.GiftVoucherTest do
       assert {:ok, %{expires_on: ^later} = extended} =
                Payments.change_gift_voucher_last_day(expired, later, authorize?: false)
 
-      # Even from a page still showing the old date.
+      # Reuse the stale record to simulate a page that still shows the previous expiry date.
       assert {:error, _} = Payments.change_gift_voucher_last_day(expired, later, authorize?: false)
       assert {:error, _} = Payments.change_gift_voucher_last_day(expired, Date.add(later, -1), authorize?: false)
       assert Ash.reload!(extended, authorize?: false).expires_on == later

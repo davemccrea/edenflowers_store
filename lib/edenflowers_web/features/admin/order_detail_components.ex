@@ -65,7 +65,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   attr :form, Phoenix.HTML.Form, default: nil
   attr :locale, :string, required: true
 
-  # The date, with Change beside it while the voucher can still be given time; the form opens in its place.
+  # Show the expiry date with a Change button when an extension form is available.
+  # Opening the form replaces this date display.
   defp gift_voucher_last_day(assigns) do
     ~H"""
     <div id="gift-voucher-last-day-view" class="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -126,8 +127,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   attr :voucher, GiftVoucher, required: true
   attr :locale, :string, required: true
 
-  # Once it's been spent: a small ledger, read like the Payment card, of what it paid for,
-  # what was handed back onto it, and what's left.
+  # Present voucher activity like the Payment card: purchases, money returned to
+  # the voucher, and its remaining balance.
   defp gift_voucher_spending(assigns) do
     ~H"""
     <dl id="order-gift-voucher-payments" class="border-base-content/12 mt-6 border-t pt-4 text-sm">

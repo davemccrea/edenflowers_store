@@ -8,8 +8,9 @@ defmodule Edenflowers.Typst do
   @typst_bin "typst"
 
   @doc """
-  Compiles `entry` (a .typ file in priv/receipts) with `payload` as JSON in the input named `input`.
-  A PDF unless `format: "png"`, which renders the first page at `ppi` (default 96).
+  Compiles `entry` (a .typ file in `priv/receipts`), passing `payload` as JSON
+  under the Typst input key given by `input`. Returns PDF bytes by default.
+  With `format: "png"`, returns the first page as PNG bytes at `ppi` (default 96).
   """
   def render(entry, input, payload, opts \\ []) do
     format = Keyword.get(opts, :format, "pdf")

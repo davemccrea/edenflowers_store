@@ -164,8 +164,7 @@ defmodule Edenflowers.Orders.Receipt do
     end
   end
 
-  # Dated, since money paid after the order (a payment link, cash at pickup)
-  # would otherwise carry only the order date.
+  # Show each payment's own date: a payment link or cash at pickup may be paid after the order date.
   defp payment_payload(payment, locale) do
     %{
       method: payment.payment_method_type,
@@ -244,7 +243,7 @@ defmodule Edenflowers.Orders.Receipt do
     end)
   end
 
-  # The trader registered with the Y-tunnus, for the footer, as on an invoice.
+  # Identify the seller in the receipt footer with its registered name, business ID and address.
   defp seller, do: Map.take(Application.fetch_env!(:edenflowers, :seller), [:name, :business_id, :address])
 
   @doc ~s(The language subtag Typst expects, as "sv" for "sv-FI": app locales include a region.)

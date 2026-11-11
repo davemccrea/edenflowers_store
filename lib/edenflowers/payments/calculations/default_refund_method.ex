@@ -1,8 +1,9 @@
 defmodule Edenflowers.Payments.Calculations.DefaultRefundMethod do
   @moduledoc """
-  Which of the `refund_methods` a refund starts at: Stripe when it's one,
-  otherwise the method holding the most of the money paid outside Stripe, so
-  cash taken is handed back as cash. Nil when nothing can be refunded.
+  Selects the refund form's initial method. Stripe takes priority when it is
+  available; otherwise, use the non-Stripe method with the largest net payment
+  total, including vouchers. This defaults cash payments back to cash, for
+  example. Returns nil when no refund method is available.
   """
   use Ash.Resource.Calculation
 

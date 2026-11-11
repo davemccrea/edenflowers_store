@@ -1,5 +1,5 @@
 defmodule Edenflowers.Accounts.Workers.SyncNewsletterListTest do
-  # Clears the MailerLite API key in the global app env in one test.
+  # Run synchronously because one test clears the globally shared MailerLite API key.
   use Edenflowers.DataCase, async: false
 
   import Edenflowers.Actors

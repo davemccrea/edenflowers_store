@@ -12,10 +12,10 @@ defmodule Edenflowers.Payments.InvoiceFinancials do
   alias Edenflowers.Pricing.Vat
 
   @doc """
-  The numeric snapshot frozen on issuance, from complete InvoiceLines: each
-  line's gross, each VAT rate's gross, base and VAT, and the totals, as
-  strings. An error message while a line is missing a field or nothing is
-  billed.
+  Builds the numeric snapshot frozen when the invoice is issued. The snapshot
+  contains each line's gross amount, each VAT rate's gross, base and VAT, and
+  the overall totals, with numbers stored as strings. Returns `{:ok, snapshot}`
+  or `{:error, message}` for incomplete lines, no lines or a nonpositive total.
   """
   def build([]), do: {:error, ~t"Add at least one item."}
 
@@ -41,7 +41,7 @@ defmodule Edenflowers.Payments.InvoiceFinancials do
 
   def build(_lines), do: {:error, ~t"Complete the items to see the total."}
 
-  @doc "Whether a line has every field issuing needs."
+  @doc "Checks that a line has a nonblank description and decimal quantity, unit price and VAT rate."
   def complete?(line) do
     is_binary(line.description) and String.trim(line.description) != "" and
       Enum.all?([line.quantity, line.unit_price, line.vat_rate], &is_struct(&1, Decimal))

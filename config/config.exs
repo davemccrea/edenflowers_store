@@ -19,13 +19,13 @@ config :cinder, default_initial_load: :sync
 config :edenflowers, Oban,
   engine: Oban.Engines.Basic,
   notifier: Oban.Notifiers.Postgres,
-  # newsletter runs one job at a time, so a MailerLite sync and an opt-in push never overlap.
+  # The newsletter queue runs one job at a time so a MailerLite sync and an opt-in push never overlap.
   queues: [default: 10, newsletter: 1],
   repo: Edenflowers.Repo,
   plugins: [
     {Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7},
-    # A job killed mid-run stays `executing`, and AshOban's uniqueness then
-    # blocks that record's trigger for good. Rescued after an hour.
+    # A job killed mid-run stays `executing`, which prevents AshOban from
+    # scheduling another job for that record. Lifeline rescues it after an hour.
     Oban.Plugins.Lifeline,
     # AshOban adds each trigger's `scheduler_cron` here, so they run on shop time too.
     {Oban.Plugins.Cron,
@@ -99,9 +99,9 @@ config :edenflowers,
     Edenflowers.Marketing
   ]
 
-# Who sells: the trader registered with the Y-tunnus, which receipts and
-# invoices print in their footer. Invoices freeze it as they are made
-# (Edenflowers.Payments.Invoice.seller/0).
+# Receipts and invoices identify the seller using this registered Finnish
+# business ID (Y-tunnus) and contact information. Each invoice stores a copy
+# when it is created (see Edenflowers.Payments.Invoice.seller/0).
 config :edenflowers, :seller, %{
   name: "Jennie McCrea",
   business_id: "2944459-6",
@@ -109,9 +109,9 @@ config :edenflowers, :seller, %{
   iban: "FI69 3939 0018 3959 05"
 }
 
-# Edenflowers.Payments.Invoice. Shop invoices continue Zervant's series, whose
-# last was 1336; only the first invoice reads `first_number`, later ones follow
-# the last number.
+# Edenflowers.Payments.Invoice continues Zervant's invoice numbering, which
+# ended at 1336. Only the first shop invoice uses `first_number`; later invoices
+# increment the last invoice number.
 config :edenflowers, :invoices,
   first_number: 1337,
   late_interest_rate: "0.08"

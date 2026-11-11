@@ -56,7 +56,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
       prepare build(load: [:course, :first_name, :payments])
     end
 
-    # Sent by hand only, like the order's. Opens the link if need be.
+    # Jennie sends reminders explicitly; sending also creates a payment link if needed.
     update :send_payment_reminder do
       description "Jennie emails the customer of a confirmed booking a Payment reminder for its Balance, " <>
                     "opening its Payment Link if need be."

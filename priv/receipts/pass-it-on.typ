@@ -1,15 +1,15 @@
 #import "@preview/tiaoma:0.3.0"
 #import "theme.typ": colors, fonts, eyebrow
 
-// Business cards for a print shop: 85x55 mm trimmed, two pages per card
+// These print-shop cards are 85x55 mm after trimming, with two pages per card
 // (logo side, then QR side), in code order. Each page carries 3 mm bleed on
 // every side, so it is 91x61 mm, with no crop marks: the printer imposes the
-// cards on its own sheets. Content keeps 5 mm inside the trim.
+// cards on its own sheets. Keep content 5 mm inside the trim edge.
 
 #let bleed = 3mm
 #let safe = 5mm
 
-// The wording Jennie approves before a print run. Swedish first.
+// Jennie approves this wording before a print run, with Swedish appearing first.
 #let copy = (
   sv: (
     heading: "Skicka vidare 💛",

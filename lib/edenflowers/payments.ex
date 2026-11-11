@@ -270,7 +270,7 @@ defmodule Edenflowers.Payments do
     with :ok <- update_amount(payable), do: setup(payable, actor)
   end
 
-  # One not made yet is made at the right amount.
+  # With no existing PaymentIntent, setup/2 will create one for the current amount.
   defp update_amount(%{payment_intent_id: nil}), do: :ok
 
   defp update_amount(payable) do
@@ -318,9 +318,9 @@ defmodule Edenflowers.Payments do
       find_error(error, AlreadyPaid) ->
         {:ok, :already_completed}
 
-      # A concurrent completion got there first. The loser sees a
-      # mismatch at checkout, which clears the PaymentIntent, or the
-      # unique payment_intent_id on a payment link.
+      # Another completion may have recorded this payment while our action failed.
+      # Checkout can fail because the winner cleared the attached PaymentIntent;
+      # payment-link processing can hit the unique payment_intent_id constraint.
       recorded?(payment_intent.id) ->
         {:ok, :already_completed}
 
@@ -550,7 +550,7 @@ defmodule Edenflowers.Payments do
   def parent_key(%Order{}), do: :order_id
   def parent_key(%CourseRegistration{}), do: :course_registration_id
 
-  @doc "The order or course booking a job's args name by `parent_key/1`, read for emailing its customer."
+  @doc "Loads the order or booking named by a job's `order_id` or `course_registration_id`, ready for customer emails."
   def get_for_customer_email!(%{"order_id" => id}),
     do: Ash.get!(Order, id, action: :for_customer_email, actor: system_actor())
 

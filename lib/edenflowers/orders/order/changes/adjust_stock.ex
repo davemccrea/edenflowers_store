@@ -22,7 +22,7 @@ defmodule Edenflowers.Orders.Order.Changes.AdjustStock do
       else: {:error, "direction must be :take or :return"}
   end
 
-  # Returned before the write, as an edit saves the lines replacing these with it.
+  # Return stock before the edit replaces the old lines; take stock after the new lines are saved.
   @impl true
   def change(changeset, opts, _context) do
     case opts[:direction] do

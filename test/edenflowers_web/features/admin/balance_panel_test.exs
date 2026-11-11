@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.Admin.BalancePanelTest do
   @moduledoc """
-  Every case in the loop runs on the order page's panel and on a courses page
-  row, which settle a balance the same ways.
+  Runs each shared balance-settlement scenario against both the order detail
+  panel and a booking row on the course page, which offer the same operations.
   """
   use EdenflowersWeb.ConnCase, async: true
 
@@ -16,7 +16,8 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
 
   setup :log_in_admin
 
-  # An order or booking for 88.50, paid with `payments` like `[stripe: "58.50", cash: "30.00"]`.
+  # Build an order or booking owing 88.50 and seed any payments supplied in
+  # `payments`, for example `[stripe: "58.50", cash: "30.00"]`.
   defp build(parent, opts \\ []) do
     cancelled? = Keyword.get(opts, :cancelled, false)
 
@@ -50,7 +51,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
   defp parent_key(:order), do: :order_id
   defp parent_key(:booking), do: :course_registration_id
 
-  # Both pages settle a balance in the drawer the balance's button opens.
+  # Open the settlement drawer when available and return the record's balance selector.
   defp open(conn, :order, order) do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
     if has_element?(view, "#order-balance-settle"), do: view |> element("#order-balance-settle") |> render_click()
@@ -265,7 +266,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     assert Decimal.equal?(balance(order), "88.50")
   end
 
-  # Courses are only paid by payment link, so recording a payment is the order's alone.
+  # Only the order page offers manual payment recording; course bookings use payment links.
   test "recording a payment offers Payment received, unticked", %{conn: conn} do
     order = build(:order)
     {view, _panel} = open(conn, :order, order)

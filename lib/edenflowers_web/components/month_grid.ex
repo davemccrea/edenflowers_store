@@ -18,7 +18,7 @@ defmodule EdenflowersWeb.MonthGrid do
     * `:focus_date` - when it changes, the grid shows its month
     * `:open_date` - the grid first opens on its month when there's no
       `:focus_date`; later changes don't move the grid
-    * `:status` - said after the month whenever the grid changes
+    * `:status` - text announced after the month whenever the grid changes
     * `:class` - added to the root
 
   ## Slots
@@ -165,8 +165,8 @@ defmodule EdenflowersWeb.MonthGrid do
             this.setTabIndex(this.viewDate);
 
             this.calendarGrid.addEventListener("keydown", (event) => {
-              // Bail on modifier-key combos so browser/SR shortcuts (Ctrl+Home,
-              // Shift+Arrow, etc.) still reach the host.
+              // Leave modified key presses to the browser and screen reader so
+              // shortcuts such as Ctrl+Home and Shift+Arrow keep working.
               if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
                 return;
               }
@@ -192,10 +192,9 @@ defmodule EdenflowersWeb.MonthGrid do
             }
             this.setTabIndex(this.viewDate);
 
-            // If the server just moved the view date in response to a cross-month
-            // keyboard nav, restore DOM focus to the newly-promoted cell. Doing this
-            // here (instead of in a pushEventTo callback) avoids racing the morph:
-            // updated() runs after the patch has landed, so the target cell exists.
+            // Restore focus after server-side navigation changes the month. Do this
+            // in updated(), not the pushEventTo callback, so LiveView has finished
+            // patching the DOM and the target day's button exists.
             if (this.pendingKeyboardNav) {
               this.pendingKeyboardNav = false;
               this.clientFocus(this.viewDate);
@@ -204,13 +203,12 @@ defmodule EdenflowersWeb.MonthGrid do
 
           /** @param {string} key */
           handleKeyDown(key) {
-            // If focusable dates are missing/empty, every nav would otherwise fall
-            // through to serverFocus and spam the server on each keypress.
+            // Without client-focusable dates, every key press would unnecessarily
+            // request server-side navigation instead of moving focus locally.
             if (!this.focusableDates.length) return;
 
-            // A server roundtrip is already in flight (held-key repeat across a month
-            // boundary). Drop the event rather than queueing — the user can resume
-            // navigating once focus lands on the newly-promoted cell.
+            // Ignore repeated key presses while waiting for the server to change
+            // months. Navigation can resume once the new day's button has focus.
             if (this.pendingKeyboardNav) return;
 
             // Read targets from the currently-focused cell, not the root: each cell's
@@ -230,7 +228,7 @@ defmodule EdenflowersWeb.MonthGrid do
               return;
             }
 
-            // A date not in data-focusable-dates is the server's to move to.
+            // Ask the server to render the target month when the date is not available locally.
             if (!this.isClientFocusable(nextDate)) {
               return this.serverFocus(key);
             }
@@ -275,9 +273,9 @@ defmodule EdenflowersWeb.MonthGrid do
           },
 
           /**
-           * Used when the focus is to be moved to a date that is not focusable by the client.
-           * The server will rerender into the new month; updated() then restores DOM
-           * focus to the newly-promoted view date via the `pendingKeyboardNav` flag.
+           * Requests navigation to a date outside the client-focusable dates.
+           * The server renders the target month, then updated() uses
+           * `pendingKeyboardNav` to restore focus to the target day's button.
            * @param {string} key
            */
           serverFocus(key) {

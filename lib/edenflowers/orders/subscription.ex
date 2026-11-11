@@ -22,7 +22,7 @@ defmodule Edenflowers.Orders.Subscription do
 
   @intervals [1, 2, 4]
 
-  # Notice Jennie gets to buy the flowers before an Occurrence is delivered.
+  # Create and charge each Occurrence this many days ahead so Jennie has time to buy its flowers.
   @lead_days 2
 
   # The last day a customer can change or cancel is this many days before a
@@ -85,7 +85,7 @@ defmodule Edenflowers.Orders.Subscription do
     end
   end
 
-  @doc "Starts a subscription held at `:payment_failed` making Occurrences again."
+  @doc "Reactivates a subscription held at `:payment_failed` so it can create Occurrences again."
   def reactivate_if_held(%{state: :payment_failed} = subscription) do
     Edenflowers.Orders.reactivate_subscription(subscription, actor: system_actor())
   end
@@ -138,8 +138,8 @@ defmodule Edenflowers.Orders.Subscription do
         where expr(state == :active and next_fulfillment_date <= date_add(helsinki_today(), ^@lead_days, :day))
       end
 
-      # Weekly subscribers get flowers too often to need telling. Daily, from
-      # `@heads_up_days` before a delivery until its changes close, once per delivery.
+      # Only two- and four-week subscriptions get a heads-up; weekly deliveries need no extra reminder.
+      # Check daily from @heads_up_days before delivery until changes close, and send once per delivery.
       trigger :send_heads_up_email do
         action :send_heads_up_email
         queue :default
@@ -386,8 +386,8 @@ defmodule Edenflowers.Orders.Subscription do
       change transition_state(:active)
       change {Changes.StepToScheduledDate, days_from_today: @change_deadline_days}
 
-      # The customer has just chosen it, so a delivery already due its
-      # heads-up goes without.
+      # Resuming already shows the next delivery date, so suppress its heads-up
+      # if that delivery is already inside the reminder window.
       change fn changeset, _context ->
         date = Ash.Changeset.get_attribute(changeset, :next_fulfillment_date)
 

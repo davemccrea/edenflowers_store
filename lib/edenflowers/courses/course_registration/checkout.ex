@@ -14,7 +14,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Checkout do
 
   @locales Edenflowers.Locales.all()
 
-  # Per checkout. Codes are 60 random bits, so this is against hammering, not guessing.
+  # Limit voucher-code submissions per checkout to prevent repeated lookup requests.
   rate_limit do
     backend Edenflowers.RateLimiter
     action :add_gift_voucher_with_code, limit: 10, per: :timer.minutes(15), on: :before_transaction

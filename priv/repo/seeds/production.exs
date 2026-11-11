@@ -1,5 +1,5 @@
-# The rows the admin can't create: admins, tax rates, fulfillment options and
-# product categories. Run once against an empty production database, see the
+# This script creates the initial admins, tax rates, fulfillment options and
+# product categories. Run it once against an empty production database; see the
 # "New server" section of infra/README.md.
 # priv/repo/seeds.exs runs this first and builds its dev fixtures on top.
 
@@ -28,7 +28,7 @@ Repo.transaction(fn ->
   end
 
   # Flowers, plants, cards, pre-loved items (no margin scheme), delivery and
-  # courses are standard rate; chocolates are food, so reduced.
+  # courses use the standard rate. Chocolates are food, so they use the reduced rate.
   standard_tax_rate =
     TaxRate
     |> Ash.Changeset.for_create(:create, %{name: "Standard 25.5%", percentage: "0.255"})

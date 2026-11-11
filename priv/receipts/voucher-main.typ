@@ -5,7 +5,7 @@
 //
 // Local preview falls back to a fixture. Override via `--input fixture=…`:
 //   sv | fi | en          (default sv)
-// its style via `--input style=cream|christmas|christmas_green` and its snow via `--input seed=…`.
+// Override the style via `--input style=cream|christmas|christmas_green` and the snow via `--input seed=…`.
 #let data = if "voucher" in sys.inputs {
   json(bytes(sys.inputs.voucher))
 } else {

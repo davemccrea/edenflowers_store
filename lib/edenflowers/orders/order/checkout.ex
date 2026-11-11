@@ -17,10 +17,10 @@ defmodule Edenflowers.Orders.Order.Checkout do
   alias Edenflowers.Payments.Validations, as: PaymentValidations
 
   @locales Edenflowers.Locales.all()
-  # As long as the largest card's, and what fits on the voucher.
+  # Match the largest greeting card's message limit while keeping the text short enough for the voucher layout.
   @voucher_message_length 200
 
-  # A round number on the card.
+  # Offer voucher amounts in ten-euro steps so the printed card shows a round amount.
   @voucher_amounts Enum.to_list(20..200//10)
 
   @checkout_load [
@@ -70,8 +70,9 @@ defmodule Edenflowers.Orders.Order.Checkout do
 
   oban do
     triggers do
-      # Removing a cart's last line leaves it empty. A cart with lines goes after 90 days, as it
-      # holds the customer's contact details. Keep the filter in step with the destroy action's.
+      # Empty carts can be left behind when their last line is removed. Keep carts with lines
+      # for at most 90 days because they may contain contact details. Keep this filter in
+      # sync with the destroy action's filter so scheduling and deletion agree.
       trigger :purge_abandoned_cart do
         action :purge_abandoned_cart
         queue :default
@@ -92,7 +93,7 @@ defmodule Edenflowers.Orders.Order.Checkout do
     end
   end
 
-  # Per cart. Codes are 60 random bits, so this is against hammering, not guessing.
+  # Limit voucher-code submissions per cart to prevent repeated lookup requests.
   rate_limit do
     backend Edenflowers.RateLimiter
     action :add_gift_voucher_with_code, limit: 10, per: :timer.minutes(15), on: :before_transaction
@@ -422,11 +423,11 @@ defmodule Edenflowers.Orders.Order.Checkout do
       require_atomic? false
     end
 
-    # finalize_checkout without Stripe; keep the two in step. A voucher always
-    # leaves a subscription cart something to charge, so the card is saved and
-    # there's no subscription to start here, and a voucher sale can't hold a
-    # voucher, so there's none to issue. Also places an Occurrence its
-    # Subscription's voucher pays in full.
+    # Keep this voucher-only placement path in sync with finalize_checkout.
+    # A new subscription must charge something to save its card, so this path
+    # never starts a subscription. A voucher cannot buy another voucher, so it
+    # never issues one either. It can place an existing subscription's Occurrence
+    # when that subscription's voucher covers the whole charge.
     update :place_paid_by_voucher do
       description "Places a cart its Gift voucher pays for in full, as finalize_checkout does once Stripe " <>
                     "has charged a card: records the voucher payment, takes stock, queues the receipt and " <>
@@ -438,7 +439,7 @@ defmodule Edenflowers.Orders.Order.Checkout do
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
       change Changes.SnapshotVatBreakdown
-      # A PaymentIntent from paying by card before the voucher went on.
+      # Cancel any PaymentIntent opened before the voucher covered the purchase.
       change PaymentChanges.CancelOpenPaymentIntent
       change PaymentChanges.PayFromVoucher
       change PaymentChanges.RequireSettled

@@ -11,10 +11,11 @@ defmodule Edenflowers.Orders.Subscription.Changes.Reschedule do
   delivery is read from the orders, since "next date minus the interval" only
   holds while the next date is on the schedule.
 
-  It only ever moves forward from there, never back: an earlier date could
-  leave a few days between two deliveries, and two charges close together,
-  where a later one only makes one wait a little longer. A date that lands
-  inside the charge window moves on along the new schedule.
+  After adding the new interval to the latest delivery, move forward to the
+  chosen weekday, never backward to an earlier weekday. Moving backward could
+  put two deliveries and their charges too close together. If the resulting
+  date is already past the change cutoff, advance by whole intervals on the
+  new schedule until changes are still allowed.
   """
   use Ash.Resource.Change
 

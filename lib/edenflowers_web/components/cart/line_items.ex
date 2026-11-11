@@ -241,8 +241,9 @@ defmodule EdenflowersWeb.Cart.LineItems do
     {:noreply, assign(socket, :asking_to_remove, nil)}
   end
 
-  # Decided here rather than when the bin rendered: a checkout field sends what was typed on blur, which the
-  # tap on the bin causes, so its change arrives just before this event.
+  # Decide whether to confirm removal when the button is tapped, not when it is
+  # rendered. Tapping blurs the checkout field, so newly typed details reach the
+  # server just before this event and must be included in that decision.
   def handle_event("tap_remove", %{"id" => id} = params, socket) do
     if asks_before_removing?(socket.assigns.order, socket.assigns.typed_details?),
       do: {:noreply, assign(socket, :asking_to_remove, id)},

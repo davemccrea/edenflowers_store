@@ -216,7 +216,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       assert has_element?(view, "[data-testid=variant-option-large][checked]")
       refute has_element?(view, "[data-testid=subscribe-option][checked]")
 
-      # With Large sold out, two sizes are left, and the default of two is the first.
+      # With Large sold out, only two sizes remain. The default is the first available size, Small.
       Ash.Seed.update!(variants.large, %{stock_quantity: 0})
       {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}?size=large")
       assert has_element?(view, "[data-testid=variant-option-small][checked]")
@@ -506,7 +506,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}")
 
-    # It starts on the bow already in the cart, which needs no second add.
+    # The initially selected bow colour is already in the cart, so offer Show cart instead of adding it again.
     assert has_element?(view, "[data-testid=add-to-cart-button]", "Show cart")
 
     view

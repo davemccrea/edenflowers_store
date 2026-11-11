@@ -496,9 +496,9 @@ defmodule Edenflowers.Orders.Order do
   end
 
   calculations do
-    # The calculations here written as `fn` run in Elixir from the values they
-    # `load`, so the SQL doesn't inline another copy of the Balance or payment
-    # status chain (ADR 0007).
+    # Calculations written as `fn` use their explicitly loaded values in Elixir.
+    # This avoids repeating the balance and payment-status calculations' dependent
+    # expressions in SQL (ADR 0007).
     calculate :payment_overdue?,
               :boolean,
               fn records, _context ->
@@ -914,7 +914,8 @@ defmodule Edenflowers.Orders.Order do
       description "Placed and paid. A Custom Order is placed before it is paid, and has no receipt until it is."
     end
 
-    # `state == :placed and payable?`, restated: keep in step with `payable?` in Payable.
+    # Keep this equivalent to `state == :placed and payable?`. If Payable's
+    # payable? rule changes, update this expression too.
     calculate :unpaid?,
               :boolean,
               fn records, _context ->

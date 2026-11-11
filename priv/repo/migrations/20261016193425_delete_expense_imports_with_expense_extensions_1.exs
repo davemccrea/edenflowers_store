@@ -25,8 +25,7 @@ defmodule Edenflowers.Repo.Migrations.DeleteExpenseImportsWithExpenseExtensions1
   end
 
   def down do
-    # Uncomment this if you actually want to uninstall the extensions
-    # when this migration is rolled back:
-    # ash_required/2 was redefined in place in version 7; nothing to roll back
+    # ash_required/2 was redefined in place in version 7, so there is no new
+    # extension to uninstall when this migration is rolled back.
   end
 end

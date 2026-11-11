@@ -72,7 +72,8 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
               </div>
             </div>
 
-            <%!-- On desktop the width comes from the screen height, so the whole section fits one screen and no browser sizes the photo from its natural size. --%>
+            <%!-- On desktop, derive the photo width from the viewport height and its aspect ratio
+                  so the opening section fits on screen rather than using the photo's natural size. --%>
             <figure class="md:justify-self-end">
               <.image
                 src="local:///wedding/anna_riska_2.jpg"

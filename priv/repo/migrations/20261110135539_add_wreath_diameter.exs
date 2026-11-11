@@ -14,7 +14,7 @@ defmodule Edenflowers.Repo.Migrations.AddWreathDiameter do
 
     flush()
 
-    # Jennie has no category screen to set it on, so the existing wreath category becomes one here.
+    # Set the existing wreath category's product type here because Jennie has no category editor.
     execute "UPDATE product_categories SET product_type = 'wreath' WHERE slug = 'wreaths'"
   end
 

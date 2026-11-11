@@ -83,6 +83,6 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmail do
     end
   end
 
-  # Atomic, so a caller holding a copy from before the failure still clears it.
+  # Clear the failure in the database even if the caller's stale record already has a nil timestamp.
   defp clear_failure(changeset), do: Ash.Changeset.atomic_update(changeset, :fulfillment_email_failed_at, nil)
 end

@@ -29,8 +29,8 @@ defmodule Edenflowers.Payments.Workers.SendCancelledEmail do
 
   @impl true
   def perform(%Oban.Job{args: args}) do
-    # Jobs queued before the cancellation charge carry no charge or to_collect,
-    # and before Gift vouchers no back_on_voucher.
+    # Older queued jobs lack charge and to_collect, or back_on_voucher if they
+    # predate vouchers. Default those missing amounts to zero so they can still run.
     money = %{
       charge: Decimal.new(args["charge"] || "0"),
       refunded: Decimal.new(args["refunded_amount"]),

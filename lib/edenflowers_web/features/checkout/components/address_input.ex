@@ -144,8 +144,8 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
          socket
          |> assign(loading: true, typed: address, error: nil)
          |> start_async(:lookup_address, fn ->
-           # The task is a new process, which doesn't inherit the Gettext
-           # locale HERE's `lang` is read from.
+           # Async tasks do not inherit the parent's Gettext locale. Restore it
+           # because the HERE request derives its `lang` parameter from Gettext.
            Gettext.put_locale(EdenflowersWeb.Gettext, locale)
            Fulfillment.calculate_delivery(address, fulfillment_option.id)
          end)}
@@ -193,7 +193,8 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
     not loading and not is_nil(quote) and typed == quote.address
   end
 
-  # An API error shows untouched: the user's own typing triggered the lookup.
+  # Show lookup errors even if the form has not marked the field as touched;
+  # the customer already triggered the lookup by entering an address.
   defp errors({:required, _}, false), do: []
   defp errors({_kind, message}, _touched), do: [message]
   defp errors(nil, _touched), do: []

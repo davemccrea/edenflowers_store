@@ -12,8 +12,8 @@ defmodule Edenflowers.Repo.Migrations.ExpensePaidStatus do
       add :due_on, :date
     end
 
-    # An empty paid_on used to mean paid on its date; now it means unpaid, so
-    # existing expenses keep counting in the month they already did.
+    # A missing paid_on used to mean the expense was paid on its document date;
+    # it now means unpaid. Copy the date so existing expenses stay in the same reporting month.
     execute "UPDATE expenses SET paid_on = date WHERE paid_on IS NULL"
   end
 

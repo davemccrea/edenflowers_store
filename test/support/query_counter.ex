@@ -1,15 +1,16 @@
 defmodule EdenflowersWeb.QueryCounter do
   @moduledoc """
-  Records the SELECTs a LiveView process runs, so a test can tell a cheap
-  refresh from a full one. Add rows to the table only while the work under
-  test runs, then read `sources/1`.
+  Records SELECT queries from a LiveView process so tests can distinguish a
+  targeted refresh from a full reload. Call `track/1` before the work under
+  test, then inspect the recorded table names with `sources/1`.
   """
 
   import ExUnit.Callbacks, only: [on_exit: 1]
 
   @doc """
-  Starts counting the reads `pid` runs, including those it spawns. The table
-  stays empty until something is read.
+  Returns an ETS table that records SELECT queries from `pid` and processes
+  whose `$callers` list includes `pid`, such as its async tasks. The telemetry
+  handler is detached when the test exits.
   """
   def track(pid) do
     table = :ets.new(:tracked_reads, [:public, :duplicate_bag])
@@ -31,13 +32,13 @@ defmodule EdenflowersWeb.QueryCounter do
     table
   end
 
-  @doc "The tables read so far, one entry per SELECT."
+  @doc "Returns the recorded source table names, with one entry per SELECT query."
   def sources(table), do: Enum.map(:ets.tab2list(table), &elem(&1, 0))
 
-  @doc "How many SELECTs ran."
+  @doc "Returns the number of SELECT queries recorded so far."
   def count(table), do: :ets.info(table, :size)
 
-  @doc "Forgets the reads so far, keeping the tracking."
+  @doc "Clears recorded queries without stopping tracking, so the next operation can be measured separately."
   def clear(table), do: :ets.delete_all_objects(table)
 
   defp reads_as?(pid), do: self() == pid or pid in Process.get(:"$callers", [])

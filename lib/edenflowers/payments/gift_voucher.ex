@@ -162,11 +162,12 @@ defmodule Edenflowers.Payments.GiftVoucher do
   end
 
   @doc """
-  A new code: 16 random digits, about 53 bits, so guessing one is hopeless.
-  Digits only, so phones open the number pad and the code reads out easily.
+  Generates a 16-digit voucher code with about 53 bits of randomness.
+  Digits let customers use a phone's number pad and read the code aloud easily.
   """
   def generate_code do
-    # 128 random bits reduced to 16 digits leaves no bias worth counting.
+    # Start with 128 random bits so reducing the result to 16 decimal digits
+    # introduces negligible bias between possible codes.
     :crypto.strong_rand_bytes(16)
     |> :binary.decode_unsigned()
     |> rem(10 ** @code_digits)
@@ -178,9 +179,9 @@ defmodule Edenflowers.Payments.GiftVoucher do
   def default_expiry, do: Date.shift(Edenflowers.ShopTime.today(), year: @valid_for_years)
 
   @doc """
-  A code as the customer might type it, reduced to how it's stored: spaces
-  and dashes ignored, and the letters O, I and L read as the digits they're
-  mistaken for.
+  Normalizes a typed code to its stored digits. Treat O as 0 and I or L as 1
+  to tolerate common reading mistakes, then discard all remaining non-digits,
+  including spaces and dashes.
   """
   def normalize_code(code) do
     code

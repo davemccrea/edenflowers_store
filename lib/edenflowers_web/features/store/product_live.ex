@@ -40,7 +40,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
     product_variants = product.product_variants
     product_category = Translations.translate(product.product_category)
-    # Analytics names a product in English, so a bouquet's adds add up across languages.
+    # Keep the English product name for analytics so add-to-cart events for the
+    # same product are grouped together across storefront languages.
     english_name = product.name
     product = Translations.translate(product)
 
@@ -97,8 +98,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
   defp initial_subscribe?(_params, _product, nil), do: false
   defp initial_subscribe?(_params, _product, cart_line), do: cart_line.interval_weeks != nil
 
-  # A product that offers bows starts on the one its cart line has, else the
-  # first, so the choice is always sent.
+  # Reuse the cart line's bow colour when it is still offered; otherwise select
+  # the first available colour so adding the product always submits a choice.
   defp initial_bow_colour([], _chosen), do: nil
 
   defp initial_bow_colour(colours, chosen), do: if(chosen in colours, do: chosen, else: hd(colours))

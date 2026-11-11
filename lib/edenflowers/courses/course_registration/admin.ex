@@ -97,7 +97,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
       require_atomic? false
     end
 
-    # Opens the link if need be, so sending it is opening one.
+    # Sending the payment link also creates it if the booking does not have one yet.
     update :email_payment_link do
       description "Emails a confirmed booking's Balance collection link, opening it if needed. Jennie sends it explicitly."
 

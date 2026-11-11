@@ -16,7 +16,7 @@ defmodule Generator do
   alias Edenflowers.Pricing.Promotion
   alias Edenflowers.Pricing.TaxRate
 
-  # seed_generator bypasses actions so we can set :admin directly
+  # seed_generator bypasses actions so tests can set :admin directly
   # (the attribute is writable?: false on the resource).
   def admin_user(opts \\ []) do
     seed_generator(
@@ -65,13 +65,12 @@ defmodule Generator do
     changeset_generator(ProductCategory, :create,
       defaults: %{
         name: "Category",
-        # slug has a unique index; without this Ash fills it with a random short
-        # string that occasionally collides. Must be unique across concurrently
-        # running tests (not sequence/2, which restarts per test process) or
-        # concurrent sandbox transactions deadlock on the index.
+        # Slugs must be unique across concurrent tests to avoid collisions and
+        # deadlocks on the unique index. sequence/2 restarts in each test process,
+        # so use a VM-wide unique integer instead of it or a random short string.
         slug: StreamData.repeatedly(fn -> "category-#{System.unique_integer([:positive])}" end),
         add_on: false,
-        # Not left to chance: a wreath category keeps bow colours other categories drop.
+        # Keep the category type deterministic because only wreaths retain bow colours.
         product_type: :flowers
       },
       overrides: opts,
@@ -128,8 +127,8 @@ defmodule Generator do
   end
 
   def order(opts \\ []) do
-    # seed_generator so tests can set attributes no action accepts. The base
-    # struct avoids random foreign keys that don't exist.
+    # Use seed_generator so tests can set attributes no action accepts. Starting
+    # from a struct avoids generating random foreign keys for nonexistent records.
     {payment_status, opts} = Keyword.pop(opts, :payment_status)
 
     opts =
@@ -165,8 +164,8 @@ defmodule Generator do
   end
 
   @doc """
-  A placed order from Ada Lovelace for two items at 42.00, picked up for 4.50:
-  88.50 in all, and nothing paid yet.
+  Creates Ada Lovelace's placed pickup order with two items at 42.00 each and a
+  4.50 pickup fee. The default total is 88.50, with no payment recorded.
 
   `paid: true` pays the grand total when the order was placed, and
   `paid: "40.00"` pays that amount instead. `refunded: true` pays it and then
@@ -223,8 +222,8 @@ defmodule Generator do
   end
 
   @doc """
-  John Smith's order waiting on its Stripe PaymentIntent: one item and a
-  fulfillment fee, loaded with its grand total.
+  Creates John Smith's order in the payment step with a Stripe PaymentIntent ID,
+  one item and a fulfillment fee. Loads the grand total and Stripe amount.
 
   `product_variant_id:` picks the item; any other option overrides the
   order's attributes.
@@ -262,7 +261,7 @@ defmodule Generator do
     Ash.load!(order, [:grand_total, :stripe_amount], authorize?: false)
   end
 
-  # seed_generator because a Subscription is only ever created by checkout.
+  # Seed subscriptions directly so tests do not need to complete checkout to create one.
   def subscription(opts \\ []) do
     opts =
       opts
@@ -290,8 +289,9 @@ defmodule Generator do
   end
 
   @doc """
-  A Gift voucher for 50.00, valid a year, sold on a line of a placed order of
-  its own. Its code is in `code`, as typed.
+  Builds a generator for a 50.00 gift voucher with the default one-year expiry.
+  Unless `line_item_id` is supplied, creates a line item on a separate placed
+  order to represent the sale. The generated code is available in `code`.
   """
   def gift_voucher(opts \\ []) do
     opts =
@@ -312,7 +312,7 @@ defmodule Generator do
     )
   end
 
-  @doc "Counts towards a promotion's usage by placing `times` orders with it."
+  @doc "Seeds `times` placed orders with the promotion so they count towards its usage."
   def use_promotion(promotion, times \\ 1) do
     for _ <- 1..times do
       generate(order(state: :placed, promotion_id: promotion.id))
@@ -355,7 +355,8 @@ defmodule Generator do
   end
 
   @doc """
-  Sets the shop calendar, which every test starts with open every day and same-day off.
+  Updates the shared shop calendar. Its default state allows every weekday but
+  disables same-day fulfillment.
 
   The update locks the one row until the test's transaction rolls back, so
   modules that write the calendar run `async: false`. Tests of pure calendar
@@ -398,8 +399,8 @@ defmodule Generator do
     )
   end
 
-  # seed_generator, not the :register action, so a registration can be attached
-  # to any user directly: :register always links the user with its email.
+  # Seed registrations so tests can attach any user directly. The :register
+  # action instead chooses the user by the registration's email address.
   def course_registration(opts \\ []) do
     opts = Keyword.put_new_lazy(opts, :course_id, fn -> generate(course()).id end)
 

@@ -52,7 +52,7 @@
         {Credo.Check.Warning.UnusedTupleOperation, []},
         {Credo.Check.Warning.WrongTestFilename, []},
         {Credo.Check.Readability.ModuleDoc, false},
-        # Flags Ash's expr(if(condition, then, else)).
+        # Disable this check because it flags valid Ash expr(if(condition, then, else)) expressions.
         {Credo.Check.Readability.ParenthesesInCondition, false}
       ]
     }

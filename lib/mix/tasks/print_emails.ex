@@ -17,7 +17,8 @@ defmodule Mix.Tasks.PrintEmails do
 
   @impl Mix.Task
   def run(args) do
-    # Rendering needs the endpoint for its URLs, but never a running queue.
+    # Start the app so email rendering can build endpoint URLs, but prevent Oban
+    # from running background jobs while we generate previews.
     Mix.Task.run("app.config")
     Application.put_env(:edenflowers, Oban, Keyword.put(Application.fetch_env!(:edenflowers, Oban), :testing, :manual))
     Mix.Task.run("app.start")

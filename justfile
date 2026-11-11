@@ -17,8 +17,8 @@ install-typst:
 # Run the development server
 [group('development')]
 dev: check-typst start-imgproxy
-    # iex quits on EOF, so a backgrounded run (no terminal) needs plain mix
-    # Photo URLs use the Tailscale IP so they load on other devices too; localhost when Tailscale is down
+    # Start IEx only with a terminal attached; it exits on EOF when run in the background.
+    # Use the Tailscale IP for photo URLs so other devices can load them, falling back to localhost.
     PORT={{ port }} IMGPROXY_PREFIX=http://$(tailscale ip -4 2>/dev/null || echo localhost):{{ imgproxy_port }} $([ -t 0 ] && echo iex -S) mix phx.server
 
 # Run both suites with no args; extra args run only the focused Elixir suite
@@ -165,7 +165,7 @@ backup:
     version=$(ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers version" | awk '{print "v"$2}') || version=unknown
     mkdir -p tmp
     file="tmp/production-$version-$(date +%Y%m%dT%H%M%S).dump"
-    # -T: a pty would turn every LF byte in the dump into CRLF
+    # Disable SSH's pseudo-terminal with -T so terminal newline conversion cannot corrupt the binary dump.
     ssh -T edenflowers-production "sudo -u postgres pg_dump -Fc edenflowers_store_prod" > "$file.partial"
     pg_restore -f /dev/null "$file.partial" || { echo "$file.partial cannot be read back, so it is no backup" >&2; exit 1; }
     mv "$file.partial" "$file"
@@ -189,7 +189,7 @@ print-cards name count:
 # Pull and restart production's other services (cloudflared, imgproxy, umami, papra). Restarting cloudflared drops the site for a few seconds
 [group('production')]
 update-services:
-    # Not app: its `latest` tag would skip migrations and undo a rollback; `just deploy` updates it
+    # Leave the app to `just deploy`: pulling its latest image here would skip migrations and undo a rollback.
     ssh -T edenflowers-production 'cd /opt/edenflowers_store && services=$(docker compose config --services | grep -vx app) && docker compose pull $services && docker compose up -d --no-deps $services && docker image prune -f'
 
 # Toggle production's maintenance mode after a prompt, restarting the app (the Maintenance workflow does the same from GitHub)

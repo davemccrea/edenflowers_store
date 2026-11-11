@@ -13,9 +13,9 @@ defmodule Edenflowers.Courses do
   require Ash.Query
 
   @doc """
-  Queues reminders for the course's current confirmed bookings only, in one
-  transaction. `edits` holds Jennie's rewrite of any booking's reminder, as
-  `%{subject: ..., body: ...}` by booking id; the rest go as built.
+  Queues reminders for the course's currently confirmed bookings in one
+  transaction. `edits` maps booking IDs to Jennie's email edits in the form
+  `%{subject: ..., body: ...}`. Bookings without edits use the generated email.
   """
   def send_course_reminders(course_id, edits \\ %{}, actor) do
     case Edenflowers.Repo.transaction(fn -> queue_reminders(course_id, edits, actor) end) do

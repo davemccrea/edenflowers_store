@@ -1,9 +1,8 @@
 defmodule EdenflowersWeb.Admin.DrawerPreview do
   @moduledoc """
-  The customer email a drawer would send, from its form as Jennie has filled it
-  in so far: for a payment or refund, the amount and how she hands it back,
-  or for a cancel the charge she keeps. What the order and course pages'
-  drawers share.
+  Builds customer email previews for the drawers shared by order and course pages.
+  Each preview uses the current form values: the payment amount, the refund
+  amount and method, or the cancellation charge Jennie keeps.
   """
 
   alias Edenflowers.Email.Preview
@@ -25,6 +24,6 @@ defmodule EdenflowersWeb.Admin.DrawerPreview do
   def build(:cancelled, record, %Phoenix.HTML.Form{} = form),
     do: Preview.build(:cancelled, record, %{charge: form[:cancellation_charge].value})
 
-  # The email drawer's kinds have nothing to enter but the email itself.
+  # Email-only drawers have no payment or cancellation values to include in the preview.
   def build(kind, record, _params), do: Preview.build(kind, record, %{})
 end

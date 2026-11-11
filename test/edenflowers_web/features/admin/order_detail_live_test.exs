@@ -1,5 +1,6 @@
 defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
-  # Absence-of-warning assertions need isolation from the global order topic.
+  # Run synchronously so broadcasts from other tests on the shared order topic
+  # cannot trigger warnings that these tests expect to be absent.
   use EdenflowersWeb.ConnCase, async: false
 
   use Oban.Testing, repo: Edenflowers.Repo
@@ -897,7 +898,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     end
 
     test "no: fulfils without queueing the fulfillment email", %{conn: conn} do
-      # A gift starts ticked, so unticking is a real choice.
+      # Gift orders select the fulfillment email by default, so unticking explicitly opts out.
       order =
         placed_order(
           fulfillment_status: :ready,

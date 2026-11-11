@@ -103,16 +103,16 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     end
   end
 
-  # The step is mirrored in the URL so the browser's back button steps back
-  # through checkout. The order's state still decides which step shows: a URL
-  # step before it steps the order back, and any other is corrected in place,
-  # as only Next moves the order forward.
+  # Mirror the checkout step in the URL to support the browser's Back button.
+  # The saved order state remains authoritative: an earlier URL step moves the
+  # order back, but a later or invalid URL step is replaced with the saved step.
+  # Only submitting Next can move the order forward.
   #
-  # So browser forward after going back lands on the earlier step, with the
-  # customer's details still filled in for Next. Going back moves the order's
-  # state, and forward would have to submit the step again or work the step
-  # out from the order's data instead of storing it (TASK-24). Forward is
-  # rarely used, so neither was worth it.
+  # Consequently, browser Forward after Back stays on the earlier saved step;
+  # the customer can press Next with their details still filled in. Supporting
+  # Forward would require resubmitting that step or deriving the step from the
+  # order data instead of storing it (TASK-24). Neither is implemented because
+  # Forward is rarely used.
   @impl true
   def handle_params(params, _uri, %{assigns: %{fulfillment_options: _}} = socket) do
     socket = track_checkout_progress(socket)
@@ -963,7 +963,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # amount. A retry after a declined card reuses it, at the current total.
   defp pay(%{assigns: %{order: order}} = socket) do
     case Orders.prepare_checkout_payment(order.id, actor: actor(socket)) do
-      # Its gift voucher paid it all, and it's placed: on to the order, as Stripe would send them.
+      # A gift voucher covered the full total, so the order is already placed.
+      # Use the same completion route as Stripe without starting a card payment.
       {:ok, %{client_secret: nil}} ->
         {:noreply, redirect(socket, to: ~p"/checkout/complete/#{order.id}")}
 
@@ -1178,8 +1179,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     end
   end
 
-  # Keeps unsaved input across a reload. `drop` discards params the action just
-  # cleared, which would otherwise shadow the cleared attribute.
+  # Preserve unsaved input when reloading the order. Drop parameters for fields
+  # the action just cleared so stale form values do not override the saved values.
   defp assign_forms(socket, order, opts) do
     drop = Keyword.get(opts, :drop, [])
 

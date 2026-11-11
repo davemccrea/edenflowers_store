@@ -285,10 +285,11 @@ defmodule Edenflowers.Payments.Payable do
                     "its Balance, but is settled."
     end
 
-    # The three below run in Elixir from loaded values, so the SQL doesn't
-    # inline another copy of the Balance chain (ADR 0007).
+    # Compute to_collect?, to_refund? and refundable? in Elixir using loaded
+    # values, avoiding repeated balance expressions in SQL (ADR 0007).
 
-    # `not settled? and balance > 0`, restated: keep in step with `settled?`.
+    # Keep this equivalent to `not settled? and balance > 0`. If the settled?
+    # rule changes, update this expression too.
     calculate :to_collect?,
               :boolean,
               fn records, _context ->
@@ -298,7 +299,8 @@ defmodule Edenflowers.Payments.Payable do
       description "Whether money is still owed by the customer."
     end
 
-    # `not settled? and balance < 0`, restated: keep in step with `settled?`.
+    # Keep this equivalent to `not settled? and balance < 0`. If the settled?
+    # rule changes, update this expression too.
     calculate :to_refund?,
               :boolean,
               fn records, _context ->

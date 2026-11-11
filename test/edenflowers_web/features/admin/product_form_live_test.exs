@@ -206,7 +206,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     view |> element(~s|button[phx-click=make_main_photo][phx-value-slug="c.jpg"]|) |> render_click()
     view |> element(~s|button[phx-click=remove_photo][phx-value-slug="a.jpg"]|) |> render_click()
 
-    # The size's photo is gone, so it shows as the main photo.
+    # Removing the size-specific photo must select the main-photo fallback for that size.
     assert has_element?(view, ~s|input[name="form[product_variants][0][own_photo_slug]"][value=""][checked]|)
 
     view

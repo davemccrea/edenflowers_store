@@ -953,7 +953,8 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     |> Enum.join(", ")
   end
 
-  # `{label, empty}`; further out than tomorrow the heading is the date itself.
+  # Return the relative heading and empty-state text. Dates after tomorrow have
+  # no relative heading; the caller displays the date instead.
   defp day_texts(date, today) do
     case Date.diff(date, today) do
       0 -> {~t"Today", ~t"Nothing to make today"}

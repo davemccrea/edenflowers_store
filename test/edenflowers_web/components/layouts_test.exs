@@ -1,5 +1,5 @@
 defmodule EdenflowersWeb.LayoutsTest do
-  # Changes the app's Umami config.
+  # Run synchronously because these tests change the globally shared Umami configuration.
   use EdenflowersWeb.ConnCase, async: false
 
   import Generator

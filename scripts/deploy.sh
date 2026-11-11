@@ -131,7 +131,7 @@ fi
 
 run_checks
 
-# Before tagging, so a failed push doesn't leave a local version-bump commit and tag behind.
+# Push photos before creating the release commit and tag so a failed photo upload leaves neither behind.
 scripts/push-images.sh
 
 section "Tagging release"

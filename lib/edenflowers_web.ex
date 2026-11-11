@@ -106,7 +106,7 @@ defmodule EdenflowersWeb do
   end
 
   @doc """
-  When used, dispatch to the appropriate controller/live_view/etc.
+  Expands `use EdenflowersWeb, role` into the shared setup for that role.
   """
   defmacro __using__({which, opts}) when is_atom(which) and is_list(opts) do
     apply(__MODULE__, which, [opts])

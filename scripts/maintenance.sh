@@ -22,7 +22,7 @@ read -r -p "  Turn it $NEXT_STATE and restart the app? [y/N]: " CONFIRM
 
 section "Restarting the app"
 ssh -T edenflowers-production "cd $APP_DIR && echo MAINTENANCE_MODE=$NEXT > maintenance.env && docker compose up -d app"
-# Quiet while it boots: Cloudflare answers 502 until the new container is serving.
+# Suppress expected HTTP errors during startup; Cloudflare returns 502 until the app is ready.
 curl -fs --retry 60 --retry-delay 2 --retry-all-errors https://edenflowers.fi/health > /dev/null ||
   fail "the app did not come back within two minutes, check just tail-logs"
 ok "the app is back up"

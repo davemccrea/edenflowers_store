@@ -1,17 +1,11 @@
 defmodule Edenflowers.DataCase do
   @moduledoc """
-  This module defines the setup for tests requiring
-  access to the application's data layer.
+  Provides SQL sandbox setup, Oban test helpers and default external-service
+  stubs for tests that use the application's data layer.
 
-  You may define functions here to be used as helpers in
-  your tests.
-
-  Finally, if the test case interacts with the database,
-  we enable the SQL sandbox, so changes done to the database
-  are reverted at the end of every test. If you are using
-  PostgreSQL, you can even run database tests asynchronously
-  by setting `use Edenflowers.DataCase, async: true`, although
-  this option is not recommended for other databases.
+  Database changes are rolled back after each test. Use `async: true` for
+  isolated tests; tests that change global application configuration or shared
+  singleton rows must run synchronously.
   """
 
   use ExUnit.CaseTemplate
@@ -32,7 +26,8 @@ defmodule Edenflowers.DataCase do
   end
 
   @doc """
-  Sets up the sandbox based on the test tags.
+  Starts a sandbox owner and stops it when the test exits. Synchronous tests
+  share the connection with other processes; async tests keep it isolated.
   """
   def setup_sandbox(tags) do
     pid = Sandbox.start_owner!(Edenflowers.Repo, shared: not tags[:async])
@@ -40,16 +35,17 @@ defmodule Edenflowers.DataCase do
   end
 
   @doc """
-  Saving a subscription's card looks the card up in Stripe to show it. Tests
-  that don't care get no details back; a test can still `expect` the call.
+  Stubs the Stripe lookup used to display a subscription's saved card. Returns
+  only the payment-method ID by default; tests that need specific card details
+  or call verification can set their own Mox expectation.
   """
   def stub_card_lookup do
     Mox.stub(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_method, fn id -> {:ok, %{id: id}} end)
   end
 
   @doc """
-  Saving an expense updates its Papra document. Tests that don't care get the
-  update accepted; a test can still `expect` the call.
+  Accepts Papra document updates when an expense is saved, without contacting
+  Papra. Tests that need to verify the update can set their own Mox expectation.
   """
   def stub_papra_update do
     Mox.stub(Edenflowers.External.PapraAPI.Mock, :update_document, fn _document_id, _fields -> :ok end)

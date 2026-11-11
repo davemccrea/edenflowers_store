@@ -501,7 +501,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     end
   end
 
-  # Each booking's reminder is its own email, rewritten or not on its own.
+  # Keep each booking's reminder edits separate so rewriting one email does not change the others.
   defp booking_reminder_form(form, registration),
     do: to_form(Map.get(form.params, registration.id, %{}), as: "reminder[#{registration.id}]")
 

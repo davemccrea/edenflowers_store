@@ -1,8 +1,8 @@
 defmodule Edenflowers.Orders.Subscription.Validations.SubscriptionChangesOpen do
   @moduledoc """
-  Refuses a customer's change once the next Occurrence is close to being
-  created and charged (see `Subscription.changes_closed?`), so a change always
-  lands before the card is. Jennie can still make it.
+  Refuses customer changes after the cutoff for the next Occurrence
+  (`Subscription.changes_closed?`), so the plan is settled before that
+  delivery is created and charged. Admins can still make changes.
   """
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext

@@ -20,6 +20,6 @@ defmodule EdenflowersWeb.Analytics do
     push_event(socket, "umami", %{name: name, data: data, once: opts[:once]})
   end
 
-  @doc "Revenue in the shape Umami's revenue reports read."
+  @doc "Formats an amount as the `revenue` and `currency` fields expected by Umami's revenue reports."
   def revenue(%Decimal{} = amount), do: %{revenue: Decimal.to_float(amount), currency: "EUR"}
 end

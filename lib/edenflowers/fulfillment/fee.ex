@@ -8,8 +8,9 @@ defmodule Edenflowers.Fulfillment.Fee do
 
   @typedoc """
   The fees for a distance, or `:out_of_delivery_range` when it's beyond the
-  option's `max_dist_km`. Out-of-range rides in `:error` rather than being an
-  error proper, so callers match the reason instead of an Ash.Error.Unknown.
+  option's `max_dist_km`. An out-of-range result stores the reason in the
+  map's `:error` field rather than returning an action error, so callers can
+  match the reason without unwrapping an Ash.Error.Unknown.
 
   `fulfillment_fee` is what any cart pays: for a distance-priced option,
   `base_price` plus `price_per_km` for every km from the shop.
@@ -44,7 +45,7 @@ defmodule Edenflowers.Fulfillment.Fee do
     end
   end
 
-  # base_price plus price_per_km for each of `metres`, to the cent.
+  # Convert metres to kilometres before applying price_per_km, then round the total fee to cents.
   defp distance_fee(option, metres) do
     metres
     |> Decimal.new()

@@ -20,7 +20,7 @@ mcp = '''printf '{"mcpServers": {"tidewave": {"type": "http", "url": "http://loc
 [[pre-start]]
 deps = "bash -c 'source .env && mix deps.get && mix deps.compile'"
 
-# Tailwind's downloaded binary has an invalid signature; macOS SIGKILLs it unless re-signed
+# Re-sign Tailwind's downloaded binary on macOS; its invalid signature otherwise causes the OS to kill it.
 [[pre-start]]
 tailwind = "bash -c 'source .env && mix tailwind.install --if-missing && if [ \"$(uname)\" = Darwin ]; then codesign --force --sign - _build/tailwind-macos-arm64-*; fi'"
 
@@ -36,7 +36,7 @@ db = "bash -c 'source .env && (mix ecto.drop --quiet 2>/dev/null; true) && mix a
 [[pre-start]]
 server = "bash scripts/start-worktree-server.sh {{ branch | hash_port }}"
 
-# Stop this worktree's dev server so it releases the database before the drop
+# Stop this worktree's dev server so its database connections do not prevent the database from being dropped.
 [[pre-remove]]
 server = "bash -c 'source .env && lsof -ti tcp:$PORT | xargs kill -9 2>/dev/null; sleep 1; true'"
 
