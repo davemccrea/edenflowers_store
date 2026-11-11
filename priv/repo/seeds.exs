@@ -278,8 +278,8 @@ for attrs <- [
   |> Ash.create!(authorize?: false)
 end
 
-# Hanna's gift leads to Karin's order, then to Elin's and Olle's orders.
-# Olle's cancelled gift leads to Nils's order. Sanna's source order was never
+# Hanna's gift leads to Karin's order, then to Elin's order and to Olle's, which
+# was cancelled and so isn't listed. Olle's cancelled gift leads to Nils's order. Sanna's source order was never
 # linked to her card. Mikael's card is unopened, and one card is spare to scan.
 [linked_card_code, used_card_code, karin_card_code, cancelled_card_code, unlinked_card_code, _spare_card_code] =
   Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare 2026-11", 6, actor: Edenflowers.Actors.system_actor())
