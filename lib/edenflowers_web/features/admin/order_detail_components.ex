@@ -834,19 +834,18 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       assign(assigns,
         source: order.promotion && order.promotion.gift_order,
         from_card?: match?(%{kind: :pass_it_on}, order.promotion),
+        brought_in: if(order.pass_it_on_card, do: order.pass_it_on_card.placed_orders, else: []),
         card_missing?: order.pass_it_on_card_changeable? && !order.pass_it_on_card,
         no_card?: order.gift && !order.pass_it_on_card && !order.pass_it_on_card_changeable?
       )
 
     ~H"""
     <.widget id="order-pass-it-on" title={~t"Pass it on"}>
-      <%!-- A phone drops "This order" and the arrows, which only repeat the page it is on,
-           and puts each code beside its order instead of under it. --%>
-      <div class="flex flex-col gap-3 text-sm sm:flex-row sm:items-start">
-        <section :if={@from_card?} id="order-card-source" class="min-w-0 flex-1 space-y-2">
-          <h3 class="eyebrow text-base-content/75">
-            {~t"From"}
-          </h3>
+      <%!-- Each code sits with the gift it was sent out with. A phone stacks the steps,
+           with each code beside its order instead of under it. --%>
+      <div class="divide-base-content/12 flex flex-col gap-3 text-sm max-sm:divide-y sm:flex-row sm:items-start">
+        <section :if={@from_card?} id="order-card-source" class="min-w-0 flex-1 space-y-2 max-sm:pb-3">
+          <h3 class="eyebrow text-base-content/75">{~t"From"}</h3>
           <div class="flex items-start justify-between gap-3 sm:flex-col sm:gap-2">
             <div class="min-w-0 flex-1 sm:w-full">
               <.related_order :if={@source && @source.committed?} order={@source} locale={@locale} />
@@ -863,23 +862,19 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           class="text-base-content/45 h-4 w-4 shrink-0 max-sm:hidden"
         />
 
-        <section class="min-w-0 flex-1 space-y-2 max-sm:hidden">
+        <section class="min-w-0 flex-1 space-y-2 max-sm:pb-3 last:max-sm:pb-0">
           <h3 class="eyebrow text-base-content/75">{~t"This order"}</h3>
-          <div class="py-1"><.order_lines order={@order} locale={@locale} /></div>
-        </section>
-
-        <.icon
-          :if={@order.pass_it_on_card || @card_missing? || @no_card?}
-          name="hero-arrow-right"
-          class="text-base-content/45 h-4 w-4 shrink-0 max-sm:hidden"
-        />
-        <div
-          :if={@order.pass_it_on_card || @card_missing? || @no_card?}
-          class={["min-w-0 flex-1 space-y-2", @from_card? && "max-sm:border-base-content/12 max-sm:border-t max-sm:pt-3"]}
-        >
-          <h3 class="eyebrow text-base-content/75">
-            {~t"To"}
-          </h3>
+          <div class="flex items-start justify-between gap-3 sm:flex-col sm:gap-2">
+            <div class="min-w-0 flex-1 py-1 sm:w-full"><.order_lines order={@order} locale={@locale} /></div>
+            <div
+              :if={@order.pass_it_on_card}
+              id="order-card-outgoing"
+              class="flex shrink-0 gap-2 max-sm:flex-col max-sm:items-end max-sm:py-1 sm:flex-wrap sm:items-center"
+            >
+              <.card_code id="order-card-outgoing-code" code={@order.pass_it_on_card.code} />
+              <.card_status_badge card={@order.pass_it_on_card} locale={@locale} />
+            </div>
+          </div>
 
           <p :if={@no_card?} id="order-card-none" class="text-base-content/65">
             {~t"No card went with this gift."}
@@ -911,23 +906,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
               <.button type="submit" variant="secondary">{~t"Link card"}</.button>
             </.form>
           </div>
+        </section>
 
-          <section
-            :if={@order.pass_it_on_card}
-            id="order-card-outgoing"
-            class="flex items-start justify-between gap-3 sm:flex-col sm:gap-2"
-          >
-            <ul :if={@order.pass_it_on_card.placed_orders != []} class="min-w-0 flex-1 space-y-3 sm:w-full">
-              <li :for={order <- @order.pass_it_on_card.placed_orders} id={"order-card-redemption-#{order.id}"}>
-                <.related_order order={order} locale={@locale} />
-              </li>
-            </ul>
-            <div class="flex flex-wrap items-center gap-2 max-sm:py-1">
-              <.card_code id="order-card-outgoing-code" code={@order.pass_it_on_card.code} />
-              <.card_status_badge card={@order.pass_it_on_card} locale={@locale} />
-            </div>
-          </section>
-        </div>
+        <.icon :if={@brought_in != []} name="hero-arrow-right" class="text-base-content/45 h-4 w-4 shrink-0 max-sm:hidden" />
+        <section :if={@brought_in != []} id="order-card-redemptions" class="min-w-0 flex-1 space-y-2">
+          <h3 class="eyebrow text-base-content/75">{~t"To"}</h3>
+          <ul class="space-y-3">
+            <li :for={order <- @brought_in} id={"order-card-redemption-#{order.id}"}>
+              <.related_order order={order} locale={@locale} />
+            </li>
+          </ul>
+        </section>
       </div>
     </.widget>
     """

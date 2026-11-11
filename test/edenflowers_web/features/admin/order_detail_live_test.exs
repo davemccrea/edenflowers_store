@@ -300,7 +300,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       end
 
       for redemption <- redemptions do
-        assert has_element?(view, ~s|#order-card-outgoing a[href="/admin/orders/#{redemption.id}"]|)
+        assert has_element?(view, ~s|#order-card-redemptions a[href="/admin/orders/#{redemption.id}"]|)
       end
 
       for unrelated <- [gift, passed_on, brought_in, sibling, cancelled, cart] -- (List.wrap(source) ++ redemptions) do
@@ -369,9 +369,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     redeemed = placed_order(promotion_id: card.id, payment_intent_id: nil)
     Orders.update_florist_note!(redeemed, %{florist_note: "Flowers"}, actor: admin)
     assert has_element?(view, "#editor-stale-notice")
-    refute has_element?(view, ~s|#order-card-outgoing a[href="/admin/orders/#{redeemed.id}"]|)
+    refute has_element?(view, ~s|#order-card-redemptions a[href="/admin/orders/#{redeemed.id}"]|)
     {:ok, view, _} = live(conn, ~p"/admin/orders/#{gift.id}")
-    assert has_element?(view, ~s|#order-card-outgoing a[href="/admin/orders/#{redeemed.id}"]|)
+    assert has_element?(view, ~s|#order-card-redemptions a[href="/admin/orders/#{redeemed.id}"]|)
     refute has_element?(view, "#order-card-outgoing", "Opened")
 
     Orders.cancel_order!(redeemed, %{cancellation_reason: "Changed mind", email_customer?: false}, actor: admin)
