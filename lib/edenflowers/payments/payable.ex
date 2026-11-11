@@ -222,6 +222,8 @@ defmodule Edenflowers.Payments.Payable do
               # Reads as: due = total_due - amount_invoiced; owed when due > paid, owed back when
               # due < held, else 0. Held never exceeds paid, so at most one half is nonzero. Written
               # this way so the SQL carries the due expression twice rather than five times (ADR 0007).
+              # A cart, whose total_due is nil, reads 0: GREATEST and LEAST ignore a null. The
+              # calculations computed in Elixir rely on that, as they pass balance to Decimal unguarded.
               expr(
                 fragment(
                   "GREATEST(? - ?, 0) + LEAST(? - ?, 0)",

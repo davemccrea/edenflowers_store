@@ -533,7 +533,7 @@ defmodule Edenflowers.Orders.Order do
                     Date.compare(record.fulfillment_date, overdue_before) == :lt
                 end)
               end do
-      load [:balance]
+      load [:fulfillment_status, :fulfillment_date, :balance]
       description "Whether a fulfilled order still has a balance more than 14 days after fulfillment."
     end
 
@@ -643,7 +643,7 @@ defmodule Edenflowers.Orders.Order do
                     not record.invoiced?
                 end)
               end do
-      load [:amount_held, :balance, :invoiced?]
+      load [:state, :origin, :payment_terms, :amount_held, :balance, :invoiced?]
 
       description "Whether Jennie can invoice it: a Custom Order on invoice terms with nothing paid, a Balance " <>
                     "to collect and no invoice already covering it. A cancelled one is invoiced for its " <>
@@ -875,7 +875,7 @@ defmodule Edenflowers.Orders.Order do
                     record.to_collect? and not record.gift_voucher_sale?
                 end)
               end do
-      load [:to_collect?, :gift_voucher_sale?]
+      load [:fulfillment_status, :customer_email, :to_collect?, :gift_voucher_sale?]
 
       description "Whether Jennie can send a Payment reminder: a Balance to collect, an email to send it to, " <>
                     "on a purchase that has not been cancelled. Never a Gift voucher sale, paid at the counter " <>
@@ -942,7 +942,7 @@ defmodule Edenflowers.Orders.Order do
     calculate :receipt_available?,
               :boolean,
               fn records, _context -> Enum.map(records, &(&1.state == :placed and &1.payment_status == :paid)) end do
-      load [:payment_status]
+      load [:state, :payment_status]
       description "Placed and paid. A Custom Order is placed before it is paid, and has no receipt until it is."
     end
 
@@ -955,7 +955,7 @@ defmodule Edenflowers.Orders.Order do
                   record.state == :placed and Decimal.positive?(record.balance) and not record.refunded?
                 end)
               end do
-      load [:balance, :refunded?]
+      load [:state, :balance, :refunded?]
 
       description "Money still owed on a placed order. A fulfilled order can still be unpaid when the customer " <>
                     "pays afterwards, and an Occurrence whose card was refused is placed unpaid."

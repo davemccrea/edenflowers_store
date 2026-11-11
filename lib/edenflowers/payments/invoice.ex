@@ -540,7 +540,7 @@ defmodule Edenflowers.Payments.Invoice do
                     Date.compare(record.due_date, today) == :lt
                 end)
               end do
-      load [:status]
+      load [:status, :due_date]
 
       description "Whether it is late: still open after its due date, counted in Helsinki days, so it turns " <>
                     "overdue the day after the due date. A paid or cancelled invoice is never overdue; one " <>
@@ -631,7 +631,7 @@ defmodule Edenflowers.Payments.Invoice do
     calculate :amount_unpaid,
               :decimal,
               fn records, _context -> Enum.map(records, &Decimal.sub(&1.amount, &1.amount_paid)) end do
-      load [:amount_paid]
+      load [:amount, :amount_paid]
       description "What is still to pay on it in euros: its amount less its Payments, which can't exceed it."
     end
   end

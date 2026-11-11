@@ -7,7 +7,7 @@ defmodule Edenflowers.Orders.Calculations.Vat do
 
   @impl true
   def load(_query, _opts, _context) do
-    [:fulfillment_fee, :fulfillment_tax_rate, line_items: [:tax_rate, :total, :is_gift_voucher]]
+    [:state, :vat_breakdown, :fulfillment_fee, :fulfillment_tax_rate, line_items: [:tax_rate, :total, :is_gift_voucher]]
   end
 
   @impl true
