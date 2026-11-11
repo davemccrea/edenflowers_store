@@ -61,6 +61,11 @@ button:is(.btn, [type="submit"]):is(
   content: "";
   position: absolute;
   inset: 0;
+  /* Small buttons size and shift ::after as a tap area on touch screens
+     (touch-target in base.css); undo that so the spinner stays centred. */
+  width: auto;
+  height: auto;
+  transform: none;
   display: grid;
   place-items: center;
   background-color: currentColor;
