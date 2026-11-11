@@ -184,7 +184,8 @@ defmodule EdenflowersWeb.Router do
       on_mount: [
         {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required},
         {EdenflowersWeb.Hooks.PutLocale, :admin},
-        EdenflowersWeb.Hooks.PutCurrentPath
+        EdenflowersWeb.Hooks.PutCurrentPath,
+        EdenflowersWeb.Hooks.HandleAdminSearch
       ] do
       live "/", OverviewLive
       live "/orders", OrdersLive

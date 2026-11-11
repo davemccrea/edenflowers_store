@@ -217,6 +217,17 @@ defmodule Edenflowers.Orders.Subscription do
       prepare build(sort: [next_fulfillment_date: :asc], load: [:next_delivery_date, :user, :product_variant])
     end
 
+    read :search do
+      description "Admin search for subscriptions in any state by the subscriber's name or email, soonest next " <>
+                    "delivery first."
+
+      argument :term, :ci_string, allow_nil?: false
+
+      filter expr(matches?(term: ^arg(:term)))
+
+      prepare build(sort: [next_fulfillment_date: :asc], load: [:user, :product_variant, :next_delivery_date])
+    end
+
     read :delivering_on_closed_days do
       description "Active subscriptions with a delivery scheduled on a day the shop calendar closes in the next " <>
                     "8 weeks, soonest first, for Jennie to deliver anyway or move the order to another day once it's booked."

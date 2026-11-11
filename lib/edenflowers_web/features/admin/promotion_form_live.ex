@@ -328,10 +328,11 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
   defp history_label(:expiration_date), do: ~t"Expires"
   defp history_label(:usage_limit), do: ~t"Usage limit"
 
-  defp status(:scheduled), do: {~t"Scheduled", :neutral, "hero-calendar-days"}
-  defp status(:expired), do: {~t"Expired", :neutral, "hero-clock"}
-  defp status(:used_up), do: {~t"Used up", :neutral, "hero-minus-circle"}
-  defp status(:active), do: {~t"Active", :success, "hero-check"}
+  @doc "A promotion status's label, badge tone and icon."
+  def status(:scheduled), do: {~t"Scheduled", :neutral, "hero-calendar-days"}
+  def status(:expired), do: {~t"Expired", :neutral, "hero-clock"}
+  def status(:used_up), do: {~t"Used up", :neutral, "hero-minus-circle"}
+  def status(:active), do: {~t"Active", :success, "hero-check"}
 
   defp show(nil, _field, _locale), do: "—"
   defp show(value, :discount_rate, locale), do: Format.percentage(Decimal.new(value), locale)

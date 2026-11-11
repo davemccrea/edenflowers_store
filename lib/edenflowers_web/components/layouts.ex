@@ -422,8 +422,15 @@ defmodule EdenflowersWeb.Layouts do
 
   defp admin_search(assigns) do
     ~H"""
-    <form action={~p"/admin/search"} method="get" role="search" class={["relative", @class]}>
-      <label for={@id} class="sr-only">{dgettext("admin", "Search orders and customers")}</label>
+    <form
+      id={"#{@id}-form"}
+      action={~p"/admin/search"}
+      method="get"
+      role="search"
+      phx-submit="admin_search"
+      class={["relative", @class]}
+    >
+      <label for={@id} class="sr-only">{dgettext("admin", "Search")}</label>
       <.icon
         name="hero-magnifying-glass"
         class="text-base-content/50 pointer-events-none absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2"
@@ -434,7 +441,7 @@ defmodule EdenflowersWeb.Layouts do
         name="q"
         value={@value}
         data-admin-search
-        placeholder={dgettext("admin", "Search orders and customers…")}
+        placeholder={dgettext("admin", "Search…")}
         class="input w-full pl-9 lg:pr-10"
       />
       <kbd
@@ -1091,24 +1098,16 @@ defmodule EdenflowersWeb.Layouts do
               </a>
             </span>
           </div>
-          <div class="-mt-1.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs">
+          <div class="-mt-1.5 flex items-center justify-center gap-x-1 text-xs">
             <span>Built with</span>
-            <%= for {{name, url, logo}, index} <- Enum.with_index([
-                  {"Elixir", "https://elixir-lang.org", ~p"/images/logo-elixir.svg"},
-                  {"Phoenix", "https://www.phoenixframework.org", ~p"/images/logo-phoenix.svg"},
-                  {"Ash", "https://ash-hq.org", ~p"/images/logo-ash.svg"}
-                ]) do %>
-              <span :if={index > 0} aria-hidden="true">/</span>
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener"
-                class="text-base-content link-underline-hover inline-flex items-center gap-1"
-              >
-                <img src={logo} alt="" loading="lazy" class="h-3.5 w-3.5 object-contain" />
-                {name}
-              </a>
-            <% end %>
+            <a
+              href="https://ash-hq.org"
+              target="_blank"
+              rel="noopener"
+              class="text-base-content link-underline-hover inline-flex items-center gap-1"
+            >
+              Ash <img src={~p"/images/logo-ash.svg"} alt="" loading="lazy" class="h-3.5 w-3.5 object-contain" />
+            </a>
           </div>
         </div>
       </div>

@@ -37,6 +37,20 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
       prepare build(load: [:balance, :payment_overdue?, :course])
     end
 
+    read :search do
+      description "Admin search for confirmed or cancelled bookings by the name, email or receipt reference on " <>
+                    "them, newest first. Unfinished website checkouts are left out."
+
+      argument :term, :ci_string, allow_nil?: false
+
+      filter expr(
+               committed? and
+                 (contains(name, ^arg(:term)) or contains(email, ^arg(:term)) or contains(reference, ^arg(:term)))
+             )
+
+      prepare build(sort: [inserted_at: :desc], load: [:course, :cancelled?, :seats_held])
+    end
+
     create :add_manually do
       description "Jennie accepts a booking, including after online cutoff or over capacity. Holds places immediately, " <>
                     "with payment by link, at the course, or already received. Confirmation is optional. Bank " <>

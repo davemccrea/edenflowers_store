@@ -125,6 +125,7 @@ defmodule Edenflowers.Orders do
       define :reactivate_subscription, action: :reactivate
       define :get_subscription, action: :read, get_by: [:id]
       define :list_my_subscriptions, action: :mine
+      define :search_subscriptions, action: :search, args: [:term]
       define :list_failed_subscriptions, action: :payment_failed
       define :list_subscriptions_on_closed_days, action: :delivering_on_closed_days
       define :pause_subscription, action: :pause
