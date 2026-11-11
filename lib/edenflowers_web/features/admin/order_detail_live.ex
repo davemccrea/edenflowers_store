@@ -145,6 +145,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               :if={@order.can_mark_fulfilled?}
               type="button"
               phx-click="confirm_fulfillment"
+              aria-haspopup="dialog"
               variant="primary"
               size="sm"
             >

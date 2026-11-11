@@ -155,6 +155,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
               :if={!@editable && @invoice.sendable?}
               type="button"
               phx-click="open_email"
+              aria-haspopup="dialog"
               phx-value-kind="invoice"
               variant={if @invoice.sent_at && !@invoice.overdue?, do: "secondary", else: "primary"}
               size="sm"
@@ -624,7 +625,14 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                   variant="secondary"
                   size="sm"
                 >{~t"Download credit note"}</.button>
-                <.button type="button" phx-click="open_email" phx-value-kind="credit_note" variant="primary" size="sm">
+                <.button
+                  type="button"
+                  phx-click="open_email"
+                  phx-value-kind="credit_note"
+                  aria-haspopup="dialog"
+                  variant="primary"
+                  size="sm"
+                >
                   <.icon name="hero-envelope" class="h-4 w-4" /> {~t"Send credit note"}
                 </.button>
               </div>
