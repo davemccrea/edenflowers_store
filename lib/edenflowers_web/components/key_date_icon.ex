@@ -57,6 +57,8 @@ defmodule EdenflowersWeb.KeyDateIcon do
   # fi and sv translations carry the local name.
   defp label(:valentines_day), do: ~t"Valentine's Day"
   defp label(:womens_day), do: ~t"Women's Day"
+  defp label(:easter), do: ~t"Easter"
   defp label(:mothers_day), do: ~t"Mother's Day"
   defp label(:fathers_day), do: ~t"Father's Day"
+  defp label(:examenshelg), do: ~t"Graduation weekend"
 end

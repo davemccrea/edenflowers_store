@@ -1005,7 +1005,7 @@ msgstr "Vanliga frågor"
 msgid "Failed payments"
 msgstr "Misslyckade betalningar"
 
-#: lib/edenflowers_web/components/key_date_icon.ex:61
+#: lib/edenflowers_web/components/key_date_icon.ex:62
 #, elixir-autogen, elixir-format
 msgid "Father's Day"
 msgstr "Fars dag"
@@ -1674,7 +1674,7 @@ msgstr "MobilePay, kort, Apple Pay eller Google Pay. Prenumerationer kräver kor
 msgid "Mon–Fri: %{weekdays}"
 msgstr "Mån–Fre: %{weekdays}"
 
-#: lib/edenflowers_web/components/key_date_icon.ex:60
+#: lib/edenflowers_web/components/key_date_icon.ex:61
 #, elixir-autogen, elixir-format
 msgid "Mother's Day"
 msgstr "Mors dag"
@@ -4552,3 +4552,13 @@ msgstr "Logga ut från alla enheter"
 #, elixir-autogen, elixir-format
 msgid "You are now signed out on all your devices"
 msgstr "Du är nu utloggad från alla dina enheter"
+
+#: lib/edenflowers_web/components/key_date_icon.ex:60
+#, elixir-autogen, elixir-format
+msgid "Easter"
+msgstr "Påsk"
+
+#: lib/edenflowers_web/components/key_date_icon.ex:63
+#, elixir-autogen, elixir-format
+msgid "Graduation weekend"
+msgstr "Examenshelg"

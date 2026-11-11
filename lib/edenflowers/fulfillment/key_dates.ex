@@ -1,7 +1,7 @@
 defmodule Edenflowers.Fulfillment.KeyDates do
   @moduledoc """
-  Florist key dates calculated from fixed dates and weekday rules, shared by
-  the checkout and admin calendars. Labels and artwork live in
+  Florist key dates calculated from fixed dates, weekday rules and Easter,
+  shared by the checkout and admin calendars. Labels and artwork live in
   `EdenflowersWeb.KeyDateIcon`.
   """
 
@@ -11,8 +11,12 @@ defmodule Edenflowers.Fulfillment.KeyDates do
   @key_dates [
     %{key: :valentines_day, rule: {:fixed, 2, 14}},
     %{key: :womens_day, rule: {:fixed, 3, 8}},
+    %{key: :easter, rule: :easter},
     %{key: :mothers_day, rule: {:nth_weekday, 5, :sunday, 2}},
-    %{key: :fathers_day, rule: {:nth_weekday, 11, :sunday, 2}}
+    %{key: :fathers_day, rule: {:nth_weekday, 11, :sunday, 2}},
+    # A one-off date has no rule to repeat it, so add each year's date and
+    # remove the past ones.
+    %{key: :examenshelg, rule: {:one_off, ~D[2027-05-28]}}
   ]
 
   @typedoc "A florist key date materialised for a specific year — the shape returned by `for_year/1`."
@@ -20,7 +24,9 @@ defmodule Edenflowers.Fulfillment.KeyDates do
 
   @spec for_year(integer()) :: [key_date()]
   def for_year(year) do
-    Enum.map(@key_dates, fn %{key: key, rule: rule} -> %{key: key, date: materialise(rule, year)} end)
+    @key_dates
+    |> Enum.map(fn %{key: key, rule: rule} -> %{key: key, date: materialise(rule, year)} end)
+    |> Enum.reject(&is_nil(&1.date))
   end
 
   @doc "Key dates falling in the same month as `date`, in date order."
@@ -35,9 +41,9 @@ defmodule Edenflowers.Fulfillment.KeyDates do
   @doc "The key for `date`, or `nil` when it isn't a key date."
   @spec lookup_for(Date.t()) :: atom() | nil
   def lookup_for(%Date{} = date) do
-    Enum.find_value(@key_dates, fn %{key: key, rule: rule} ->
-      if materialise(rule, date.year) == date, do: key
-    end)
+    date.year
+    |> for_year()
+    |> Enum.find_value(fn %{key: key, date: known} -> if known == date, do: key end)
   end
 
   @doc "Whether `date` is one of the florist key dates."
@@ -59,6 +65,30 @@ defmodule Edenflowers.Fulfillment.KeyDates do
   end
 
   defp materialise({:fixed, month, day}, year), do: Date.new!(year, month, day)
+
+  # Easter Sunday is a moving feast; the anonymous Gregorian computus
+  # (Meeus/Jones/Butcher) turns the year into its date.
+  defp materialise(:easter, year) do
+    a = rem(year, 19)
+    b = div(year, 100)
+    c = rem(year, 100)
+    d = div(b, 4)
+    e = rem(b, 4)
+    f = div(b + 8, 25)
+    g = div(b - f + 1, 3)
+    h = rem(19 * a + b - d - g + 15, 30)
+    i = div(c, 4)
+    k = rem(c, 4)
+    l = rem(32 + 2 * e + 2 * i - h - k, 7)
+    m = div(a + 11 * h + 22 * l, 451)
+    month = div(h + l - 7 * m + 114, 31)
+    day = rem(h + l - 7 * m + 114, 31) + 1
+
+    Date.new!(year, month, day)
+  end
+
+  defp materialise({:one_off, %Date{year: one_off_year} = date}, year) when one_off_year == year, do: date
+  defp materialise({:one_off, %Date{}}, _year), do: nil
 
   defp materialise({:nth_weekday, month, weekday, n}, year) do
     target = Weekday.to_integer(weekday)
