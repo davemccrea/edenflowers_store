@@ -76,6 +76,7 @@ defmodule Edenflowers.Orders.GiftVoucherSaleTest do
       assert order.state == :placed
       assert order.fulfillment_status == :fulfilled
       assert order.vat_breakdown == []
+      assert_stores_live_grand_total(order)
       assert Decimal.eq?(voucher(order).remaining, 50)
       assert voucher(order).spendable?
     end

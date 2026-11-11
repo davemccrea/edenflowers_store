@@ -143,16 +143,52 @@ defmodule Generator do
           raise ArgumentError, "seed payments instead of setting calculated payment_status to #{inspect(status)}"
       end
 
+    opts = snapshot_promotion(opts)
+
     seed_generator(
       %Order{
         state: :contact_details,
         order_reference: StreamData.repeatedly(fn -> "T#{System.unique_integer([:positive])}" end),
-        vat_breakdown: if(opts[:state] == :placed, do: [], else: nil)
+        vat_breakdown: if(opts[:state] == :placed, do: [], else: nil),
+        stored_grand_total: if(opts[:state] == :placed, do: 0, else: nil)
       },
       overrides: opts,
-      authorize?: false
+      authorize?: false,
+      after_action: &store_live_grand_total/1
     )
   end
+
+  # An order takes its promotion's discount rate with it, as ApplyPromotion does.
+  defp snapshot_promotion(opts) do
+    case opts[:promotion_id] do
+      nil ->
+        opts
+
+      promotion_id ->
+        Keyword.put_new_lazy(opts, :discount_rate, fn ->
+          Ash.get!(Edenflowers.Pricing.Promotion, promotion_id, authorize?: false).discount_rate
+        end)
+    end
+  end
+
+  @doc "Places a seeded cart directly, storing its grand total as placing it would."
+  def seed_placed(order, attrs \\ %{}) do
+    order = Ash.load!(order, :grand_total, authorize?: false, reuse_values?: false)
+    Ash.Seed.update!(order, Map.merge(%{state: :placed, stored_grand_total: order.grand_total}, attrs))
+  end
+
+  # Seeding skips Changes.SnapshotVatBreakdown, so placed orders store the
+  # live total here, again each time a line is added.
+  defp store_live_grand_total(%Order{state: :placed} = order) do
+    order = Ash.load!(order, :grand_total, authorize?: false, reuse_values?: false)
+
+    # Left alone when it already matches, so an updated_at a test set stays put.
+    if Decimal.eq?(order.stored_grand_total, order.grand_total),
+      do: order,
+      else: Ash.Seed.update!(order, %{stored_grand_total: order.grand_total})
+  end
+
+  defp store_live_grand_total(order), do: order
 
   @doc "Records money received for an order or course booking, as a Stripe payment unless `method:` says otherwise."
   def payment(opts \\ []) do
@@ -328,7 +364,11 @@ defmodule Generator do
         bow_colour: nil
       },
       overrides: opts,
-      authorize?: false
+      authorize?: false,
+      after_action: fn line_item ->
+        line_item |> Ash.load!(:order, authorize?: false) |> Map.fetch!(:order) |> store_live_grand_total()
+        line_item
+      end
     )
   end
 

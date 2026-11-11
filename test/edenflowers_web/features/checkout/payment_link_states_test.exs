@@ -355,7 +355,9 @@ defmodule EdenflowersWeb.PaymentLinkStatesTest do
               Ash.Seed.update!(line, %{unit_price: Decimal.new("0")})
             end
 
-            Ash.Seed.update!(record, %{quoted_fulfillment_fee: Decimal.new("0")})
+            record
+            |> Ash.Seed.update!(%{quoted_fulfillment_fee: Decimal.new("0")})
+            |> Edenflowers.Orders.refresh_vat_breakdown!(authorize?: false)
         end
 
       {:ok, view, _html} = live(ctx.conn, PaymentLink.path_for(record))

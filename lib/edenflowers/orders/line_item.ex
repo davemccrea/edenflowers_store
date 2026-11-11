@@ -194,6 +194,10 @@ defmodule Edenflowers.Orders.LineItem do
     prepare build(load: [:subtotal], sort: [inserted_at: :asc])
   end
 
+  changes do
+    change Changes.RefreshPlacedOrder, on: [:create, :update, :destroy]
+  end
+
   attributes do
     uuid_primary_key :id
     attribute :quantity, :integer, allow_nil?: false, default: 1, constraints: [min: 1]
@@ -266,13 +270,8 @@ defmodule Edenflowers.Orders.LineItem do
 
     calculate :total,
               :decimal,
-              expr(
-                if(
-                  promotion_applied?,
-                  do: subtotal - discount,
-                  else: subtotal
-                )
-              ) do
+              # discount is already 0 when the promotion doesn't apply.
+              expr(subtotal - discount) do
       description "What the line costs in euros, VAT included, after any promotion."
     end
 

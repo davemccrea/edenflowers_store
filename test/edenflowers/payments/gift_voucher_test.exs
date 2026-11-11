@@ -98,6 +98,7 @@ defmodule Edenflowers.Payments.GiftVoucherTest do
                Orders.prepare_checkout_payment(order.id, actor: nil)
 
       assert Decimal.eq?(remaining(voucher), Decimal.sub(500, order.grand_total))
+      assert_stores_live_grand_total(order)
       assert [_job] = all_enqueued(worker: SendReceiptEmail, args: %{"primary_key" => %{"id" => order.id}})
     end
 
@@ -284,6 +285,7 @@ defmodule Edenflowers.Payments.GiftVoucherTest do
       assert sale.fulfillment_status == :fulfilled
       assert sale.payment_terms == :on_fulfillment
       assert Decimal.eq?(sale.balance, 35)
+      assert_stores_live_grand_total(sale)
       assert Decimal.eq?(sale.gift_voucher_line.gift_voucher.amount, 35)
 
       Oban.drain_queue(queue: :default)

@@ -127,6 +127,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert order.user_id == nil
       assert order.id in Enum.map(Orders.list_orders_to_fulfil!(actor: ctx.admin), & &1.id)
       assert Decimal.equal?(order.grand_total, "134.00")
+      assert_stores_live_grand_total(order)
       assert Enum.map(order.line_items, & &1.product_name) == ["Spring Bouquet", "Funeral spray"]
       assert [%{rate: rate}] = order.vat_breakdown
       assert Decimal.equal?(rate, "0.255")
@@ -525,6 +526,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       assert [%{quantity: 2}] = order.line_items
       assert Decimal.equal?(order.grand_total, "98.00")
+      assert_stores_live_grand_total(order)
       assert [%{gross: gross}] = order.vat_breakdown
       assert Decimal.equal?(gross, "98.00")
     end
