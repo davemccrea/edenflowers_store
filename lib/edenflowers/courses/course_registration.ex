@@ -303,7 +303,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
                   Decimal.positive?(record.balance) and Date.compare(record.course.date, overdue_before) == :lt
                 end)
               end do
-      load [:balance, :course]
+      load [:balance, course: [:date]]
       description "Whether a booking still has a balance more than 14 days after the course."
     end
 

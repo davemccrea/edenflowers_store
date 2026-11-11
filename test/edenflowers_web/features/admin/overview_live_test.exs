@@ -412,6 +412,19 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       assert has_element?(view, "#still-owed", "177,00 €")
     end
 
+    test "flags a booking still unpaid two weeks after its course", %{conn: conn} do
+      today = Edenflowers.ShopTime.today()
+
+      course =
+        generate(course(name: "Spring posies", date: Date.add(today, -15), register_before: Date.add(today, -20)))
+
+      generate(course_registration(course_id: course.id, status: :confirmed, name: "Birgitta"))
+
+      {:ok, view, _html} = live(conn, ~p"/admin")
+
+      assert has_element?(view, "#attention-payment-overdue", "Birgitta")
+    end
+
     test "refreshes payments and refunds made while the Overview is open", %{conn: conn} do
       order = placed_order(payment_intent_id: "pi_link", fulfillment_date: Edenflowers.ShopTime.today())
 
