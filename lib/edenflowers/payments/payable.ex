@@ -285,15 +285,39 @@ defmodule Edenflowers.Payments.Payable do
                     "its Balance, but is settled."
     end
 
-    calculate :to_collect?, :boolean, Calculations.ToCollect do
+    # The three below run in Elixir from loaded values, so the SQL doesn't
+    # inline another copy of the Balance chain (ADR 0007).
+
+    # `not settled? and balance > 0`, restated: keep in step with `settled?`.
+    calculate :to_collect?,
+              :boolean,
+              fn records, _context ->
+                Enum.map(records, &(not &1.refunded? and Decimal.positive?(&1.balance)))
+              end do
+      load [:balance, :refunded?]
       description "Whether money is still owed by the customer."
     end
 
-    calculate :to_refund?, :boolean, Calculations.ToRefund do
+    # `not settled? and balance < 0`, restated: keep in step with `settled?`.
+    calculate :to_refund?,
+              :boolean,
+              fn records, _context ->
+                Enum.map(records, &(not &1.refunded? and Decimal.negative?(&1.balance)))
+              end do
+      load [:balance, :refunded?]
       description "Whether money is owed back to the customer."
     end
 
-    calculate :refundable?, :boolean, Calculations.Refundable do
+    calculate :refundable?,
+              :boolean,
+              fn records, _context ->
+                Enum.map(records, fn record ->
+                  record.committed? and Decimal.lte?(record.balance, 0) and
+                    Decimal.positive?(record.amount_held) and not record.refunded_only_by_cancelling?
+                end)
+              end do
+      load [:committed?, :balance, :amount_held, :refunded_only_by_cancelling?]
+
       description "Whether Jennie can hand money back now: committed, nothing left to collect, money still " <>
                     "held, and not something refunded only by cancelling it. Validations.Refundable applies the " <>
                     "same rules."

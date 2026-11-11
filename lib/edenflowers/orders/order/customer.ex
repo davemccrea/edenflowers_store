@@ -56,7 +56,24 @@ defmodule Edenflowers.Orders.Order.Customer do
   calculations do
     calculate :payment_instruction,
               :atom,
-              Edenflowers.Orders.Order.Calculations.PaymentInstruction do
+              # Runs in Elixir from loaded values, so the SQL doesn't inline
+              # another copy of the Balance chain (ADR 0007).
+              fn records, _context ->
+                Enum.map(records, fn record ->
+                  due_at_fulfillment? =
+                    record.payment_terms == :on_fulfillment and record.fulfillment_status in [:pending, :ready]
+
+                  cond do
+                    not record.unpaid? -> nil
+                    record.payment_link_open? -> :pay_now
+                    record.payment_terms == :invoice -> :invoice
+                    due_at_fulfillment? and record.fulfillment_method == :delivery -> :on_delivery
+                    due_at_fulfillment? -> :at_collection
+                    true -> nil
+                  end
+                end)
+              end do
+      load [:unpaid?, :payment_link_open?]
       constraints one_of: [:pay_now, :invoice, :on_delivery, :at_collection]
 
       description "How the customer should pay an unpaid order, following its payment link or agreed terms. " <>

@@ -39,6 +39,8 @@ defmodule Edenflowers.Orders.Order do
   alias Edenflowers.Orders.Calculations.Vat
   alias Edenflowers.Orders.Order.Calculations
   alias Edenflowers.Orders.Subscription
+  alias Edenflowers.Payments.Payment
+  alias Edenflowers.ShopTime
 
   @checkout_states [:contact_details, :gift_options, :delivery, :payment]
 
@@ -494,7 +496,21 @@ defmodule Edenflowers.Orders.Order do
   end
 
   calculations do
-    calculate :payment_overdue?, :boolean, Calculations.PaymentOverdue do
+    # The calculations here written as `fn` run in Elixir from the values they
+    # `load`, so the SQL doesn't inline another copy of the Balance or payment
+    # status chain (ADR 0007).
+    calculate :payment_overdue?,
+              :boolean,
+              fn records, _context ->
+                overdue_before = Date.add(ShopTime.today(), -Payment.overdue_after_days())
+
+                Enum.map(records, fn record ->
+                  record.fulfillment_status == :fulfilled and Decimal.positive?(record.balance) and
+                    not is_nil(record.fulfillment_date) and
+                    Date.compare(record.fulfillment_date, overdue_before) == :lt
+                end)
+              end do
+      load [:balance]
       description "Whether a fulfilled order still has a balance more than 14 days after fulfillment."
     end
 
@@ -589,7 +605,17 @@ defmodule Edenflowers.Orders.Order do
                     "invoice, edits must keep its amount per VAT rate, date and terms, and the order can't be cancelled."
     end
 
-    calculate :invoiceable?, :boolean, Calculations.Invoiceable do
+    calculate :invoiceable?,
+              :boolean,
+              fn records, _context ->
+                Enum.map(records, fn record ->
+                  record.state == :placed and record.origin == :custom and record.payment_terms == :invoice and
+                    Decimal.equal?(record.amount_held, 0) and Decimal.positive?(record.balance) and
+                    not record.invoiced?
+                end)
+              end do
+      load [:amount_held, :balance, :invoiced?]
+
       description "Whether Jennie can invoice it: a Custom Order on invoice terms with nothing paid, a Balance " <>
                     "to collect and no invoice already covering it. A cancelled one is invoiced for its " <>
                     "cancellation charge. The admin offers Create invoice from it and issuing a linked invoice " <>
@@ -698,7 +724,16 @@ defmodule Edenflowers.Orders.Order do
                     "the flowers, so only a gift still to deliver, not one fulfilled or cancelled."
     end
 
-    calculate :pass_it_on_card_removable?, :boolean, Calculations.PassItOnCardRemovable do
+    calculate :pass_it_on_card_removable?,
+              :boolean,
+              fn records, _context ->
+                Enum.map(records, fn record ->
+                  record.pass_it_on_card_changeable? and
+                    match?(%{gift_order_linkable?: true}, record.pass_it_on_card)
+                end)
+              end do
+      load [:pass_it_on_card_changeable?, pass_it_on_card: [:gift_order_linkable?]]
+
       description "Whether Jennie can remove the gift's pass-it-on card, if she typed the wrong code: the gift is " <>
                     "still to deliver and its recipient hasn't opened the card."
     end
@@ -708,7 +743,15 @@ defmodule Edenflowers.Orders.Order do
                     "buy another."
     end
 
-    calculate :payment_emailable?, :boolean, Calculations.PaymentEmailable do
+    calculate :payment_emailable?,
+              :boolean,
+              fn records, _context ->
+                Enum.map(records, fn record ->
+                  not record.gift_voucher_sale? or (record.receipt_available? and not record.cancelled?)
+                end)
+              end do
+      load [:receipt_available?, :cancelled?, :gift_voucher_sale?]
+
       description "Whether a payment on it can be emailed. A Gift voucher sale's only once it's paid in full, " <>
                     "since the email carries the voucher, so a part payment in cash beside one by card waits " <>
                     "for the rest."
@@ -795,7 +838,16 @@ defmodule Edenflowers.Orders.Order do
       argument :term, :ci_string, allow_nil?: false
     end
 
-    calculate :payment_reminder_sendable?, :boolean, Calculations.PaymentReminderSendable do
+    calculate :payment_reminder_sendable?,
+              :boolean,
+              fn records, _context ->
+                Enum.map(records, fn record ->
+                  record.fulfillment_status != :cancelled and not is_nil(record.customer_email) and
+                    record.to_collect? and not record.gift_voucher_sale?
+                end)
+              end do
+      load [:to_collect?, :gift_voucher_sale?]
+
       description "Whether Jennie can send a Payment reminder: a Balance to collect, an email to send it to, " <>
                     "on a purchase that has not been cancelled. Never a Gift voucher sale, paid at the counter " <>
                     "when Jennie sells it or at checkout online."
@@ -819,7 +871,12 @@ defmodule Edenflowers.Orders.Order do
                     "invoice's. Nil for a cancelled order that never took any money."
     end
 
-    calculate :paid?, :boolean, Calculations.Paid do
+    calculate :paid?,
+              :boolean,
+              fn records, _context ->
+                Enum.map(records, &(&1.committed? and &1.payment_status == :paid and not &1.cancelled?))
+              end do
+      load [:committed?, :payment_status, :cancelled?]
       description "A placed, uncancelled order with nothing left to pay. The payment link page shows it as paid."
     end
 
@@ -850,11 +907,23 @@ defmodule Edenflowers.Orders.Order do
                     "with an email address."
     end
 
-    calculate :receipt_available?, :boolean, Calculations.ReceiptAvailable do
+    calculate :receipt_available?,
+              :boolean,
+              fn records, _context -> Enum.map(records, &(&1.state == :placed and &1.payment_status == :paid)) end do
+      load [:payment_status]
       description "Placed and paid. A Custom Order is placed before it is paid, and has no receipt until it is."
     end
 
-    calculate :unpaid?, :boolean, Calculations.Unpaid do
+    # `state == :placed and payable?`, restated: keep in step with `payable?` in Payable.
+    calculate :unpaid?,
+              :boolean,
+              fn records, _context ->
+                Enum.map(records, fn record ->
+                  record.state == :placed and Decimal.positive?(record.balance) and not record.refunded?
+                end)
+              end do
+      load [:balance, :refunded?]
+
       description "Money still owed on a placed order. A fulfilled order can still be unpaid when the customer " <>
                     "pays afterwards, and an Occurrence whose card was refused is placed unpaid."
     end

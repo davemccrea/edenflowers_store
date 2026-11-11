@@ -23,7 +23,19 @@ defmodule Edenflowers.Courses.CourseRegistration.Customer do
   calculations do
     calculate :payment_instruction,
               :atom,
-              Edenflowers.Courses.Calculations.RegistrationPaymentInstruction do
+              # Runs in Elixir from the loaded Balance, so the SQL doesn't inline
+              # another copy of the Balance chain (ADR 0007).
+              fn records, _context ->
+                Enum.map(records, fn record ->
+                  cond do
+                    Decimal.lte?(record.balance, 0) -> nil
+                    record.payment_terms == :invoice -> :invoice
+                    record.payment_link_open? -> :pay_now
+                    true -> :at_course
+                  end
+                end)
+              end do
+      load [:balance, :payment_link_open?]
       constraints one_of: [:invoice, :pay_now, :at_course]
 
       description "How the customer should pay the booking's remaining balance: by invoice, an open payment " <>
