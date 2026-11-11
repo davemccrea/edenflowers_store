@@ -192,6 +192,7 @@ defmodule Edenflowers.Fulfillment.ShopCalendar do
                   _ -> [:cream]
                 end)
               end,
+              load: [:christmas_vouchers_online],
               description:
                 "The Gift voucher styles customers can choose online: Signature always, and the " <>
                   "Christmas ones while `christmas_vouchers_online` is on. The voucher page offers these, and " <>

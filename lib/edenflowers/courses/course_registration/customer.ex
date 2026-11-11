@@ -35,7 +35,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Customer do
                   end
                 end)
               end do
-      load [:balance, :payment_link_open?]
+      load [:payment_terms, :balance, :payment_link_open?]
       constraints one_of: [:invoice, :pay_now, :at_course]
 
       description "How the customer should pay the booking's remaining balance: by invoice, an open payment " <>
