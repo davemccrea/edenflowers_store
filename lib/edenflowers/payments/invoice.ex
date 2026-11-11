@@ -97,6 +97,7 @@ defmodule Edenflowers.Payments.Invoice do
 
       filter expr(matches?(term: ^arg(:term)))
 
+      prepare Edenflowers.Preparations.RankByMatch
       prepare build(sort: [inserted_at: :desc], load: [:buyer, :status, :overdue?])
     end
 
@@ -620,6 +621,24 @@ defmodule Edenflowers.Payments.Invoice do
                     "cancelled invoices out."
 
       argument :date, :date, allow_nil?: false
+    end
+
+    calculate :match_rank,
+              :integer,
+              expr(
+                fragment(
+                  "least(?, ?, ?, ?)",
+                  match_rank(buyer_name, ^arg(:term)),
+                  match_rank(company_name, ^arg(:term)),
+                  match_rank(buyer_email, ^arg(:term)),
+                  match_rank(type(number, :string), ^arg(:term))
+                )
+              ) do
+      description "How closely the admin search term matches what a result row shows (see `match_rank`): " <>
+                    "0 exact, 1 at the start of a word, 2 elsewhere, 3 for a match in a field the row " <>
+                    "doesn't show. The search sorts by it."
+
+      argument :term, :ci_string, allow_nil?: false
     end
 
     calculate :matches?,

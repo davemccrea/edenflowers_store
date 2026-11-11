@@ -357,7 +357,8 @@ defmodule Edenflowers.Payments.GiftVoucherTest do
       sale = Ash.load!(sold, [line_item: :order], authorize?: false).line_item.order
       typed = sold.code |> GiftVoucher.format_code() |> String.downcase()
 
-      assert [%{id: id}] = Orders.search_orders!(typed, actor: admin)
+      # The whole code is as exact as a search gets, so the order ranks with exact matches.
+      assert [%{id: id, match_rank: 0}] = Orders.search_orders!(typed, actor: admin)
       assert id == sale.id
       assert Orders.search_orders!(String.slice(sold.code, 0, 4), actor: admin) == []
     end

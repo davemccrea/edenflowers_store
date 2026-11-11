@@ -844,6 +844,43 @@ defmodule Edenflowers.Orders.Order do
                     "collected. A past date Jennie hasn't marked fulfilled stays scheduled."
     end
 
+    calculate :sold_voucher_with_code?,
+              :boolean,
+              expr(
+                exists(
+                  line_items.gift_voucher,
+                  code ==
+                    fragment(
+                      "translate(upper(regexp_replace(?, '[^0-9A-Za-z]', '', 'g')), 'OIL', '011')",
+                      ^arg(:term)
+                    )
+                )
+              ) do
+      description "Whether the term is the whole code of a Gift voucher the order sold, typed with or without its spaces."
+      argument :term, :ci_string, allow_nil?: false
+    end
+
+    calculate :match_rank,
+              :integer,
+              expr(
+                if sold_voucher_with_code?(term: ^arg(:term)) do
+                  0
+                else
+                  fragment(
+                    "least(?, ?, ?)",
+                    match_rank(customer_name, ^arg(:term)),
+                    match_rank(order_reference, ^arg(:term)),
+                    match_rank(recipient_name, ^arg(:term))
+                  )
+                end
+              ) do
+      description "How closely the admin search term matches what a result row shows (see `match_rank`): " <>
+                    "0 exact, 1 at the start of a word, 2 elsewhere, 3 for a match in a field the row " <>
+                    "doesn't show. The whole code of a Gift voucher it sold counts as exact. The search sorts by it."
+
+      argument :term, :ci_string, allow_nil?: false
+    end
+
     calculate :matches?,
               :boolean,
               expr(
@@ -851,14 +888,7 @@ defmodule Edenflowers.Orders.Order do
                   contains(customer_phone_number, ^arg(:term)) or contains(customer_email, ^arg(:term)) or
                   contains(customer_instagram, ^arg(:term)) or
                   contains(recipient_name, ^arg(:term)) or contains(delivery_address, ^arg(:term)) or
-                  exists(
-                    line_items.gift_voucher,
-                    code ==
-                      fragment(
-                        "translate(upper(regexp_replace(?, '[^0-9A-Za-z]', '', 'g')), 'OIL', '011')",
-                        ^arg(:term)
-                      )
-                  )
+                  sold_voucher_with_code?(term: ^arg(:term))
               ) do
       description "The admin orders search, case-insensitive: whether the term appears in the Customer's name, " <>
                     "email, phone or Instagram, the reference, the Recipient's name or the delivery address, or " <>

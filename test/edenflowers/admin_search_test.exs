@@ -30,6 +30,32 @@ defmodule Edenflowers.AdminSearchTest do
       end
     end
 
+    test "puts the closest match first, then the newest", %{admin: admin} do
+      anywhere = placed(customer_name: "Johanna Lind", ordered_at: ~U[2026-03-03 10:00:00Z])
+      word_start = placed(customer_name: "Maria Annala", ordered_at: ~U[2026-03-02 10:00:00Z])
+      exact = placed(customer_name: "Eva Berg", order_reference: "ANNA", ordered_at: ~U[2026-03-01 10:00:00Z])
+
+      hidden_field =
+        placed(customer_name: "Eva Berg", delivery_address: "Annagatan 1", ordered_at: ~U[2026-03-04 10:00:00Z])
+
+      assert Enum.map(Orders.search_orders!("anna", actor: admin), & &1.id) ==
+               [exact.id, word_start.id, anywhere.id, hidden_field.id]
+    end
+
+    test "a hyphenated name's second part counts as the start of a word", %{admin: admin} do
+      inside = placed(customer_name: "Sakarina Holm", ordered_at: ~U[2026-03-02 10:00:00Z])
+      double_name = placed(customer_name: "Anna-Karin Berg", ordered_at: ~U[2026-03-01 10:00:00Z])
+
+      assert Enum.map(Orders.search_orders!("karin", actor: admin), & &1.id) == [double_name.id, inside.id]
+    end
+
+    test "an email match ranks an order last, since its row doesn't show the email", %{admin: admin} do
+      by_email = placed(customer_email: "ada@example.com", ordered_at: ~U[2026-03-02 10:00:00Z])
+      by_name = placed(customer_name: "Nada Berg", ordered_at: ~U[2026-03-01 10:00:00Z])
+
+      assert Enum.map(Orders.search_orders!("ada", actor: admin), & &1.id) == [by_name.id, by_email.id]
+    end
+
     test "finds only placed orders", %{admin: admin} do
       generate(order(customer_name: "Ada Lovelace"))
 

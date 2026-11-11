@@ -96,8 +96,12 @@ defmodule EdenflowersWeb.Admin.SearchLive do
   attr :today, Date, required: true
 
   defp results(assigns) do
-    found = for section <- @sections, assigns.results[section] != [], do: {section, assigns.results[section]}
-    assigns = assigns |> assign(assigns.results) |> assign(found: found, found?: found != [])
+    # The kind holding the closest match comes first; equally close kinds keep their usual order.
+    found =
+      for(section <- @sections, assigns.results[section] != [], do: {section, assigns.results[section]})
+      |> Enum.sort_by(fn {_section, rows} -> rows |> Enum.map(& &1.match_rank) |> Enum.min() end)
+
+    assigns = assign(assigns, found: found, found?: found != [])
 
     ~H"""
     <.widget
@@ -122,130 +126,175 @@ defmodule EdenflowersWeb.Admin.SearchLive do
     </nav>
 
     <div :if={@found?} class="flex flex-col gap-6">
-      <.result_box section={:orders} rows={@orders} limit={@limit} href={fn order -> ~p"/admin/orders/#{order.id}" end}>
-        <:who :let={order}>
-          <span class={title_class()}><.match text={order.customer_name || ~t"Unnamed customer"} term={@term} /></span>
-          <span class={detail_class()}>
-            <.match text={order.order_reference} term={@term} />
-            <span :if={order.gift and order.recipient_name}>
-              · <.icon name="hero-gift" class="align-[-0.15em] h-3.5 w-3.5" />
-              <span class="sr-only">{~t"Gift for"}</span>
-              <.match text={order.recipient_name} term={@term} />
-            </span>
-          </span>
-        </:who>
-        <:facts :let={order}>{facts(order_facts(order, @locale))}</:facts>
-        <:status :let={order}>
-          <.fulfillment_status_badge status={order.fulfillment_status} method={order.fulfillment_method} />
-          <.order_payment_badge order={order} locale={@locale} />
-        </:status>
-        <:see_all navigate={~p"/admin/orders?#{%{search: @term}}"}>{~t"See all matching orders"}</:see_all>
-      </.result_box>
-
-      <.result_box
-        section={:customers}
-        rows={@customers}
+      <.section
+        :for={{section, rows} <- @found}
+        section={section}
+        rows={rows}
+        term={@term}
         limit={@limit}
-        href={fn customer -> ~p"/admin/customers/#{customer.id}" end}
-      >
-        <:who :let={customer}>
-          <span class={title_class()}><.match text={customer.name || to_string(customer.email)} term={@term} /></span>
-          <span :if={customer.name} class={detail_class()}>
-            <.match text={to_string(customer.email)} term={@term} />
-          </span>
-        </:who>
-        <:facts :let={customer}>{facts(customer_facts(customer, @locale))}</:facts>
-        <:see_all navigate={~p"/admin/customers?#{%{search: @term}}"}>{~t"See all matching customers"}</:see_all>
-      </.result_box>
-
-      <.result_box
-        section={:subscriptions}
-        rows={@subscriptions}
-        limit={@limit}
-        href={fn subscription -> ~p"/admin/subscriptions/#{subscription.id}" end}
-      >
-        <:who :let={subscription}>
-          <span class={title_class()}><.match text={subscription.user.name || ~t"Unnamed customer"} term={@term} /></span>
-          <span class={detail_class()}><.match text={to_string(subscription.user.email)} term={@term} /></span>
-        </:who>
-        <:facts :let={subscription}>{facts(subscription_facts(subscription, @locale))}</:facts>
-        <:status :let={subscription}><.subscription_state_badge state={subscription.state} /></:status>
-        <:see_all navigate={~p"/admin/subscriptions?#{%{search: @term}}"}>
-          {~t"See all matching subscriptions"}
-        </:see_all>
-      </.result_box>
-
-      <.result_box
-        section={:invoices}
-        rows={@invoices}
-        limit={@limit}
-        href={fn invoice -> ~p"/admin/invoices/#{invoice.id}" end}
-      >
-        <:who :let={invoice}>
-          <span class={title_class()}><.match text={invoice.buyer || ~t"Customer details needed"} term={@term} /></span>
-          <span :if={invoice.number} class={detail_class()}>
-            <.match text={to_string(invoice.number)} term={@term} />
-          </span>
-        </:who>
-        <:facts :let={invoice}>{facts(invoice_facts(invoice, @locale))}</:facts>
-        <:status :let={invoice}>
-          <.badge tone={InvoicesLive.status_tone(invoice.status, invoice.overdue?)}>
-            {InvoicesLive.status_label(invoice.status, invoice.overdue?)}
-          </.badge>
-        </:status>
-        <:see_all navigate={~p"/admin/invoices?#{%{search: @term}}"}>{~t"See all matching invoices"}</:see_all>
-      </.result_box>
-
-      <.result_box
-        section={:bookings}
-        rows={@bookings}
-        limit={@limit}
-        href={fn booking -> ~p"/admin/courses/#{booking.course_id}?#{%{booking: booking.id}}" end}
-      >
-        <:who :let={booking}>
-          <span class={title_class()}><.match text={booking.name} term={@term} /></span>
-          <span class={detail_class()}><.match text={to_string(booking.email)} term={@term} /></span>
-        </:who>
-        <:facts :let={booking}>{facts(booking_facts(booking, @locale))}</:facts>
-        <:status :let={booking}>
-          <.badge :if={booking.cancelled?} tone={:neutral}>{dpgettext("admin", "booking", "Cancelled")}</.badge>
-        </:status>
-      </.result_box>
-
-      <.result_box section={:courses} rows={@courses} limit={@limit} href={fn course -> ~p"/admin/courses/#{course.id}" end}>
-        <:who :let={course}>
-          <span class={title_class()}><.match text={Translations.translate(course).name} term={@term} /></span>
-          <span class={detail_class()}>
-            {Format.date(course.date, @locale)} · {Format.time(course.start_time, @locale)}–{Format.time(
-              course.end_time,
-              @locale
-            )}
-          </span>
-        </:who>
-        <:facts :let={course}>
-          {~t"#{booked = course.seats_booked || 0} of #{total = course.total_places} seats booked"}
-        </:facts>
-        <:status :let={course}>
-          <.badge :if={course.draft} tone={:neutral}>{~t"Draft"}</.badge>
-          <.badge :if={Date.before?(course.date, @today)} tone={:tag}>{dpgettext("admin", "course", "Past")}</.badge>
-        </:status>
-      </.result_box>
-
-      <.result_box
-        section={:promotions}
-        rows={@promotions}
-        limit={@limit}
-        href={fn promotion -> ~p"/admin/promotions/#{promotion.id}" end}
-      >
-        <:who :let={promotion}>
-          <span class={title_class()}><.match text={to_string(promotion.code)} term={@term} /></span>
-          <span class={detail_class()}>{promotion.name}</span>
-        </:who>
-        <:facts :let={promotion}>{facts(promotion_facts(promotion, @locale))}</:facts>
-        <:status :let={promotion}><.promotion_status status={promotion.status} /></:status>
-        <:see_all navigate={~p"/admin/promotions?#{%{search: @term}}"}>{~t"See all matching promotions"}</:see_all>
-      </.result_box>
+        locale={@locale}
+        today={@today}
+      />
     </div>
+    """
+  end
+
+  attr :section, :atom, required: true
+  attr :rows, :list, required: true
+  attr :term, :string, required: true
+  attr :limit, :integer, required: true
+  attr :locale, :string, required: true
+  attr :today, Date, required: true
+
+  defp section(%{section: :orders} = assigns) do
+    ~H"""
+    <.result_box section={:orders} rows={@rows} limit={@limit} href={fn order -> ~p"/admin/orders/#{order.id}" end}>
+      <:who :let={order}>
+        <span class={title_class()}><.match text={order.customer_name || ~t"Unnamed customer"} term={@term} /></span>
+        <span class={detail_class()}>
+          <.match text={order.order_reference} term={@term} />
+          <span :if={order.gift and order.recipient_name}>
+            · <.icon name="hero-gift" class="align-[-0.15em] h-3.5 w-3.5" />
+            <span class="sr-only">{~t"Gift for"}</span>
+            <.match text={order.recipient_name} term={@term} />
+          </span>
+        </span>
+      </:who>
+      <:facts :let={order}>{facts(order_facts(order, @locale))}</:facts>
+      <:status :let={order}>
+        <.fulfillment_status_badge status={order.fulfillment_status} method={order.fulfillment_method} />
+        <.order_payment_badge order={order} locale={@locale} />
+      </:status>
+      <:see_all navigate={~p"/admin/orders?#{%{search: @term}}"}>{~t"See all matching orders"}</:see_all>
+    </.result_box>
+    """
+  end
+
+  defp section(%{section: :customers} = assigns) do
+    ~H"""
+    <.result_box
+      section={:customers}
+      rows={@rows}
+      limit={@limit}
+      href={fn customer -> ~p"/admin/customers/#{customer.id}" end}
+    >
+      <:who :let={customer}>
+        <span class={title_class()}><.match text={customer.name || to_string(customer.email)} term={@term} /></span>
+        <span :if={customer.name} class={detail_class()}>
+          <.match text={to_string(customer.email)} term={@term} />
+        </span>
+      </:who>
+      <:facts :let={customer}>{facts(customer_facts(customer, @locale))}</:facts>
+      <:see_all navigate={~p"/admin/customers?#{%{search: @term}}"}>{~t"See all matching customers"}</:see_all>
+    </.result_box>
+    """
+  end
+
+  defp section(%{section: :subscriptions} = assigns) do
+    ~H"""
+    <.result_box
+      section={:subscriptions}
+      rows={@rows}
+      limit={@limit}
+      href={fn subscription -> ~p"/admin/subscriptions/#{subscription.id}" end}
+    >
+      <:who :let={subscription}>
+        <span class={title_class()}><.match text={subscription.user.name || ~t"Unnamed customer"} term={@term} /></span>
+        <span class={detail_class()}><.match text={to_string(subscription.user.email)} term={@term} /></span>
+      </:who>
+      <:facts :let={subscription}>{facts(subscription_facts(subscription, @locale))}</:facts>
+      <:status :let={subscription}><.subscription_state_badge state={subscription.state} /></:status>
+      <:see_all navigate={~p"/admin/subscriptions?#{%{search: @term}}"}>
+        {~t"See all matching subscriptions"}
+      </:see_all>
+    </.result_box>
+    """
+  end
+
+  defp section(%{section: :invoices} = assigns) do
+    ~H"""
+    <.result_box
+      section={:invoices}
+      rows={@rows}
+      limit={@limit}
+      href={fn invoice -> ~p"/admin/invoices/#{invoice.id}" end}
+    >
+      <:who :let={invoice}>
+        <span class={title_class()}><.match text={invoice.buyer || ~t"Customer details needed"} term={@term} /></span>
+        <span :if={invoice.number} class={detail_class()}>
+          <.match text={to_string(invoice.number)} term={@term} />
+        </span>
+      </:who>
+      <:facts :let={invoice}>{facts(invoice_facts(invoice, @locale))}</:facts>
+      <:status :let={invoice}>
+        <.badge tone={InvoicesLive.status_tone(invoice.status, invoice.overdue?)}>
+          {InvoicesLive.status_label(invoice.status, invoice.overdue?)}
+        </.badge>
+      </:status>
+      <:see_all navigate={~p"/admin/invoices?#{%{search: @term}}"}>{~t"See all matching invoices"}</:see_all>
+    </.result_box>
+    """
+  end
+
+  defp section(%{section: :bookings} = assigns) do
+    ~H"""
+    <.result_box
+      section={:bookings}
+      rows={@rows}
+      limit={@limit}
+      href={fn booking -> ~p"/admin/courses/#{booking.course_id}?#{%{booking: booking.id}}" end}
+    >
+      <:who :let={booking}>
+        <span class={title_class()}><.match text={booking.name} term={@term} /></span>
+        <span class={detail_class()}><.match text={to_string(booking.email)} term={@term} /></span>
+      </:who>
+      <:facts :let={booking}>{facts(booking_facts(booking, @locale))}</:facts>
+      <:status :let={booking}>
+        <.badge :if={booking.cancelled?} tone={:neutral}>{dpgettext("admin", "booking", "Cancelled")}</.badge>
+      </:status>
+    </.result_box>
+    """
+  end
+
+  defp section(%{section: :courses} = assigns) do
+    ~H"""
+    <.result_box section={:courses} rows={@rows} limit={@limit} href={fn course -> ~p"/admin/courses/#{course.id}" end}>
+      <:who :let={course}>
+        <span class={title_class()}><.match text={Translations.translate(course).name} term={@term} /></span>
+        <span class={detail_class()}>
+          {Format.date(course.date, @locale)} · {Format.time(course.start_time, @locale)}–{Format.time(
+            course.end_time,
+            @locale
+          )}
+        </span>
+      </:who>
+      <:facts :let={course}>
+        {~t"#{booked = course.seats_booked || 0} of #{total = course.total_places} seats booked"}
+      </:facts>
+      <:status :let={course}>
+        <.badge :if={course.draft} tone={:neutral}>{~t"Draft"}</.badge>
+        <.badge :if={Date.before?(course.date, @today)} tone={:tag}>{dpgettext("admin", "course", "Past")}</.badge>
+      </:status>
+    </.result_box>
+    """
+  end
+
+  defp section(%{section: :promotions} = assigns) do
+    ~H"""
+    <.result_box
+      section={:promotions}
+      rows={@rows}
+      limit={@limit}
+      href={fn promotion -> ~p"/admin/promotions/#{promotion.id}" end}
+    >
+      <:who :let={promotion}>
+        <span class={title_class()}><.match text={to_string(promotion.code)} term={@term} /></span>
+        <span class={detail_class()}>{promotion.name}</span>
+      </:who>
+      <:facts :let={promotion}>{facts(promotion_facts(promotion, @locale))}</:facts>
+      <:status :let={promotion}><.promotion_status status={promotion.status} /></:status>
+      <:see_all navigate={~p"/admin/promotions?#{%{search: @term}}"}>{~t"See all matching promotions"}</:see_all>
+    </.result_box>
     """
   end
 

@@ -225,6 +225,7 @@ defmodule Edenflowers.Orders.Subscription do
 
       filter expr(matches?(term: ^arg(:term)))
 
+      prepare Edenflowers.Preparations.RankByMatch
       prepare build(sort: [next_fulfillment_date: :asc], load: [:user, :product_variant, :next_delivery_date])
     end
 
@@ -590,6 +591,16 @@ defmodule Edenflowers.Orders.Subscription do
   end
 
   calculations do
+    calculate :match_rank,
+              :integer,
+              expr(fragment("least(?, ?)", match_rank(user.name, ^arg(:term)), match_rank(user.email, ^arg(:term)))) do
+      description "How closely the admin search term matches what a result row shows (see `match_rank`): " <>
+                    "0 exact, 1 at the start of a word, 2 elsewhere, 3 for a match in a field the row " <>
+                    "doesn't show. The search sorts by it."
+
+      argument :term, :ci_string, allow_nil?: false
+    end
+
     calculate :matches?,
               :boolean,
               expr(contains(user.name, ^arg(:term)) or contains(user.email, ^arg(:term))) do
