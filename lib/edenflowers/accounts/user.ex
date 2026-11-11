@@ -59,7 +59,6 @@ defmodule Edenflowers.Accounts.User do
         registration_enabled? true
         brute_force_strategy :rate_limit
         otp_characters :digits_only
-        otp_length 8
 
         sender Edenflowers.Accounts.Senders.SendOtp
       end

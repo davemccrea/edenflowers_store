@@ -670,8 +670,8 @@ defmodule Edenflowers.Email.Previews do
        Email.already_subscribed("maria@example.com", promo, locale)},
       {"Already subscribed", "code used or expired", :already_subscribed,
        Email.already_subscribed("maria@example.com", nil, locale)},
-      {"Account", "sign-in code", :otp_sign_in, Email.otp_sign_in("maria@example.com", "48291375")},
-      {"Account", "email change code", :email_change_code, Email.email_change_code("maria@example.com", "73018462")}
+      {"Account", "sign-in code", :otp_sign_in, Email.otp_sign_in("maria@example.com", "482913")},
+      {"Account", "email change code", :email_change_code, Email.email_change_code("maria@example.com", "730184")}
     ]
   end
 

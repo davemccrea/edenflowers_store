@@ -12,7 +12,7 @@ defmodule Edenflowers.Accounts.OtpRateLimitTest do
     strategy = AshAuthentication.Info.strategy!(User, :otp)
 
     sign_in = fn email ->
-      AshAuthentication.Strategy.action(strategy, :sign_in, %{"email" => email, "otp" => "00000000"}, [])
+      AshAuthentication.Strategy.action(strategy, :sign_in, %{"email" => email, "otp" => "000000"}, [])
     end
 
     for _ <- 1..5, do: assert({:error, _} = sign_in.("otp-limit@example.com"))
@@ -29,7 +29,7 @@ defmodule Edenflowers.Accounts.OtpRateLimitTest do
     context = %{client_ip: "203.0.113.#{System.unique_integer([:positive])}"}
 
     sign_in = fn n ->
-      params = %{"email" => "otp-ip-#{n}@example.com", "otp" => "00000000"}
+      params = %{"email" => "otp-ip-#{n}@example.com", "otp" => "000000"}
       AshAuthentication.Strategy.action(strategy, :sign_in, params, context: context)
     end
 
