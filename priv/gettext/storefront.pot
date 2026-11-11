@@ -1009,7 +1009,7 @@ msgstr ""
 msgid "Failed payments"
 msgstr ""
 
-#: lib/edenflowers_web/components/key_date_icon.ex:61
+#: lib/edenflowers_web/components/key_date_icon.ex:62
 #, elixir-autogen, elixir-format
 msgid "Father's Day"
 msgstr ""
@@ -1678,7 +1678,7 @@ msgstr ""
 msgid "Mon–Fri: %{weekdays}"
 msgstr ""
 
-#: lib/edenflowers_web/components/key_date_icon.ex:60
+#: lib/edenflowers_web/components/key_date_icon.ex:61
 #, elixir-autogen, elixir-format
 msgid "Mother's Day"
 msgstr ""
@@ -4551,4 +4551,14 @@ msgstr ""
 #: lib/edenflowers_web/features/auth/auth_controller.ex:50
 #, elixir-autogen, elixir-format
 msgid "You are now signed out on all your devices"
+msgstr ""
+
+#: lib/edenflowers_web/components/key_date_icon.ex:60
+#, elixir-autogen, elixir-format
+msgid "Easter"
+msgstr ""
+
+#: lib/edenflowers_web/components/key_date_icon.ex:63
+#, elixir-autogen, elixir-format
+msgid "Graduation weekend"
 msgstr ""

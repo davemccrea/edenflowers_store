@@ -1005,7 +1005,7 @@ msgstr "UKK"
 msgid "Failed payments"
 msgstr "Epäonnistuneet maksut"
 
-#: lib/edenflowers_web/components/key_date_icon.ex:61
+#: lib/edenflowers_web/components/key_date_icon.ex:62
 #, elixir-autogen, elixir-format
 msgid "Father's Day"
 msgstr "Isänpäivä"
@@ -1674,7 +1674,7 @@ msgstr "MobilePay, kortti, Apple Pay tai Google Pay. Kestotilaukset edellyttäv�
 msgid "Mon–Fri: %{weekdays}"
 msgstr "Ma–Pe: %{weekdays}"
 
-#: lib/edenflowers_web/components/key_date_icon.ex:60
+#: lib/edenflowers_web/components/key_date_icon.ex:61
 #, elixir-autogen, elixir-format
 msgid "Mother's Day"
 msgstr "Äitienpäivä"
@@ -4552,3 +4552,13 @@ msgstr "Kirjaudu ulos kaikilta laitteilta"
 #, elixir-autogen, elixir-format
 msgid "You are now signed out on all your devices"
 msgstr "Olet nyt kirjautunut ulos kaikilta laitteiltasi"
+
+#: lib/edenflowers_web/components/key_date_icon.ex:60
+#, elixir-autogen, elixir-format
+msgid "Easter"
+msgstr "Pääsiäinen"
+
+#: lib/edenflowers_web/components/key_date_icon.ex:63
+#, elixir-autogen, elixir-format
+msgid "Graduation weekend"
+msgstr "Valmistujaisviikonloppu"

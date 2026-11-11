@@ -4,15 +4,38 @@ defmodule Edenflowers.Fulfillment.KeyDatesTest do
   alias Edenflowers.Fulfillment.KeyDates
 
   describe "for_year/1" do
-    test "materialises the four known key dates for 2026" do
+    test "materialises the year's recurring key dates for 2026" do
       by_key = KeyDates.for_year(2026) |> Map.new(fn %{key: k, date: d} -> {k, d} end)
 
       assert by_key == %{
                valentines_day: ~D[2026-02-14],
                womens_day: ~D[2026-03-08],
+               easter: ~D[2026-04-05],
                mothers_day: ~D[2026-05-10],
                fathers_day: ~D[2026-11-08]
              }
+    end
+
+    test "computes Easter Sunday for its moving date" do
+      easter = fn year ->
+        KeyDates.for_year(year)
+        |> Enum.find(&(&1.key == :easter))
+        |> Map.fetch!(:date)
+      end
+
+      assert easter.(2024) == ~D[2024-03-31]
+      assert easter.(2026) == ~D[2026-04-05]
+      assert easter.(2027) == ~D[2027-03-28]
+      assert easter.(2028) == ~D[2028-04-16]
+      assert easter.(2038) == ~D[2038-04-25]
+    end
+
+    test "includes a one-off date only in its own year" do
+      keys_for = fn year -> KeyDates.for_year(year) |> Enum.map(& &1.key) end
+
+      refute :examenshelg in keys_for.(2026)
+      assert :examenshelg in keys_for.(2027)
+      refute :examenshelg in keys_for.(2028)
     end
 
     test "nth-weekday rule shifts year-over-year" do
@@ -33,6 +56,13 @@ defmodule Edenflowers.Fulfillment.KeyDatesTest do
       assert KeyDates.for_month(~D[2026-11-20]) == [%{key: :fathers_day, date: ~D[2026-11-08]}]
     end
 
+    test "mixes a one-off date with the month's recurring key dates in date order" do
+      assert KeyDates.for_month(~D[2027-05-01]) == [
+               %{key: :mothers_day, date: ~D[2027-05-09]},
+               %{key: :examenshelg, date: ~D[2027-05-28]}
+             ]
+    end
+
     test "is empty for a month without key dates" do
       assert KeyDates.for_month(~D[2026-06-01]) == []
     end
@@ -42,8 +72,15 @@ defmodule Edenflowers.Fulfillment.KeyDatesTest do
     test "returns the key for each key date in 2026" do
       assert KeyDates.lookup_for(~D[2026-02-14]) == :valentines_day
       assert KeyDates.lookup_for(~D[2026-03-08]) == :womens_day
+      assert KeyDates.lookup_for(~D[2026-04-05]) == :easter
       assert KeyDates.lookup_for(~D[2026-05-10]) == :mothers_day
       assert KeyDates.lookup_for(~D[2026-11-08]) == :fathers_day
+    end
+
+    test "finds the one-off date only in its own year" do
+      assert KeyDates.lookup_for(~D[2027-05-28]) == :examenshelg
+      assert KeyDates.lookup_for(~D[2026-05-28]) == nil
+      assert KeyDates.lookup_for(~D[2028-05-28]) == nil
     end
 
     test "tracks the right year — Mother's Day shifts across years" do
