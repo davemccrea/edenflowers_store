@@ -828,102 +828,141 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   the orders its own card brought in. Follow each link to continue the chain.
   """
   def pass_it_on_card(assigns) do
-    assigns = assign(assigns, :source, assigns.order.promotion && assigns.order.promotion.gift_order)
+    order = assigns.order
+
+    assigns =
+      assign(assigns,
+        source: order.promotion && order.promotion.gift_order,
+        from_card?: match?(%{kind: :pass_it_on}, order.promotion),
+        card_missing?: order.pass_it_on_card_changeable? && !order.pass_it_on_card,
+        no_card?: order.gift && !order.pass_it_on_card && !order.pass_it_on_card_changeable?
+      )
 
     ~H"""
     <.widget id="order-pass-it-on" title={~t"Pass it on"}>
-      <div class="space-y-5">
-        <p
-          :if={@order.gift && !@order.pass_it_on_card && !@order.pass_it_on_card_changeable?}
-          id="order-card-none"
-          class="text-base-content/65 text-sm"
-        >
-          {~t"No card went with this gift."}
-        </p>
-
-        <div :if={@order.pass_it_on_card_changeable? && !@order.pass_it_on_card} class="space-y-4">
-          <div
-            id="order-card-missing"
-            class="bg-warning/15 border-base-content/12 flex gap-2.5 border px-3 py-2.5"
-          >
-            <.icon name="hero-gift" class="text-warning-content mt-0.5 h-5 w-5 shrink-0" />
-            <div class="text-sm">
-              <p class="text-warning-content font-semibold">{~t"No card linked to this gift"}</p>
-              <p class="text-base-content mt-0.5">{~t"Type the code printed under the card's QR code."}</p>
-            </div>
-          </div>
-          <.form for={%{}} id="link-card-form" phx-submit="link_card" class="flex items-end gap-2">
-            <.input
-              name="code"
-              value=""
-              label={~t"Code on the card"}
-              autocomplete="off"
-              autocapitalize="characters"
-              required
-              class="input w-32 uppercase tracking-wider"
-            />
-            <.button type="submit" variant="secondary">{~t"Link card"}</.button>
-          </.form>
-        </div>
-
-        <section
-          :if={match?(%{kind: :pass_it_on}, @order.promotion)}
-          id="order-card-source"
-          aria-labelledby="order-card-source-title"
-          class="space-y-2"
-        >
-          <h3 id="order-card-source-title" class="text-base-content flex items-center gap-2 text-sm font-semibold">
-            <.icon name="hero-arrow-left" class="h-4 w-4" />
-            <% gettext_comment("The gift order this order's discount card came from, not a product or payment source.") %>
-            {~t"Source gift"}
+      <%!-- A phone drops "This order" and the arrows, which only repeat the page it is on,
+           and puts each code beside its order instead of under it. --%>
+      <div class="flex flex-col gap-3 text-sm sm:flex-row sm:items-start">
+        <section :if={@from_card?} id="order-card-source" class="min-w-0 flex-1 space-y-2">
+          <h3 class="eyebrow text-base-content/75">
+            {~t"From"}
           </h3>
-          <.card_code code={@order.promotion.code} />
-          <.related_order :if={@source && @source.committed?} order={@source} locale={@locale} />
-          <p :if={!@source || !@source.committed?} class="text-base-content/65 text-sm">
-            {~t"Source gift not linked"}
-          </p>
+          <div class="flex items-start justify-between gap-3 sm:flex-col sm:gap-2">
+            <div class="min-w-0 flex-1 sm:w-full">
+              <.related_order :if={@source && @source.committed?} order={@source} locale={@locale} />
+              <p :if={!@source || !@source.committed?} class="text-base-content/65 py-1">
+                {~t"Source gift not linked"}
+              </p>
+            </div>
+            <.card_code id="order-card-source-code" code={@order.promotion.code} />
+          </div>
+        </section>
+        <.icon
+          :if={@from_card?}
+          name="hero-arrow-right"
+          class="text-base-content/45 h-4 w-4 shrink-0 max-sm:hidden"
+        />
+
+        <section class="min-w-0 flex-1 space-y-2 max-sm:hidden">
+          <h3 class="eyebrow text-base-content/75">{~t"This order"}</h3>
+          <div class="py-1"><.order_lines order={@order} locale={@locale} /></div>
         </section>
 
-        <section :if={@order.pass_it_on_card} id="order-card-outgoing" class="space-y-3">
-          <div class="flex flex-wrap items-center gap-2">
-            <.card_code code={@order.pass_it_on_card.code} />
-            <.card_status_badge card={@order.pass_it_on_card} locale={@locale} />
+        <.icon
+          :if={@order.pass_it_on_card || @card_missing? || @no_card?}
+          name="hero-arrow-right"
+          class="text-base-content/45 h-4 w-4 shrink-0 max-sm:hidden"
+        />
+        <div
+          :if={@order.pass_it_on_card || @card_missing? || @no_card?}
+          class={["min-w-0 flex-1 space-y-2", @from_card? && "max-sm:border-base-content/12 max-sm:border-t max-sm:pt-3"]}
+        >
+          <h3 class="eyebrow text-base-content/75">
+            {~t"To"}
+          </h3>
+
+          <p :if={@no_card?} id="order-card-none" class="text-base-content/65">
+            {~t"No card went with this gift."}
+          </p>
+
+          <div :if={@card_missing?} class="space-y-3">
+            <div
+              id="order-card-missing"
+              class="bg-warning/15 border-base-content/12 flex gap-2.5 border px-3 py-2.5"
+            >
+              <.icon name="hero-gift" class="text-warning-content mt-0.5 h-5 w-5 shrink-0" />
+              <div>
+                <p class="text-warning-content font-semibold">{~t"No card linked to this gift"}</p>
+                <p class="text-base-content mt-0.5">{~t"Type the code printed under the card's QR code."}</p>
+              </div>
+            </div>
+            <.form for={%{}} id="link-card-form" phx-submit="link_card" class="flex flex-wrap items-end gap-2">
+              <.input
+                name="code"
+                value=""
+                label={~t"Code on the card"}
+                autocomplete="off"
+                autocapitalize="characters"
+                autocorrect="off"
+                spellcheck="false"
+                required
+                class="input w-32 uppercase tracking-wider"
+              />
+              <.button type="submit" variant="secondary">{~t"Link card"}</.button>
+            </.form>
           </div>
-          <div :if={@order.pass_it_on_card.placed_orders != []} class="space-y-2">
-            <h3 class="text-base-content flex items-center gap-2 text-sm font-semibold">
-              <.icon name="hero-arrow-right" class="h-4 w-4" />
-              <% gettext_comment("Orders placed using the pass-it-on card sent with this gift.") %>
-              {~t"Orders brought in"}
-            </h3>
-            <ul class="space-y-2">
+
+          <section
+            :if={@order.pass_it_on_card}
+            id="order-card-outgoing"
+            class="flex items-start justify-between gap-3 sm:flex-col sm:gap-2"
+          >
+            <ul :if={@order.pass_it_on_card.placed_orders != []} class="min-w-0 flex-1 space-y-3 sm:w-full">
               <li :for={order <- @order.pass_it_on_card.placed_orders} id={"order-card-redemption-#{order.id}"}>
                 <.related_order order={order} locale={@locale} />
               </li>
             </ul>
-          </div>
-        </section>
+            <div class="flex flex-wrap items-center gap-2 max-sm:py-1">
+              <.card_code id="order-card-outgoing-code" code={@order.pass_it_on_card.code} />
+              <.card_status_badge card={@order.pass_it_on_card} locale={@locale} />
+            </div>
+          </section>
+        </div>
       </div>
     </.widget>
     """
   end
 
+  attr :id, :string, required: true
   attr :code, :any, required: true
 
+  # The copy itself is done by the listener `copy_button` registers.
   defp card_code(assigns) do
     ~H"""
-    <span class="border-base-content/30 text-base-content/80 font-mono border px-2 py-0.5 text-xs tracking-wider">
-      <span class="sr-only">{~t"Code on the card"}: </span>
-      {@code}
-    </span>
+    <button
+      id={@id}
+      type="button"
+      phx-click={JS.dispatch("edenflowers:copy", to: "##{@id}-text", detail: %{trigger: "##{@id}"})}
+      title={~t"Copy code"}
+      class="group touch-target border-base-content/30 text-base-content/80 font-mono inline-flex cursor-pointer items-center gap-1.5 border px-2 py-0.5 text-xs tracking-wider hover:bg-base-content/5"
+    >
+      <.icon name="hero-qr-code" class="h-3.5 w-3.5 shrink-0 group-data-copied:hidden" />
+      <.icon name="hero-check" class="text-success hidden h-3.5 w-3.5 shrink-0 group-data-copied:inline-block" />
+      <span class="sr-only">{~t"Copy code"}: </span>
+      <span id={"#{@id}-text"}>{@code}</span>
+      <span class="sr-only" aria-live="polite">
+        <span class="hidden group-data-copied:inline">{~t"Copied"}</span>
+      </span>
+    </button>
     """
   end
 
   attr :card, :any, required: true
   attr :locale, :string, required: true
 
+  # A used card needs no badge: the orders it brought in are listed below it.
   defp card_status_badge(%{card: %{card_status: :used}} = assigns) do
     ~H"""
-    <.badge tone={:success}>{~t"Used"}</.badge>
     """
   end
 
@@ -952,24 +991,33 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
 
   defp related_order(assigns) do
     ~H"""
-    <div>
-      <.link navigate={~p"/admin/orders/#{@order.id}"} class="group min-h-11 flex items-center gap-3 text-sm">
-        <span class="min-w-0 flex-1">
-          <span class="text-base-content block truncate font-semibold group-hover:underline">
-            {@order.customer_name || ~t"Unnamed customer"}
-          </span>
-          <span :if={@order.gift && @order.recipient_name} class="text-base-content/65 block truncate">
-            {~t"For #{name = @order.recipient_name}"}
-          </span>
-        </span>
-        <span class="text-base-content/65 shrink-0 tabular-nums">
-          {@order.order_reference}<span :if={@order.fulfillment_date}> · {Format.day_month(@order.fulfillment_date, @locale)}</span>
-        </span>
-      </.link>
-      <span :if={@order.fulfillment_status == :cancelled}>
+    <.link navigate={~p"/admin/orders/#{@order.id}"} class="group -mx-2 block px-2 py-1 hover:bg-base-content/5">
+      <.order_lines order={@order} locale={@locale} link?={true} />
+      <span :if={@order.fulfillment_status == :cancelled} class="mt-1 block">
         <.fulfillment_status_badge status={:cancelled} />
       </span>
-    </div>
+    </.link>
+    """
+  end
+
+  attr :order, Order, required: true
+  attr :locale, :string, required: true
+  attr :link?, :boolean, default: false
+
+  defp order_lines(assigns) do
+    ~H"""
+    <span class="flex items-center gap-1">
+      <span class={["text-base-content truncate font-semibold", @link? && "link-underline-group-hover"]}>
+        {@order.customer_name || ~t"Unnamed customer"}
+      </span>
+      <.icon :if={@link?} name="hero-chevron-right" class="text-base-content/45 h-3.5 w-3.5 shrink-0" />
+    </span>
+    <span :if={@order.gift && @order.recipient_name} class="text-base-content/65 block truncate">
+      {~t"For #{name = @order.recipient_name}"}
+    </span>
+    <span class="text-base-content/65 block tabular-nums">
+      {@order.order_reference}<span :if={@order.fulfillment_date}> · {Format.day_month(@order.fulfillment_date, @locale)}</span>
+    </span>
     """
   end
 end

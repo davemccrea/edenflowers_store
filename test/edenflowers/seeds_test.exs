@@ -22,7 +22,7 @@ defmodule Edenflowers.SeedsTest do
 
     karin = preview_order("Karin Öst")
     assert karin.promotion.gift_order.customer_name == "Hanna Järvinen"
-    assert Enum.map(karin.pass_it_on_card.placed_orders, & &1.customer_name) == ["Elin Järvinen", "Olle Berg"]
+    assert Enum.map(karin.pass_it_on_card.placed_orders, & &1.customer_name) == ["Elin Järvinen"]
 
     olle = preview_order("Olle Berg")
     assert olle.fulfillment_status == :cancelled

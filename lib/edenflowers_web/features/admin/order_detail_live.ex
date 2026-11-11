@@ -345,6 +345,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 <.button type="submit" variant="secondary">{~t"Save note"}</.button>
               </.form>
             </.widget>
+
+            <.pass_it_on_card
+              :if={@order.pass_it_on_shown?}
+              order={@order}
+              locale={@locale}
+            />
           </div>
 
           <%!-- Payment comes first beside the job, but after the contacts once stacked,
@@ -505,12 +511,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 <p class="text-warning-content text-sm font-semibold">{~t"Missing recipient phone"}</p>
               </div>
             </.widget>
-
-            <.pass_it_on_card
-              :if={@order.pass_it_on_shown?}
-              order={@order}
-              locale={@locale}
-            />
 
             <.widget id="order-log" title={~t"History"}>
               <.history_timeline id="order-history" entries={@log} locale={@locale}>

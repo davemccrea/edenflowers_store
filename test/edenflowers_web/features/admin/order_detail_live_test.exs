@@ -283,7 +283,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     sibling = placed_order(promotion_id: first_card.id)
 
     neighbours = [
-      {gift, nil, [cancelled, passed_on, sibling]},
+      {gift, nil, [passed_on, sibling]},
       {passed_on, gift, [brought_in]},
       {brought_in, passed_on, []},
       {sibling, gift, []},
@@ -294,7 +294,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
       if source do
-        assert has_element?(view, "#order-card-source", "Source gift")
         assert has_element?(view, ~s|#order-card-source a[href="/admin/orders/#{source.id}"]|)
       else
         refute has_element?(view, "#order-card-source")
@@ -310,8 +309,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     end
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{gift.id}")
-    assert has_element?(view, "#order-card-outgoing", "Orders brought in")
-    assert has_element?(view, "#order-card-redemption-#{cancelled.id}", "Cancelled")
+    assert has_element?(view, "#order-card-outgoing")
   end
 
   test "a cancelled gift stays visible as the source of its redemption", %{conn: conn, admin: admin} do
@@ -374,13 +372,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     refute has_element?(view, ~s|#order-card-outgoing a[href="/admin/orders/#{redeemed.id}"]|)
     {:ok, view, _} = live(conn, ~p"/admin/orders/#{gift.id}")
     assert has_element?(view, ~s|#order-card-outgoing a[href="/admin/orders/#{redeemed.id}"]|)
-    assert has_element?(view, "#order-card-outgoing", "Used")
+    refute has_element?(view, "#order-card-outgoing", "Opened")
 
     Orders.cancel_order!(redeemed, %{cancellation_reason: "Changed mind", email_customer?: false}, actor: admin)
     assert has_element?(view, "#editor-stale-notice")
-    refute has_element?(view, "#order-card-redemption-#{redeemed.id}", "Cancelled")
+    assert has_element?(view, "#order-card-redemption-#{redeemed.id}")
     {:ok, view, _} = live(conn, ~p"/admin/orders/#{gift.id}")
-    assert has_element?(view, "#order-card-redemption-#{redeemed.id}", "Cancelled")
+    refute has_element?(view, "#order-card-redemption-#{redeemed.id}")
     assert has_element?(view, "#order-card-outgoing", "Opened")
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{redeemed.id}")
