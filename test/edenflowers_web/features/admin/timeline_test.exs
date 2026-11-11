@@ -11,7 +11,10 @@ defmodule EdenflowersWeb.Admin.TimelineTest do
     for {action, warning?} <- [
           record_fulfillment_email_failure: true,
           record_receipt_email_failure: true,
+          record_payment_received_email_failure: true,
           record_order_details_email_failure: true,
+          record_order_updated_email_failure: true,
+          record_payment_failed_email_failure: true,
           place_unpaid_occurrence: true,
           send_payment_failed_email: false,
           cancel: false
@@ -33,6 +36,41 @@ defmodule EdenflowersWeb.Admin.TimelineTest do
 
       has_warning? = document |> LazyHTML.query(".hero-exclamation-triangle") |> LazyHTML.to_tree() != []
       assert has_warning? == warning?
+    end
+  end
+
+  test "titles name the email or step for the kind of order" do
+    for {action, metadata, order, title} <- [
+          {:send_receipt_email, %{}, %{gift_voucher_sale?: true}, "Gift voucher emailed"},
+          {:send_payment_received_email, %{}, %{gift_voucher_sale?: true}, "Gift voucher emailed"},
+          {:record_payment_received_email_failure, %{}, %{gift_voucher_sale?: true}, "Gift voucher email failed"},
+          {:send_payment_received_email, %{}, %{}, "Payment received emailed"},
+          {:send_receipt_email, %{}, %{origin: :subscription}, "Charge confirmation emailed"},
+          {:record_receipt_email_failure, %{}, %{origin: :subscription}, "Charge confirmation failed"},
+          {:send_receipt_email, %{}, %{origin: :online}, "Receipt emailed"},
+          {:email_receipt, %{}, %{}, "Receipt emailed"},
+          {:mark_fulfilled, %{}, %{fulfillment_method: :delivery}, "Delivered"},
+          {:mark_fulfilled, %{}, %{fulfillment_method: :pickup}, "Collected"},
+          {:send_fulfillment_email, %{fulfillment_email: "left_at_door"}, %{},
+           "Left at the door email sent, with photo"},
+          {:send_fulfillment_email, %{fulfillment_email: "delivered"}, %{}, "Delivered email sent"},
+          {:send_fulfillment_email, %{}, %{}, "Fulfillment confirmation emailed"},
+          {:place_paid_by_voucher, %{}, %{}, "Placed online"}
+        ] do
+      version =
+        Map.merge(
+          %{
+            id: "event",
+            version_action_name: action,
+            version_action_type: :update,
+            version_inserted_at: ~U[2020-11-01 12:00:00Z],
+            changes: %{},
+            items: nil
+          },
+          metadata
+        )
+
+      assert [%{title: ^title}] = OrderLog.entries([version], [], "en-GB", order)
     end
   end
 

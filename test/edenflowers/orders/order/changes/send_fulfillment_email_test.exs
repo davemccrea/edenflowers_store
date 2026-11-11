@@ -130,6 +130,13 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmailTest do
 
       reloaded = Orders.get_order_by_id!(order.id, authorize?: false)
       assert reloaded.fulfillment_emailed_at != nil
+
+      versions = reloaded |> Ash.load!(:paper_trail_versions, authorize?: false) |> Map.fetch!(:paper_trail_versions)
+
+      assert Enum.any?(
+               versions,
+               &(&1.version_action_name == :send_fulfillment_email and &1.fulfillment_email == "delivered")
+             )
     end
 
     test "leaves out the recipient when the order isn't a gift" do
