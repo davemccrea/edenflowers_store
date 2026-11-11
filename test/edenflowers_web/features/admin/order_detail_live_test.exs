@@ -696,15 +696,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     assert has_element?(view, "#editor-stale-notice")
     {:ok, view, _} = live(conn, ~p"/admin/orders/#{order.id}")
-    assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*Your flowers arrived/s)
-    assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*Thank you for choosing us\./s)
-    assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*ada@example\.com/s)
+    assert has_element?(view, "#order-log li", ~r/Delivered email sent.*Your flowers arrived/s)
+    assert has_element?(view, "#order-log li", ~r/Delivered email sent.*Thank you for choosing us\./s)
+    assert has_element?(view, "#order-log li", ~r/Delivered email sent.*ada@example\.com/s)
     assert has_element?(view, ~s|button[phx-value-kind="fulfillment"]|, "Resend confirmation")
 
     order |> Ash.reload!(authorize?: false) |> Ash.Seed.update!(%{customer_email: "new@example.com"})
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*ada@example\.com/s)
+    assert has_element?(view, "#order-log li", ~r/Delivered email sent.*ada@example\.com/s)
     refute has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*new@example\.com/s)
   end
 

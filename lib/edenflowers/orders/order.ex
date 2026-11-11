@@ -143,6 +143,8 @@ defmodule Edenflowers.Orders.Order do
     metadata :email_subject, :string
     # Where Jennie sent an email, when she chose an address other than the customer's.
     metadata :email_to, :string
+    # Which delivery email SendFulfillmentEmail sent: "delivered" or "left_at_door".
+    metadata :fulfillment_email, :string
     metadata :email_body, :string
     # The pass-it-on card linked or removed, set by LinkPassItOnCard: the link lives on the card.
     metadata :pass_it_on_card, :string
@@ -174,7 +176,10 @@ defmodule Edenflowers.Orders.Order do
       :send_fulfillment_email,
       :record_fulfillment_email_failure,
       :record_receipt_email_failure,
+      :record_payment_received_email_failure,
       :record_order_details_email_failure,
+      :record_order_updated_email_failure,
+      :record_payment_failed_email_failure,
       :email_receipt,
       :email_gift_voucher
     ]
@@ -200,7 +205,10 @@ defmodule Edenflowers.Orders.Order do
                      :remind_shop,
                      :record_fulfillment_email_failure,
                      :record_receipt_email_failure,
+                     :record_payment_received_email_failure,
                      :record_order_details_email_failure,
+                     :record_order_updated_email_failure,
+                     :record_payment_failed_email_failure,
                      :send_order_details_email,
                      :send_order_updated_email,
                      :send_payment_failed_email,

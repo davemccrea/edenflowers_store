@@ -30,9 +30,9 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     :florist_note
   ]
 
-  # A Gift voucher sale's checkout email is the voucher itself, its receipt attached.
-  def entries(versions, payments, locale, gift_voucher_sale? \\ false) do
-    (Enum.map(versions, &entry(&1, locale, gift_voucher_sale?)) ++ Enum.map(payments, &payment_entry(&1, locale)))
+  # `order` gives what the versions don't record: its kind and fulfillment method.
+  def entries(versions, payments, locale, order \\ %{}) do
+    (Enum.map(versions, &entry(&1, locale, order)) ++ Enum.map(payments, &payment_entry(&1, locale)))
     |> Enum.sort_by(& &1.at, {:desc, DateTime})
   end
 
@@ -63,28 +63,58 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     }
   end
 
-  defp entry(%{version_action_name: :send_receipt_email} = version, locale, true = _gift_voucher_sale?),
-    do: %{entry(version, locale, false) | title: ~t"Gift voucher emailed"}
-
-  defp entry(version, locale, _gift_voucher_sale?) do
+  defp entry(version, locale, order) do
     %{
       id: "version-#{version.id}",
       at: version.version_inserted_at,
-      title: title(version),
+      title: title(version, order),
       warning?:
         version.version_action_name in [
           :record_fulfillment_email_failure,
           :record_receipt_email_failure,
+          :record_payment_received_email_failure,
           :record_order_details_email_failure,
+          :record_order_updated_email_failure,
+          :record_payment_failed_email_failure,
           :place_unpaid_occurrence
         ],
       details: field_details(version, locale) ++ items_details(version) ++ message_details(version)
     }
   end
 
+  # A Gift voucher sale's receipt and Payment received emails are the voucher itself, its receipt attached.
+  defp title(%{version_action_name: action}, %{gift_voucher_sale?: true})
+       when action in [:send_receipt_email, :send_payment_received_email],
+       do: ~t"Gift voucher emailed"
+
+  defp title(%{version_action_name: action}, %{gift_voucher_sale?: true})
+       when action in [:record_receipt_email_failure, :record_payment_received_email_failure],
+       do: ~t"Gift voucher email failed"
+
+  # An Occurrence's receipt email is Subscription delivery charged.
+  defp title(%{version_action_name: :send_receipt_email}, %{origin: :subscription}), do: ~t"Charge confirmation emailed"
+
+  defp title(%{version_action_name: :record_receipt_email_failure}, %{origin: :subscription}),
+    do: ~t"Charge confirmation failed"
+
+  defp title(%{version_action_name: :mark_fulfilled}, %{fulfillment_method: :delivery}), do: ~t"Delivered"
+  defp title(%{version_action_name: :mark_fulfilled}, %{fulfillment_method: :pickup}), do: ~t"Collected"
+
+  # Versions from before the log recorded which delivery email went fall through to the general title.
+  defp title(%{version_action_name: :send_fulfillment_email, fulfillment_email: "delivered"}, _order),
+    do: ~t"Delivered email sent"
+
+  defp title(%{version_action_name: :send_fulfillment_email, fulfillment_email: "left_at_door"}, _order),
+    do: ~t"Left at the door email sent, with photo"
+
+  defp title(version, _order), do: title(version)
+
   defp title(%{version_action_name: :place_custom}), do: ~t"Placed by Jennie"
   defp title(%{version_action_name: :sell_gift_voucher}), do: ~t"Sold in the shop"
-  defp title(%{version_action_name: :finalize_checkout}), do: ~t"Placed and paid with Stripe"
+  # The payment's own entry says how it was paid.
+  defp title(%{version_action_name: action}) when action in [:finalize_checkout, :place_paid_by_voucher],
+    do: ~t"Placed online"
+
   defp title(%{version_action_name: :place_unpaid_occurrence}), do: ~t"Placed, but the saved card was refused"
   defp title(%{version_action_name: :edit}), do: ~t"Edited"
   defp title(%{version_action_name: :update_florist_note}), do: ~t"Florist note changed"
@@ -106,18 +136,23 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp title(%{version_action_name: :send_order_updated_email}), do: ~t"Updated order emailed"
   defp title(%{version_action_name: :send_payment_reminder}), do: ~t"Payment reminder emailed"
   defp title(%{version_action_name: :send_payment_failed_email}), do: ~t"Payment needed emailed"
-  defp title(%{version_action_name: :send_receipt_email}), do: ~t"Receipt emailed"
+
+  defp title(%{version_action_name: action}) when action in [:send_receipt_email, :email_receipt],
+    do: ~t"Receipt emailed"
+
   defp title(%{version_action_name: :email_gift_voucher}), do: ~t"Gift voucher emailed"
   # Retired: kept so older sales' logs still read.
   defp title(%{version_action_name: :send_gift_voucher_to_recipient}), do: ~t"Gift voucher emailed to the recipient"
 
-  defp title(%{version_action_name: action}) when action in [:email_receipt, :send_payment_received_email],
-    do: ~t"Payment received emailed"
+  defp title(%{version_action_name: :send_payment_received_email}), do: ~t"Payment received emailed"
 
   defp title(%{version_action_name: :send_fulfillment_email}), do: ~t"Fulfillment confirmation emailed"
   defp title(%{version_action_name: :record_fulfillment_email_failure}), do: ~t"Fulfillment confirmation failed"
   defp title(%{version_action_name: :record_receipt_email_failure}), do: ~t"Receipt failed"
+  defp title(%{version_action_name: :record_payment_received_email_failure}), do: ~t"Payment received failed"
   defp title(%{version_action_name: :record_order_details_email_failure}), do: ~t"Order details failed"
+  defp title(%{version_action_name: :record_order_updated_email_failure}), do: ~t"Updated order failed"
+  defp title(%{version_action_name: :record_payment_failed_email_failure}), do: ~t"Payment needed failed"
   defp title(%{version_action_name: other}), do: to_string(other)
 
   # A creation's fields are the whole order, already on the page; its items show.

@@ -52,7 +52,7 @@ defmodule Edenflowers.Orders.Order.Emails do
         worker_module_name Edenflowers.Orders.Workers.SendOrderUpdatedEmail
         scheduler_module_name Edenflowers.Orders.Schedulers.SendOrderUpdatedEmail
         default_actor system_actor()
-        on_error :record_order_details_email_failure
+        on_error :record_order_updated_email_failure
       end
 
       # Queued by :place_unpaid_occurrence when an Occurrence's card is refused.
@@ -66,7 +66,7 @@ defmodule Edenflowers.Orders.Order.Emails do
         scheduler_module_name Edenflowers.Orders.Schedulers.SendPaymentFailedEmail
         default_actor system_actor()
         where expr(state == :placed and not cancelled? and payable?)
-        on_error :record_order_details_email_failure
+        on_error :record_payment_failed_email_failure
       end
 
       # Queued when a payment link is paid, and by EmailReceipt when Jennie
@@ -80,7 +80,7 @@ defmodule Edenflowers.Orders.Order.Emails do
         worker_module_name Edenflowers.Orders.Workers.SendPaymentReceivedEmail
         scheduler_module_name Edenflowers.Orders.Schedulers.SendPaymentReceivedEmail
         default_actor system_actor()
-        on_error :record_receipt_email_failure
+        on_error :record_payment_received_email_failure
       end
 
       # Queued only when Jennie asks for it, on :mark_fulfilled or
@@ -291,16 +291,33 @@ defmodule Edenflowers.Orders.Order.Emails do
       change set_attribute(:fulfillment_email_failed_at, &DateTime.utc_now/0)
     end
 
+    # One failure action per email, so the order log can name the email that failed.
     update :record_receipt_email_failure do
-      description "Marks that the receipt or Payment received email ran out of attempts, for Jennie to see."
+      description "Marks that the receipt email ran out of attempts, for Jennie to see."
+      accept []
+      change set_attribute(:receipt_email_failed_at, &DateTime.utc_now/0)
+    end
+
+    update :record_payment_received_email_failure do
+      description "Marks that the Payment received email ran out of attempts, for Jennie to see."
       accept []
       change set_attribute(:receipt_email_failed_at, &DateTime.utc_now/0)
     end
 
     update :record_order_details_email_failure do
-      description "Marks that the order details, order updated or payment failed email ran out of attempts, for " <>
-                    "Jennie to see."
+      description "Marks that the order details email ran out of attempts, for Jennie to see."
+      accept []
+      change set_attribute(:order_details_email_failed_at, &DateTime.utc_now/0)
+    end
 
+    update :record_order_updated_email_failure do
+      description "Marks that the order updated email ran out of attempts, for Jennie to see."
+      accept []
+      change set_attribute(:order_details_email_failed_at, &DateTime.utc_now/0)
+    end
+
+    update :record_payment_failed_email_failure do
+      description "Marks that the payment failed email ran out of attempts, for Jennie to see."
       accept []
       change set_attribute(:order_details_email_failed_at, &DateTime.utc_now/0)
     end

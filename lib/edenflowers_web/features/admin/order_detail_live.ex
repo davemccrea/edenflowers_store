@@ -821,8 +821,19 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     do: assign(socket, form_key, form)
 
   defp email_failed_message("record_fulfillment_email_failure"), do: ~t"Couldn't email the confirmation."
-  defp email_failed_message("record_receipt_email_failure"), do: ~t"Couldn't email the receipt."
-  defp email_failed_message("record_order_details_email_failure"), do: ~t"Couldn't email the order details."
+
+  defp email_failed_message(event)
+       when event in ["record_receipt_email_failure", "record_payment_received_email_failure"],
+       do: ~t"Couldn't email the receipt."
+
+  defp email_failed_message(event)
+       when event in [
+              "record_order_details_email_failure",
+              "record_order_updated_email_failure",
+              "record_payment_failed_email_failure"
+            ],
+       do: ~t"Couldn't email the order details."
+
   defp email_failed_message(_event), do: nil
 
   # Worth an email only when the customer didn't see it arrive: a gift, or an
@@ -897,7 +908,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     order =
       Ash.load!(order, :paper_trail_versions, authorize?: false)
 
-    OrderLog.entries(order.paper_trail_versions, payments, locale, order.gift_voucher_sale?)
+    OrderLog.entries(order.paper_trail_versions, payments, locale, order)
   end
 
   defp readiness_result(socket, {:ok, order}, message),

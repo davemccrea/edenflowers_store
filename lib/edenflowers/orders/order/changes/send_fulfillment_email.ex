@@ -26,9 +26,9 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmail do
     edits = Edits.from_changeset(changeset)
 
     case email(order) do
-      {:ok, email} ->
+      {:ok, kind, email} ->
         changeset
-        |> Ash.Changeset.set_context(%{paper_trail_metadata: Edits.for_log(edits)})
+        |> Ash.Changeset.set_context(%{paper_trail_metadata: Map.put(Edits.for_log(edits), :fulfillment_email, kind)})
         |> deliver(order, Edits.apply_to(email, edits))
 
       {:error, error} ->
@@ -57,13 +57,13 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmail do
 
   defp email(%{email_delivery_photo: true, delivery_photo_slug: slug} = order)
        when is_binary(slug) and byte_size(slug) > 0 do
-    with {:ok, jpeg} <- fetch_small_photo(slug), do: {:ok, Email.order_left_at_door(order, jpeg)}
+    with {:ok, jpeg} <- fetch_small_photo(slug), do: {:ok, "left_at_door", Email.order_left_at_door(order, jpeg)}
   end
 
   defp email(%{email_delivery_photo: true}),
     do: {:error, ~t"Delivery photo is missing."}
 
-  defp email(order), do: {:ok, Email.order_delivered(order)}
+  defp email(order), do: {:ok, "delivered", Email.order_delivered(order)}
 
   # A phone photo can be 10 MB or more. 1600 px at quality 80 comes to a few
   # hundred KB: small enough for any inbox, sharp enough to spot a doorstep.
