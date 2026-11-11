@@ -24,6 +24,15 @@
   become_user: postgres
   notify: Restart postgresql
 
+# Records per-query timings so a deploy's effect on the database can be compared afterwards
+- name: Load pg_stat_statements
+  community.postgresql.postgresql_alter_system:
+    param: shared_preload_libraries
+    value: pg_stat_statements
+  become: true
+  become_user: postgres
+  notify: Restart postgresql
+
 - name: Create app database
   community.postgresql.postgresql_db:
     state: present
@@ -51,6 +60,17 @@
 - name: Enable citext extension
   community.postgresql.postgresql_ext:
     name: citext
+    login_db: "{{ db_name }}"
+  become: true
+  become_user: postgres
+
+# Needs the library loaded, so flush the restart queued above first
+- name: Restart postgresql for pg_stat_statements
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable pg_stat_statements extension
+  community.postgresql.postgresql_ext:
+    name: pg_stat_statements
     login_db: "{{ db_name }}"
   become: true
   become_user: postgres
