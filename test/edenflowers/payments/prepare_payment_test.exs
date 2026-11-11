@@ -95,7 +95,7 @@ defmodule Edenflowers.Payments.PreparePaymentTest do
     end
 
     test "refuses an order placed since the page read it", ctx do
-      Ash.Seed.update!(ctx.order, %{state: :placed})
+      seed_placed(ctx.order)
 
       assert {:error, _not_a_cart} = Orders.prepare_checkout_payment(ctx.order.id, actor: nil)
     end

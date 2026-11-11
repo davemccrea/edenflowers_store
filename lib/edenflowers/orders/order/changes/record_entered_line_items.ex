@@ -1,25 +1,24 @@
 defmodule Edenflowers.Orders.Order.Changes.RecordEnteredLineItems do
   @moduledoc """
   Records the lines Jennie entered in the `line_items` argument, which
-  `manage_relationship` saves: in the order's VAT breakdown once they are
-  saved, and in the order log's version for this action when they differ from
-  what the order had.
+  `manage_relationship` saves: in the order log's version for this action when
+  they differ from what the order had. Returns the order with the VAT breakdown
+  and grand total the lines stored once saved.
   """
   use Ash.Resource.Change
 
   alias Edenflowers.Catalog
   alias Edenflowers.Format
-  alias Edenflowers.Orders
   alias Edenflowers.Types.Price
 
   @impl true
   def change(changeset, _opts, _context) do
     changeset
     |> Ash.Changeset.before_action(&log_changed_items/1)
+    # LineItem's RefreshPlacedOrder stored them as each line saved; this order
+    # struct predates that, and KeepInvoicedAmounts compares its vat_breakdown.
     |> Ash.Changeset.after_action(fn _changeset, order ->
-      with {:ok, order} <- Orders.refresh_vat_breakdown(order, authorize?: false) do
-        Ash.load(order, :payment_status, authorize?: false, reuse_values?: false)
-      end
+      Ash.load(order, [:vat_breakdown, :stored_grand_total, :payment_status], authorize?: false, reuse_values?: false)
     end)
   end
 

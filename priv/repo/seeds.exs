@@ -565,6 +565,8 @@ seed_placed_order = fn attrs ->
         %{
           order_reference: next_reference.(),
           state: :placed,
+          # Stored once the line items exist, below.
+          stored_grand_total: 0,
           fulfillment_status: fulfillment_status,
           # Mark the receipt as already emailed so the admin menu offers to resend it.
           receipt_emailed_at: DateTime.utc_now(),
@@ -593,11 +595,11 @@ seed_placed_order = fn attrs ->
     Ash.Seed.seed!(LineItem, Map.put(item, :order_id, order.id))
   end
 
-  # Snapshot the VAT breakdown the same way SnapshotVatBreakdown does at checkout.
+  # Snapshot the VAT breakdown and grand total the same way SnapshotVatBreakdown does at checkout.
   # Clearing state makes Vat.breakdown compute from the line items rather than
   # read the snapshot this is about to write.
   order = Ash.load!(order, [:grand_total | Vat.load(nil, nil, nil)], authorize?: false)
-  Ash.Seed.update!(order, %{vat_breakdown: Vat.breakdown(%{order | state: nil})})
+  Ash.Seed.update!(order, %{vat_breakdown: Vat.breakdown(%{order | state: nil}), stored_grand_total: order.grand_total})
 
   if payment_card do
     {card_brand, card_last4} = payment_card

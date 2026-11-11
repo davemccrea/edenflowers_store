@@ -245,7 +245,7 @@ defmodule Edenflowers.Orders.Order.Admin do
       description "Placed orders still to deliver or collect, prepared or not, paid or not, soonest first."
       # Unpaid custom orders still have to be made (ADR 0001).
       filter expr(fulfillable?)
-      prepare build(sort: [fulfillment_date: :asc, ordered_at: :asc, id: :asc], load: [:payment_status])
+      prepare build(sort: [fulfillment_date: :asc, ordered_at: :asc, id: :asc])
     end
 
     read :admin_show do
@@ -307,6 +307,8 @@ defmodule Edenflowers.Orders.Order.Admin do
       argument :customer_id, :uuid
 
       change set_attribute(:state, :placed)
+      # Until LineItem's RefreshPlacedOrder stores the total of the lines it saves.
+      change set_attribute(:stored_grand_total, 0)
       change set_attribute(:origin, :custom)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
@@ -402,6 +404,7 @@ defmodule Edenflowers.Orders.Order.Admin do
       change set_attribute(:fulfillment_status, :fulfilled)
       # A voucher's VAT is due when it's spent, at the rates of what it buys.
       change set_attribute(:vat_breakdown, [])
+      change set_attribute(:stored_grand_total, arg(:amount))
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
 
@@ -514,8 +517,8 @@ defmodule Edenflowers.Orders.Order.Admin do
     end
 
     update :refresh_vat_breakdown do
-      description "Recomputes the stored VAT breakdown once the lines Jennie entered are saved. Run by " <>
-                    "place_custom and edit."
+      description "Recomputes a placed order's stored VAT breakdown and grand total. Run by " <>
+                    "LineItem's RefreshPlacedOrder and Order's RefreshWhenRepriced."
 
       accept []
       change Changes.SnapshotVatBreakdown

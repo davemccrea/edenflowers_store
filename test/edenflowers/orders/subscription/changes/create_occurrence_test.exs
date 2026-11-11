@@ -381,6 +381,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
       assert [order] = occurrences(ctx.subscription)
       assert order.state == :placed
       assert order.payment_intent_id == "pi_requires_action"
+      assert_stores_live_grand_total(order)
       assert Ash.load!(order, :unpaid?, authorize?: false).unpaid?
       assert reload(ctx.subscription).state == :payment_failed
     end

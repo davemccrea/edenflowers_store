@@ -228,6 +228,10 @@ defmodule Edenflowers.Courses.CourseRegistration do
                     "exactly their share of it. Once cancelled, the cancellation charge Jennie kept, paid or not."
     end
 
+    calculate :checkout_total, :decimal, expr(total_due) do
+      description "What checkout charges for, in euros: the Total due."
+    end
+
     calculate :committed?, :boolean, expr(status in [:confirmed, :cancelled]) do
       description "Whether places were committed by Jennie or successful website checkout, including cancelled history."
     end
@@ -262,14 +266,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
                     "cancellation fee on the places still held."
     end
 
-    # Compute cancelled_unsettled?, paid? and payment_overdue? in Elixir using
-    # loaded values. This avoids repeating the balance calculation's dependent
-    # expressions in SQL (ADR 0007).
-    calculate :cancelled_unsettled?,
-              :boolean,
-              fn records, _context -> Enum.map(records, &(&1.status == :cancelled and not &1.settled?)) end do
-      load [:settled?]
-
+    calculate :cancelled_unsettled?, :boolean, expr(status == :cancelled and not settled?) do
       description "Whether a cancelled booking still needs Jennie: money to refund, a cancellation charge to " <>
                     "collect. The course page lists these beside the live bookings instead " <>
                     "of folding them away with the settled cancellations."
@@ -279,14 +276,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       description "Who is told about cancels and refunds: the email given at checkout or entered by Jennie."
     end
 
-    calculate :paid?,
-              :boolean,
-              fn records, _context ->
-                Enum.map(records, fn record ->
-                  record.status == :confirmed and not record.refunded? and Decimal.lte?(record.balance, 0)
-                end)
-              end do
-      load [:refunded?, :balance]
+    calculate :paid?, :boolean, expr(status == :confirmed and not refunded? and balance <= 0) do
       description "Whether a confirmed booking has nothing left to pay and wasn't refunded, for its Payment Link page."
     end
 
@@ -294,6 +284,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       description "Whether a confirmed booking still holds places on a course that hasn't ended."
     end
 
+    # Computed in Elixir from the loaded balance: as an expression it adds to the Overview's SQL (ADR 0007).
     calculate :payment_overdue?,
               :boolean,
               fn records, _context ->

@@ -28,7 +28,7 @@ defmodule EdenflowersWeb.Hooks.PutOrderTest do
     variant = generate(product_variant(product_id: generate(product()).id))
     generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
     conn = with_cart(conn, order)
-    Ash.Seed.update!(order, %{state: :placed})
+    seed_placed(order)
 
     {:ok, view, _html} = live(conn, ~p"/en/about")
 

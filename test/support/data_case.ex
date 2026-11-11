@@ -15,6 +15,7 @@ defmodule Edenflowers.DataCase do
   using do
     quote do
       use Oban.Testing, repo: Edenflowers.Repo
+      import Edenflowers.DataCase, only: [assert_stores_live_grand_total: 1]
     end
   end
 
@@ -32,6 +33,16 @@ defmodule Edenflowers.DataCase do
   def setup_sandbox(tags) do
     pid = Sandbox.start_owner!(Edenflowers.Repo, shared: not tags[:async])
     on_exit(fn -> Sandbox.stop_owner(pid) end)
+  end
+
+  @doc """
+  Asserts a placed order's stored grand total, which its Balance reads, still
+  equals the grand total its lines and fees work out to (ADR 0007).
+  """
+  def assert_stores_live_grand_total(%{id: id}) do
+    order = Ash.get!(Edenflowers.Orders.Order, id, load: [:grand_total], authorize?: false)
+    ExUnit.Assertions.assert(order.state == :placed)
+    ExUnit.Assertions.assert(Decimal.eq?(order.stored_grand_total, order.grand_total))
   end
 
   @doc """

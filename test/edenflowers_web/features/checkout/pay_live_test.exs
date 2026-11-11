@@ -141,7 +141,10 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
 
   test "reloads instead of paying when the order changed since the page was shown", %{conn: conn, order: order} do
     {:ok, view, _html} = live(conn, ~p"/pay/orders/#{order.payment_link_token}")
-    Ash.Seed.update!(order, %{quoted_fulfillment_fee: Decimal.new("10.00")})
+
+    order
+    |> Ash.Seed.update!(%{quoted_fulfillment_fee: Decimal.new("10.00")})
+    |> Orders.refresh_vat_breakdown!(authorize?: false)
 
     {:ok, _view, html} =
       view

@@ -219,12 +219,17 @@ defmodule Edenflowers.Payments.Payable do
   calculations do
     calculate :balance,
               :decimal,
+              # Reads as: due = total_due - amount_invoiced; owed when due > paid, owed back when
+              # due < held, else 0. Held never exceeds paid, so at most one half is nonzero. Written
+              # this way so the SQL carries the due expression twice rather than five times (ADR 0007).
               expr(
-                cond do
-                  total_due - amount_invoiced >= amount_paid -> total_due - amount_invoiced - amount_paid
-                  total_due - amount_invoiced >= amount_held -> 0
-                  true -> total_due - amount_invoiced - amount_held
-                end
+                fragment(
+                  "GREATEST(? - ?, 0) + LEAST(? - ?, 0)",
+                  total_due - amount_invoiced,
+                  amount_paid,
+                  total_due - amount_invoiced,
+                  amount_held
+                )
               ) do
       description "The Balance in euros: what is left to collect here, positive, or to refund, negative. What " <>
                     "its invoices bill is theirs to collect, so an invoiced order reads 0 before it is paid. A " <>
@@ -240,9 +245,9 @@ defmodule Edenflowers.Payments.Payable do
               expr(
                 cond do
                   is_nil(gift_voucher_id) or not gift_voucher.spendable? -> 0
-                  gift_voucher.remaining >= total_due and not saves_card? -> total_due
-                  total_due - gift_voucher.remaining >= ^Decimal.new("0.50") -> gift_voucher.remaining
-                  total_due > ^Decimal.new("0.50") -> total_due - ^Decimal.new("0.50")
+                  gift_voucher.remaining >= checkout_total and not saves_card? -> checkout_total
+                  checkout_total - gift_voucher.remaining >= ^Decimal.new("0.50") -> gift_voucher.remaining
+                  checkout_total > ^Decimal.new("0.50") -> checkout_total - ^Decimal.new("0.50")
                   true -> 0
                 end
               ) do
@@ -256,7 +261,7 @@ defmodule Edenflowers.Payments.Payable do
                     "euros. Nil with no voucher."
     end
 
-    calculate :stripe_amount, :decimal, expr(total_due - voucher_amount) do
+    calculate :stripe_amount, :decimal, expr(checkout_total - voucher_amount) do
       description "At checkout, what Stripe is asked to charge in euros: the Total due less what the Gift voucher " <>
                     "pays. 0 when the voucher covers it all, and it's placed without Stripe."
     end

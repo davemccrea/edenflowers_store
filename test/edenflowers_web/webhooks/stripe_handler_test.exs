@@ -250,7 +250,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
 
   describe "a custom order's payment link" do
     setup %{order: order} do
-      %{order: Ash.Seed.update!(order, %{state: :placed, origin: :custom, order_reference: "LINK1"})}
+      %{order: seed_placed(order, %{origin: :custom, order_reference: "LINK1"})}
     end
 
     defp link_succeeded(order, amount_received) do

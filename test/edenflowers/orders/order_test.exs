@@ -209,6 +209,7 @@ defmodule Edenflowers.Orders.OrderTest do
 
     reloaded = Ash.get!(Edenflowers.Orders.Order, order.id, authorize?: false)
     assert reloaded.vat_breakdown == order.vat_breakdown
+    assert_stores_live_grand_total(order)
   end
 
   test "finalize_checkout places an order past its promotion's usage limit and logs it" do
@@ -259,7 +260,7 @@ defmodule Edenflowers.Orders.OrderTest do
     test "once placed, the next add opens a new cart" do
       visitor_id = Ecto.UUID.generate()
       placed = Orders.create_for_checkout!(%{visitor_id: visitor_id}, authorize?: false)
-      Ash.Seed.update!(placed, %{state: :placed})
+      seed_placed(placed)
 
       assert Orders.get_storefront_cart!(visitor_id, authorize?: false) == nil
       refute Orders.create_for_checkout!(%{visitor_id: visitor_id}, authorize?: false).id == placed.id
@@ -1043,11 +1044,25 @@ defmodule Edenflowers.Orders.OrderTest do
 
     defp cancel(order), do: Ash.Seed.update!(order, %{fulfillment_status: :cancelled})
 
+    test "any update that reprices a placed order keeps its stored total" do
+      order = placed_order(paid: true)
+
+      # An action that knows nothing of the snapshot, as a future one might.
+      order
+      |> Ash.Changeset.for_update(:update_florist_note, %{florist_note: "Rush"}, authorize?: false)
+      |> Ash.Changeset.force_change_attribute(:quoted_fulfillment_fee, Decimal.new("10.00"))
+      |> Ash.update!()
+
+      assert_stores_live_grand_total(order)
+      assert Decimal.equal?(payment_view(order).balance, "5.50")
+    end
+
     test "an order edited up after it was paid has the difference to collect" do
       order = placed_order(paid: true)
       [line_item] = Ash.load!(order, :line_items, authorize?: false).line_items
       line_item |> Ash.Changeset.for_update(:set_quantity, %{quantity: 3}) |> Ash.update!(authorize?: false)
 
+      assert_stores_live_grand_total(order)
       order = payment_view(order)
       assert Decimal.equal?(order.balance, "42.00")
       assert order.payment_status == :pending

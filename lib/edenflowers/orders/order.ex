@@ -51,7 +51,8 @@ defmodule Edenflowers.Orders.Order do
     migration_types quoted_fulfillment_fee: :decimal,
                     quoted_free_delivery_fee: :decimal,
                     fulfillment_fee_override: :decimal,
-                    kept_amount: :decimal
+                    kept_amount: :decimal,
+                    stored_grand_total: :decimal
 
     identity_wheres_to_sql unique_cart_per_visitor: "state != 'placed'"
 
@@ -73,6 +74,11 @@ defmodule Edenflowers.Orders.Order do
         check:
           "fulfillment_fee_override IS NULL OR (fulfillment_fee_override >= 0 AND fulfillment_fee_override = round(fulfillment_fee_override, 2))",
         message: "must be a non-negative amount in whole cents"
+
+      # A placing path that skips Changes.SnapshotVatBreakdown fails here instead of leaving a wrong Balance.
+      check_constraint :stored_grand_total, "orders_placed_have_stored_grand_total",
+        check: "state <> 'placed' OR stored_grand_total IS NOT NULL",
+        message: "must be stored once the order is placed"
     end
 
     # Shared with course registrations so an order and a booking never have
@@ -310,6 +316,7 @@ defmodule Edenflowers.Orders.Order do
 
   changes do
     change load(:fulfillment_fee), on: [:create, :update]
+    change __MODULE__.Changes.RefreshWhenRepriced, on: [:update]
   end
 
   attributes do
@@ -406,6 +413,14 @@ defmodule Edenflowers.Orders.Order do
     # The last queued receipt ran out of attempts. Cleared by a successful send.
     attribute :receipt_email_failed_at, :utc_datetime
     attribute :vat_breakdown, {:array, Edenflowers.Orders.VatRow}
+
+    attribute :stored_grand_total, :decimal do
+      description "The grand total in euros, stored alongside vat_breakdown whenever a placed order's lines or " <>
+                    "fees are set, so total_due needn't work it out again (ADR 0007). Nil on a cart."
+
+      constraints min: 0, scale: 2
+    end
+
     attribute :fulfillment_emailed_at, :utc_datetime
     # The customer's email can change later; the log names who was sent it.
     attribute :fulfillment_emailed_to, :string
@@ -595,9 +610,15 @@ defmodule Edenflowers.Orders.Order do
                     "ordered after a cancellation, for the receipt."
     end
 
-    calculate :total_due, :decimal, expr(if fulfillment_status == :cancelled, do: kept_amount, else: grand_total) do
-      description "The Total due in euros, which the Balance is worked out from: the grand total, or once " <>
-                    "cancelled the cancellation charge Jennie kept, paid or not."
+    calculate :total_due,
+              :decimal,
+              expr(if fulfillment_status == :cancelled, do: kept_amount, else: stored_grand_total) do
+      description "The Total due in euros, which the Balance is worked out from: the stored grand total, or " <>
+                    "once cancelled the cancellation charge Jennie kept, paid or not. Nil on a cart."
+    end
+
+    calculate :checkout_total, :decimal, expr(grand_total) do
+      description "What checkout charges for, in euros: the live grand total, since a cart has none stored."
     end
 
     calculate :invoiced?, :boolean, expr(exists(invoices, covers_order?)) do
@@ -858,12 +879,15 @@ defmodule Edenflowers.Orders.Order do
               expr(
                 # A €0 order that never took money owes nothing, so it reads as paid.
                 # A cancelled order that took nothing is called off, not unpaid.
+                # Ordered so balance is referenced once: each reference inlines the whole chain.
                 cond do
+                  # A cart has no Balance until it's placed (ADR 0007).
+                  state != :placed -> :pending
                   refunded? -> :refunded
-                  amount_invoiced > 0 and balance <= 0 -> :invoiced
+                  balance > 0 -> if(fulfillment_status == :cancelled and amount_paid == 0, do: nil, else: :pending)
+                  amount_invoiced > 0 -> :invoiced
                   fulfillment_status == :cancelled and amount_paid == 0 -> nil
-                  balance <= 0 -> :paid
-                  true -> :pending
+                  true -> :paid
                 end
               ) do
       description "Paid, pending or refunded, from the Balance and Payments, or invoiced when its invoices " <>
