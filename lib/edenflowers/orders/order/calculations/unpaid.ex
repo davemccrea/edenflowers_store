@@ -15,6 +15,7 @@ defmodule Edenflowers.Orders.Order.Calculations.Unpaid do
 
   @impl true
   def calculate(records, _opts, _context) do
+    # `state == :placed and payable?`, restated: keep in step with `payable?` in Payable.
     Enum.map(records, fn record ->
       record.state == :placed and Decimal.positive?(record.balance) and not record.refunded?
     end)

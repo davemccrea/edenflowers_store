@@ -14,6 +14,7 @@ defmodule Edenflowers.Payments.Calculations.ToCollect do
 
   @impl true
   def calculate(records, _opts, _context) do
+    # `not settled? and balance > 0`, restated: keep in step with `settled?` in Payable.
     Enum.map(records, &(not &1.refunded? and Decimal.positive?(&1.balance)))
   end
 end
