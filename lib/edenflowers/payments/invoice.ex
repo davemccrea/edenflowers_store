@@ -8,7 +8,6 @@ defmodule Edenflowers.Payments.Invoice do
     extensions: [AshPaperTrail.Resource]
 
   alias Edenflowers.Events
-  alias Edenflowers.Payments.Calculations
   alias Edenflowers.Payments.Changes
   alias Edenflowers.Payments.Validations
 
@@ -513,13 +512,32 @@ defmodule Edenflowers.Payments.Invoice do
                     "invoice can take a Payment, and never more than its amount_unpaid."
     end
 
-    calculate :cancellable?, :boolean, Calculations.InvoiceCancellable do
+    # cancellable? to paid? and amount_unpaid run in Elixir from the loaded
+    # status, so the SQL doesn't repeat the status CASE (ADR 0007).
+    calculate :cancellable?,
+              :boolean,
+              fn records, _context ->
+                Enum.map(records, &(&1.status == :open and Decimal.equal?(&1.amount_paid, 0)))
+              end do
+      load [:status, :amount_paid]
+
       description "Whether Jennie can cancel it with a Credit note: open with nothing paid on it. One with " <>
                     "Payments, even part-paid, can't be, as those Payments would count against no open invoice; " <>
                     "she consults the accountant for corrections. Validations.Cancellable refuses a Credit note otherwise."
     end
 
-    calculate :overdue?, :boolean, Calculations.InvoiceOverdue do
+    calculate :overdue?,
+              :boolean,
+              fn records, _context ->
+                today = Edenflowers.ShopTime.today()
+
+                Enum.map(records, fn record ->
+                  record.status == :open and not is_nil(record.due_date) and
+                    Date.compare(record.due_date, today) == :lt
+                end)
+              end do
+      load [:status]
+
       description "Whether it is late: still open after its due date, counted in Helsinki days, so it turns " <>
                     "overdue the day after the due date. A paid or cancelled invoice is never overdue; one " <>
                     "paid only in part still is. Admin flags it, and sending it again makes the email a friendly " <>
@@ -533,22 +551,32 @@ defmodule Edenflowers.Payments.Invoice do
       argument :issued_on, :date, allow_nil?: false
     end
 
-    calculate :payable?, :boolean, Calculations.InvoiceOpen do
+    calculate :payable?, :boolean, fn records, _context -> Enum.map(records, &(&1.status == :open)) end do
+      load [:status]
+
       description "Whether it can take a Payment: open, with something left to pay. An Undo also works on a " <>
                     "paid invoice, which reopens it."
     end
 
-    calculate :partly_paid?, :boolean, Calculations.InvoicePartlyPaid do
+    calculate :partly_paid?,
+              :boolean,
+              fn records, _context ->
+                Enum.map(records, &(&1.status == :open and Decimal.positive?(&1.amount_paid)))
+              end do
+      load [:status, :amount_paid]
       description "Whether it is open with some of its amount already paid, so what is left differs from its total."
     end
 
-    calculate :sendable?, :boolean, Calculations.InvoiceOpen do
+    calculate :sendable?, :boolean, fn records, _context -> Enum.map(records, &(&1.status == :open)) end do
+      load [:status]
+
       description "Whether Jennie can email it, for the first time or again: only while it is open. A paid " <>
                     "invoice needs no email and a cancelled one has its Credit note instead. " <>
                     "Validations.Sendable refuses :send otherwise."
     end
 
-    calculate :paid?, :boolean, Calculations.InvoicePaid do
+    calculate :paid?, :boolean, fn records, _context -> Enum.map(records, &(&1.status == :paid)) end do
+      load [:status]
       description "Whether its Payments cover its amount."
     end
 
@@ -596,7 +624,10 @@ defmodule Edenflowers.Payments.Invoice do
       description "Who it bills, for lists: the company's name for a business customer, otherwise the customer's."
     end
 
-    calculate :amount_unpaid, :decimal, Calculations.InvoiceAmountUnpaid do
+    calculate :amount_unpaid,
+              :decimal,
+              fn records, _context -> Enum.map(records, &Decimal.sub(&1.amount, &1.amount_paid)) end do
+      load [:amount_paid]
       description "What is still to pay on it in euros: its amount less its Payments, which can't exceed it."
     end
   end

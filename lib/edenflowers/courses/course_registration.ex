@@ -37,8 +37,9 @@ defmodule Edenflowers.Courses.CourseRegistration do
     ]
 
   alias Edenflowers.Accounts.Calculations, as: AccountCalculations
-  alias Edenflowers.Courses.Calculations
   alias Edenflowers.Events
+  alias Edenflowers.Payments.Payment
+  alias Edenflowers.ShopTime
 
   # Enough for the usual group of friends without letting one booking empty a course.
   @max_seats 4
@@ -261,7 +262,13 @@ defmodule Edenflowers.Courses.CourseRegistration do
                     "cancellation fee on the places still held."
     end
 
-    calculate :cancelled_unsettled?, :boolean, Calculations.RegistrationCancelledUnsettled do
+    # cancelled_unsettled?, paid? and payment_overdue? run in Elixir from loaded
+    # values, so the SQL doesn't inline another copy of the Balance chain (ADR 0007).
+    calculate :cancelled_unsettled?,
+              :boolean,
+              fn records, _context -> Enum.map(records, &(&1.status == :cancelled and not &1.settled?)) end do
+      load [:settled?]
+
       description "Whether a cancelled booking still needs Jennie: money to refund, a cancellation charge to " <>
                     "collect. The course page lists these beside the live bookings instead " <>
                     "of folding them away with the settled cancellations."
@@ -271,7 +278,14 @@ defmodule Edenflowers.Courses.CourseRegistration do
       description "Who is told about cancels and refunds: the email given at checkout or entered by Jennie."
     end
 
-    calculate :paid?, :boolean, Calculations.RegistrationPaid do
+    calculate :paid?,
+              :boolean,
+              fn records, _context ->
+                Enum.map(records, fn record ->
+                  record.status == :confirmed and not record.refunded? and Decimal.lte?(record.balance, 0)
+                end)
+              end do
+      load [:refunded?, :balance]
       description "Whether a confirmed booking has nothing left to pay and wasn't refunded, for its Payment Link page."
     end
 
@@ -279,7 +293,16 @@ defmodule Edenflowers.Courses.CourseRegistration do
       description "Whether a confirmed booking still holds places on a course that hasn't ended."
     end
 
-    calculate :payment_overdue?, :boolean, Calculations.RegistrationPaymentOverdue do
+    calculate :payment_overdue?,
+              :boolean,
+              fn records, _context ->
+                overdue_before = Date.add(ShopTime.today(), -Payment.overdue_after_days())
+
+                Enum.map(records, fn record ->
+                  Decimal.positive?(record.balance) and Date.compare(record.course.date, overdue_before) == :lt
+                end)
+              end do
+      load [:balance, :course]
       description "Whether a booking still has a balance more than 14 days after the course."
     end
 
