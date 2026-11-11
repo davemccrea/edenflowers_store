@@ -640,3 +640,17 @@ body:has(.admin-theme) {
     padding-bottom: calc(var(--spacing) * 5 + env(safe-area-inset-bottom));
   }
 }
+
+/* A side-panel glyph after the label marks every button and menu item that
+   opens a drawer to fill in or confirm before anything happens. Tag the
+   control with aria-haspopup="dialog". */
+.admin-theme :is(.btn, .menu button)[aria-haspopup="dialog"]::after {
+  content: "";
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  background-color: currentColor;
+  /* A box with its right third filled: the drawer sliding in from the right. */
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1.75' y='2.75' width='12.5' height='10.5' rx='1.5' fill='none' stroke='black' stroke-width='1.5'/%3E%3Cpath d='M10 3h3a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-3z'/%3E%3C/svg%3E")
+    no-repeat center / contain;
+}

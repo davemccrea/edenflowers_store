@@ -81,6 +81,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
               :if={@subscription.plan_changeable?}
               type="button"
               phx-click="open_change"
+              aria-haspopup="dialog"
               variant="secondary"
               size="sm"
             >
@@ -110,6 +111,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
               <.actions_menu_button
                 menu="subscription-actions"
                 phx-click="open_cancel"
+                aria-haspopup="dialog"
                 class="text-error"
               >
                 {~t"Cancel subscription"}

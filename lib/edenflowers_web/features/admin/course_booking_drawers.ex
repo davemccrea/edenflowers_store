@@ -154,6 +154,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
         <.button
           type="button"
           phx-click="open_email"
+          aria-haspopup="dialog"
           phx-value-kind={if @registration.payment_reminder?, do: "payment_reminder", else: "payment_link"}
           phx-value-id={@registration.id}
           variant="secondary"

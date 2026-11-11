@@ -593,6 +593,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       :if={@order.payment_reminder_sendable?}
       type="button"
       phx-click="open_email"
+      aria-haspopup="dialog"
       phx-value-kind="payment_reminder"
       variant="primary"
       size="sm"
@@ -646,6 +647,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         :if={:gift_voucher in @order.admin_menu_actions}
         menu="order-actions"
         phx-click="open_email"
+        aria-haspopup="dialog"
         phx-value-kind="gift_voucher"
       >
         {~t"Resend gift voucher"}
@@ -654,6 +656,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         :if={:receipt in @order.admin_menu_actions}
         menu="order-actions"
         phx-click="open_email"
+        aria-haspopup="dialog"
         phx-value-kind="receipt"
       >
         {if @order.receipt_emailed_at, do: ~t"Resend receipt", else: ~t"Email receipt"}
@@ -662,6 +665,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         :if={:order_details in @order.admin_menu_actions}
         menu="order-actions"
         phx-click="open_email"
+        aria-haspopup="dialog"
         phx-value-kind="order_details"
       >
         {if @order.order_details_emailed_at, do: ~t"Resend order details", else: ~t"Email order details"}
@@ -670,6 +674,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         :if={:payment_reminder in @order.admin_menu_actions}
         menu="order-actions"
         phx-click="open_email"
+        aria-haspopup="dialog"
         phx-value-kind="payment_reminder"
       >
         {~t"Send payment reminder"}
@@ -678,6 +683,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         :if={:fulfillment in @order.admin_menu_actions}
         menu="order-actions"
         phx-click="open_email"
+        aria-haspopup="dialog"
         phx-value-kind="fulfillment"
       >
         {if @order.fulfillment_emailed_at, do: ~t"Resend confirmation", else: ~t"Email confirmation"}
@@ -694,6 +700,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         :if={:refund in @order.admin_menu_actions}
         menu="order-actions"
         phx-click="open_settlement"
+        aria-haspopup="dialog"
         phx-value-mode="refund"
       >
         {~t"Refund"}
@@ -713,6 +720,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         :if={:cancel in @order.admin_menu_actions}
         menu="order-actions"
         phx-click="open_cancel"
+        aria-haspopup="dialog"
         class="text-error"
       >
         {~t"Cancel order"}

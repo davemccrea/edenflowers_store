@@ -86,6 +86,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
               :if={!@course.ended? && @registrations != []}
               type="button"
               phx-click="open_course_reminders"
+              aria-haspopup="dialog"
               variant="secondary"
               size="sm"
             >
@@ -574,6 +575,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         :if={@registration.status == :confirmed}
         menu={"registration-actions-#{@registration.id}"}
         phx-click="open_email"
+        aria-haspopup="dialog"
         phx-value-kind="confirmation"
         phx-value-id={@registration.id}
       >
@@ -585,6 +587,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         :if={@registration.to_collect?}
         menu={"registration-actions-#{@registration.id}"}
         phx-click="open_email"
+        aria-haspopup="dialog"
         phx-value-kind="payment_reminder"
         phx-value-id={@registration.id}
       >
@@ -594,6 +597,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         :if={@registration.refundable?}
         menu={"registration-actions-#{@registration.id}"}
         phx-click="open_settlement"
+        aria-haspopup="dialog"
         phx-value-id={@registration.id}
         phx-value-mode="refund"
       >
@@ -623,6 +627,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
       <.actions_menu_button
         menu={"registration-actions-#{@registration.id}"}
         phx-click="open_cancel"
+        aria-haspopup="dialog"
         phx-value-id={@registration.id}
         class="text-error"
       >
