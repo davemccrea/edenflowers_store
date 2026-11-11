@@ -45,7 +45,7 @@ defmodule EdenflowersWeb.Auth.AuthControllerTest do
   describe "failure/3" do
     test "a wrong OTP sends the user back to the code step for the same email", %{conn: conn} do
       conn =
-        %{conn | params: %{"user" => %{"email" => "jennie@example.com", "otp" => "00000000"}}}
+        %{conn | params: %{"user" => %{"email" => "jennie@example.com", "otp" => "000000"}}}
         |> init_auth_session(%{})
         |> AuthController.failure({:otp, :sign_in}, nil)
 

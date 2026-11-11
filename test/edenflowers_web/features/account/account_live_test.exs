@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       assert %{"email" => "new@example.com", "code" => code} = job.args
       refute to_string(Ash.get!(Edenflowers.Accounts.User, user.id, authorize?: false).email) == "new@example.com"
 
-      view |> form("#email-code-form", %{"confirm" => %{"code" => "00000000"}}) |> render_submit()
+      view |> form("#email-code-form", %{"confirm" => %{"code" => "000000"}}) |> render_submit()
       assert has_element?(view, "#email-code-form", "That code isn't right.")
 
       view |> form("#email-code-form", %{"confirm" => %{"code" => code}}) |> render_submit()

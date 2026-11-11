@@ -50,7 +50,7 @@ defmodule Edenflowers.Accounts.EmailChangeTest do
     {user, _code} = request!(user)
 
     assert {:error, %Ash.Error.Invalid{errors: [%{field: :code}]}} =
-             Accounts.confirm_email_change(user, "00000000x", actor: user)
+             Accounts.confirm_email_change(user, "000000x", actor: user)
 
     assert email_of(user) == to_string(user.email)
   end
@@ -59,17 +59,17 @@ defmodule Edenflowers.Accounts.EmailChangeTest do
     forged = %{
       user
       | pending_email: "attacker@example.com",
-        pending_email_code_hash: RequestEmailChange.hash_code("12345678"),
+        pending_email_code_hash: RequestEmailChange.hash_code("123456"),
         pending_email_expires_at: DateTime.add(DateTime.utc_now(), 10, :minute)
     }
 
-    assert {:error, %Ash.Error.Invalid{}} = Accounts.confirm_email_change(forged, "12345678", actor: user)
+    assert {:error, %Ash.Error.Invalid{}} = Accounts.confirm_email_change(forged, "123456", actor: user)
     assert email_of(user) == to_string(user.email)
   end
 
   test "rejects a code without a pending change", %{user: user} do
     assert {:error, %Ash.Error.Invalid{errors: [%{field: :pending_email}]}} =
-             Accounts.confirm_email_change(user, "12345678", actor: user)
+             Accounts.confirm_email_change(user, "123456", actor: user)
   end
 
   test "rejects an expired code", %{user: user} do
