@@ -201,6 +201,23 @@ defmodule Edenflowers.Courses.CourseRegistration do
   end
 
   calculations do
+    calculate :match_rank,
+              :integer,
+              expr(
+                fragment(
+                  "least(?, ?, ?)",
+                  match_rank(name, ^arg(:term)),
+                  match_rank(email, ^arg(:term)),
+                  match_rank(reference, ^arg(:term))
+                )
+              ) do
+      description "How closely the admin search term matches what a result row shows (see `match_rank`): " <>
+                    "0 exact, 1 at the start of a word, 2 elsewhere, 3 for a match in a field the row " <>
+                    "doesn't show. The search sorts by it."
+
+      argument :term, :ci_string, allow_nil?: false
+    end
+
     calculate :receipt_available?, :boolean, expr(status == :confirmed and amount_paid > 0) do
       description "Whether the customer can download a receipt for actual money recorded on this booking."
     end

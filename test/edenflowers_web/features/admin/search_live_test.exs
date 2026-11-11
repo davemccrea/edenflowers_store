@@ -57,6 +57,19 @@ defmodule EdenflowersWeb.Admin.SearchLiveTest do
     assert has_element?(view, ~s|#search-orders a[href="/admin/orders/#{order.id}"]|, "Ada Lovelace")
   end
 
+  test "puts the kind with the closest match first", %{conn: conn} do
+    generate(order(state: :placed, customer_name: "Johanna Lind", ordered_at: DateTime.utc_now()))
+    generate(promotion(code: "ANNA", name: "Spring sale"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/search?q=anna")
+    html = render_async(view)
+
+    # The code is the term exactly; the order only contains it.
+    {promotions, _} = :binary.match(html, ~s(id="search-promotions"))
+    {orders, _} = :binary.match(html, ~s(id="search-orders"))
+    assert promotions < orders
+  end
+
   test "finds a promotion by part of its code, any case", %{conn: conn} do
     promotion = generate(promotion(code: "SPRING26", name: "Spring sale"))
     generate(promotion(code: "AUTUMN26", name: "Spring leftovers"))

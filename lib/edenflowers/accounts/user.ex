@@ -237,6 +237,7 @@ defmodule Edenflowers.Accounts.User do
                  (is_nil(^arg(:term)) or contains(name, ^arg(:term)) or contains(email, ^arg(:term)))
              )
 
+      prepare Edenflowers.Preparations.RankByMatch
       prepare build(sort: [last_ordered_at: :desc])
     end
 
@@ -503,6 +504,16 @@ defmodule Edenflowers.Accounts.User do
   end
 
   calculations do
+    calculate :match_rank,
+              :integer,
+              expr(fragment("least(?, ?)", match_rank(name, ^arg(:term)), match_rank(email, ^arg(:term)))) do
+      description "How closely the admin search term matches what a result row shows (see `match_rank`): " <>
+                    "0 exact, 1 at the start of a word, 2 elsewhere, 3 for a match in a field the row " <>
+                    "doesn't show. The search sorts by it."
+
+      argument :term, :ci_string, allow_nil?: false
+    end
+
     calculate :matches?,
               :boolean,
               expr(contains(name, ^arg(:term)) or contains(email, ^arg(:term))) do

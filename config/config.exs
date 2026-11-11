@@ -47,7 +47,7 @@ config :ash,
   default_page_type: :keyset,
   policies: [no_filter_static_forbidden_reads?: false],
   default_string_length_count: :codepoints,
-  custom_expressions: [Edenflowers.Expressions.HelsinkiToday]
+  custom_expressions: [Edenflowers.Expressions.HelsinkiToday, Edenflowers.Expressions.MatchRank]
 
 config :spark,
   formatter: [

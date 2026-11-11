@@ -48,6 +48,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
                  (contains(name, ^arg(:term)) or contains(email, ^arg(:term)) or contains(reference, ^arg(:term)))
              )
 
+      prepare Edenflowers.Preparations.RankByMatch
       prepare build(sort: [inserted_at: :desc], load: [:course, :cancelled?, :seats_held])
     end
 

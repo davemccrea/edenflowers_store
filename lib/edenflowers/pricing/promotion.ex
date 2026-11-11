@@ -148,6 +148,7 @@ defmodule Edenflowers.Pricing.Promotion do
 
       filter expr(contains(code, ^arg(:term)))
 
+      prepare Edenflowers.Preparations.RankByMatch
       prepare build(sort: [code: :asc], load: [:status, :usage])
     end
 
@@ -303,6 +304,14 @@ defmodule Edenflowers.Pricing.Promotion do
   end
 
   calculations do
+    calculate :match_rank, :integer, expr(match_rank(code, ^arg(:term))) do
+      description "How closely the admin search term matches what a result row shows (see `match_rank`): " <>
+                    "0 exact, 1 at the start of a word, 2 elsewhere, 3 for a match in a field the row " <>
+                    "doesn't show. The search sorts by it."
+
+      argument :term, :ci_string, allow_nil?: false
+    end
+
     calculate :matches?,
               :boolean,
               expr(contains(name, ^arg(:term)) or contains(code, ^arg(:term))) do

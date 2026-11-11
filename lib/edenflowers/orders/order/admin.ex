@@ -225,6 +225,8 @@ defmodule Edenflowers.Orders.Order.Admin do
 
       filter expr(state == :placed and matches?(term: ^arg(:term)))
 
+      prepare Edenflowers.Preparations.RankByMatch
+
       prepare build(
                 sort: [ordered_at: :desc],
                 load: [

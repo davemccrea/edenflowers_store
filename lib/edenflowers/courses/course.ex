@@ -106,6 +106,7 @@ defmodule Edenflowers.Courses.Course do
                  contains(translations[:fi][:name], ^arg(:term))
              )
 
+      prepare Edenflowers.Preparations.RankByMatch
       prepare build(sort: [date: :desc], load: [:seats_booked])
     end
 
@@ -262,6 +263,23 @@ defmodule Edenflowers.Courses.Course do
   end
 
   calculations do
+    calculate :match_rank,
+              :integer,
+              expr(
+                fragment(
+                  "least(?, ?, ?)",
+                  match_rank(name, ^arg(:term)),
+                  match_rank(translations[:"sv-FI"][:name], ^arg(:term)),
+                  match_rank(translations[:fi][:name], ^arg(:term))
+                )
+              ) do
+      description "How closely the admin search term matches what a result row shows (see `match_rank`): " <>
+                    "0 exact, 1 at the start of a word, 2 elsewhere, 3 for a match in a field the row " <>
+                    "doesn't show. The search sorts by it."
+
+      argument :term, :ci_string, allow_nil?: false
+    end
+
     calculate :ended?,
               :boolean,
               expr(fragment("(? + ?) AT TIME ZONE 'Europe/Helsinki'", date, end_time) <= ^arg(:now)) do
