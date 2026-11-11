@@ -552,8 +552,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("confirm_fulfillment", _params, socket) do
-    # "customer_home" starts as the unanswered radio posts it, so ticking
-    # the email box first isn't taken for an answer.
+    # Match the unanswered radio field's empty value so checking the email box
+    # first is not mistaken for a change to the customer-home answer.
     form =
       socket.assigns.order
       |> AshPhoenix.Form.for_update(:mark_fulfilled,
@@ -855,8 +855,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  # Left where nobody was home, the order is photographed and the photo goes
-  # with the email. "customer_home" itself is the drawer's alone.
+  # Include the delivery photo in the email when the order was left while nobody
+  # was home. `customer_home` controls the drawer and is not an action argument.
   defp fulfillment_params(form, %{"customer_home" => "false"} = params, action),
     do: Drawers.keep_email_edits(form, Map.put(params, "email_delivery_photo", "true"), action)
 

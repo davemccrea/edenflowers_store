@@ -68,7 +68,7 @@ defmodule Edenflowers.Payments.OrderInvoiceTest do
     {:ok, draft} = Payments.create_invoice_for_order(order.id, actor: ctx.admin)
 
     assert draft.order_id == order.id
-    # Only sends are versioned: the history would read a new draft as emailed.
+    # Creating a draft must not add a send-history entry, which would imply it had been emailed.
     assert Ash.load!(draft, :paper_trail_versions, authorize?: false).paper_trail_versions == []
     assert draft.buyer_name == "Kukka Oy"
     assert to_string(draft.buyer_email) == "office@kukka.fi"
@@ -251,7 +251,8 @@ defmodule Edenflowers.Payments.OrderInvoiceTest do
 
     {:ok, draft} = Payments.create_invoice_for_order(order.id, actor: ctx.admin)
 
-    # 88,00 of 108,00 at 25,5 % and 20,00 at 14 %, of a 54,00 charge.
+    # Split the 54.00 cancellation charge in the original VAT proportions:
+    # 88.00 of the 108.00 total was at 25.5%, and 20.00 was at 14%.
     assert [{charge, "1", "44.00", "25.5"}, {charge, "1", "10.00", "14"}] = lines(draft)
     assert charge =~ order.order_reference
   end

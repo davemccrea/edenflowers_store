@@ -11,8 +11,7 @@
   --color-error-content: var(--color-red-700);
 }
 
-/* A darker edge than the storefront's so cards and dividers hold up against
-   the tinted admin page. */
+/* Darken card borders and dividers so they remain visible against the tinted admin page. */
 .admin-theme {
   --color-base-300: oklch(90% 0.014 75);
 }
@@ -202,7 +201,7 @@
   }
 }
 
-/* Labels follow the md fields' type scale, including boolean choices. */
+/* Match label text to medium-sized fields, including labels for boolean choices. */
 .admin-theme
   :is(fieldset > label, fieldset > legend, label[for], .fieldset-label) {
   @apply text-base-content text-sm;
@@ -274,8 +273,8 @@
   color: color-mix(in oklab, var(--color-base-content) 78%, transparent);
 }
 
-/* A fact about a record rather than a state, like its category or that it's a
-   gift: the neutral badge's edge and text in a lighter fill. */
+/* Tags describe facts such as a category or gift, rather than a record's state.
+   Give them a lighter fill while keeping the neutral badge's border and text. */
 .badge.admin-badge-tag {
   --badge-fill: 6%;
 }
@@ -449,8 +448,8 @@ body:has(.admin-theme) {
   );
 }
 
-/* The account page's colour picker (AccountLive.appearance_picker/1). The
-   field runs every hue across and dark to light down, under Arc's dot grid. */
+/* The account page's colour picker shows hue horizontally and becomes darker
+   toward the bottom. The dot grid adds a visual reference for picking a position. */
 .admin-picker-field {
   background-image: radial-gradient(
       circle,
@@ -470,8 +469,8 @@ body:has(.admin-theme) {
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
 }
 
-/* Presets and the field's handle show a colour brighter than the sidebar it
-   makes, so it reads on the dark panel. Presets carry --h/--c/--l. */
+/* Show presets brighter than the sidebar colour they produce so they remain
+   visible on the dark panel. Each preset supplies --h, --c and --l. */
 .admin-swatch {
   background-color: oklch(
     calc(var(--l) * 1% + 30%) calc(var(--c) / 1000 + 0.04) var(--h)
@@ -495,9 +494,9 @@ body:has(.admin-theme) {
   border: 0;
 }
 
-/* The handle shows the admin's colour, brighter like the presets. It glides
-   to presets, key presses and a pressed point, but follows a drag directly,
-   and lifts while held, as Arc's does. */
+/* The handle uses the same brighter colour as the presets so it remains visible.
+   Animate preset changes, key presses and clicks, but follow pointer movement
+   directly during a drag. Enlarge the handle while it is held. */
 .admin-picker-handle {
   background-color: oklch(
     calc(var(--admin-l) + 30%) calc(var(--admin-c) + 0.04) var(--admin-h)

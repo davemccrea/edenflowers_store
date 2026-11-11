@@ -5,7 +5,7 @@
 // Render one invoice. `invoice` is a flat dict built by
 // Edenflowers.Payments.InvoicePdf; see sample/invoice.*.json. Its own billed
 // lines and VAT use the shared table layout. Money and dates arrive
-// pre-formatted, labels translated, and the virtual barcode as its 54 digits.
+// pre-formatted, labels arrive translated, and the virtual barcode arrives as 54 digits.
 #let invoice(invoice) = {
   let required = (
     "lang", "labels", "number", "invoice_date", "due_date", "late_interest_rate",
@@ -25,8 +25,8 @@
     assert(key in invoice.buyer, message: "invoice: buyer missing `" + key + "`")
   }
 
-  // Set only on a part-paid invoice sent again: the payments so far and what
-  // is left, which the payment details and virtual barcode then ask for.
+  // A resent, partly paid invoice includes the amount paid and the remaining
+  // balance. Its payment details and virtual barcode request only that balance.
   let paid = invoice.at("paid", default: none)
   let left-to-pay = invoice.at("left_to_pay", default: none)
   let to-transfer = if left-to-pay != none { left-to-pay } else { invoice.amount }
@@ -73,14 +73,14 @@
     ]
   ]
 
-  // Elastic, as on the receipt: the payment details anchor to the bottom of
-  // a sparse page and follow on after the totals on a full one.
+  // Use flexible space to place payment details at the bottom of a sparse page,
+  // or directly after the totals when the page is full, as on receipts.
   v(20pt)
   v(1fr)
 
   // ── Payment details ─────────────────────────────────────────────────
-  // What the payer types into their bank, or pastes as the virtual barcode,
-  // or scans as the bar code. The bar code follows Finance Finland's Bank
+  // The payer can enter these details in their bank, paste the virtual barcode,
+  // or scan the printed barcode. The barcode follows Finance Finland's Bank
   // Bar Code Guide: Code 128 set C, 105 mm wide, 12 mm high, 20 mm of quiet
   // zone either side, and no text directly above or below it.
   let field(label, value) = [

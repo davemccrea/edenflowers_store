@@ -535,7 +535,7 @@ defmodule Edenflowers.Orders.OrderTest do
         })
         |> Ash.update(authorize?: false)
 
-      # Should match existing user (ci_string field)
+      # The case-insensitive email field must match the existing user instead of creating another.
       assert order.user_id == user1.id
 
       all_users = Ash.read!(User, authorize?: false)

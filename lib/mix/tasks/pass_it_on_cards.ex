@@ -27,7 +27,8 @@ defmodule Mix.Tasks.PassItOnCards do
 
   @profile "priv/receipts/icc/PSOcoated_v3.icc"
 
-  # Printed on the cards, so it must outlive any change to the site's routes.
+  # This URL is printed on physical cards. Keep it working even if the site's
+  # other routes change, because cards already in circulation cannot be updated.
   @landing_url "https://edenflowers.fi/pass-it-on"
 
   @impl Mix.Task
@@ -63,7 +64,8 @@ defmodule Mix.Tasks.PassItOnCards do
   defp to_print_ready(source, out) do
     profile = Path.expand(@profile)
 
-    # -dSAFER only lets Ghostscript read its own files, so the profile is permitted by name.
+    # Ghostscript's -dSAFER restricts file access. Explicitly allow it to read our
+    # external colour profile without disabling those protections.
     args =
       ["-q", "-dSAFER", "-dBATCH", "-dNOPAUSE", "-sDEVICE=pdfwrite", "-dNoOutputFonts"] ++
         ["-sColorConversionStrategy=CMYK", "-sProcessColorModel=DeviceCMYK"] ++

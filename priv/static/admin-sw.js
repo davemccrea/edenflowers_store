@@ -1,6 +1,7 @@
 // Service worker for the installed admin app, registered with scope /admin.
-// It shows new-order notifications and keeps the app icon's badge in step.
-// Nothing is cached: LiveView needs its socket anyway.
+// It shows new-order notifications and updates the app icon's notification count.
+// It does not cache pages or assets for offline use: LiveView still needs a
+// connection to the server.
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) =>
@@ -12,8 +13,8 @@ self.addEventListener("push", (event) => {
 
   event.waitUntil(
     (async () => {
-      // A retried push carries the same tag, so it replaces its notification
-      // rather than adding one.
+      // Retried pushes carry the same tag. Reuse it so a retry replaces the
+      // existing notification instead of showing a duplicate.
       await self.registration.showNotification(title, {
         body,
         tag,

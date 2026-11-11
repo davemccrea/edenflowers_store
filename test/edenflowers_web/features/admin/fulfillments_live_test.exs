@@ -162,7 +162,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       last = Date.end_of_month(ShopTime.today())
       next = Date.add(last, 1)
 
-      # CalendarHook pushes to the element it's on, which reaches MonthGrid.
+      # Target the calendar element as CalendarHook does so MonthGrid receives the key event.
       view
       |> with_target("#admin-fulfillment-calendar")
       |> render_hook("keydown", %{"key" => "ArrowRight", "viewDate" => Date.to_iso8601(last)})
@@ -346,7 +346,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{home_delivery.id}")
 
       assert %{"fee" => 10.5, "free" => +0.0} = preview_point(view, 5)
-      # 3.00 + 1.50 × (8 − 5)
+      # At 8 km, the free-delivery fee is the 3.00 base price plus 1.50 for each
+      # of the 3 km beyond the free 5 km: 3.00 + 1.50 × (8 − 5) = 7.50.
       assert %{"fee" => 15.0, "free" => 7.5} = preview_point(view, 8)
       assert has_element?(view, "#fee-explorer [data-value=free]")
 
@@ -432,7 +433,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
     end
 
     test "redirects non-admin authenticated users to /sign-in" do
-      # A user that exists but isn't an admin should still get bounced.
+      # Being signed in is not enough; the page must also require an admin account.
       regular_user =
         Generator.admin_user(admin: false)
         |> Generator.generate()

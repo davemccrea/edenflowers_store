@@ -1,8 +1,8 @@
-# Dev fixtures, built on the production base seed. Run it with:
+# This script builds development fixtures on top of the production seed. Run it with:
 #
 #     just seed-db
 #
-# One example of each feature or variation the store and admin show. Add a new
+# The fixtures cover each feature or variation the store and admin show. Add a new
 # fixture only when it shows something none of the existing ones do.
 
 alias Edenflowers.Accounts
@@ -34,8 +34,8 @@ if seed_stripe? and not String.starts_with?(Application.fetch_env!(:stripity_str
   raise "Seeding with Stripe needs a test-mode key (sk_test_…). Nothing was written."
 end
 
-# Returns the PaymentIntent, real and confirmed with Stripe's test card for
-# the brand, or a made-up one with the same fields.
+# This helper returns a PaymentIntent confirmed with Stripe's test card for the
+# requested brand, or a made-up PaymentIntent with the same fields.
 seed_payment_intent = fn amount, card_brand, metadata ->
   cents = StripeAPI.to_stripe_amount(amount)
 
@@ -53,7 +53,7 @@ seed_payment_intent = fn amount, card_brand, metadata ->
   end
 end
 
-# Refunds a seeded Stripe payment in full and records it as the webhook would.
+# This helper refunds a seeded Stripe payment in full and records it as the webhook would.
 seed_refund = fn payment, fake_id ->
   cents = StripeAPI.to_stripe_amount(payment.amount)
 
@@ -130,7 +130,7 @@ create_product.(
   bouquet_details
 )
 
-# One size with only a height, as the florist sometimes leaves stems blank.
+# One size has only a height because the florist sometimes leaves the stem count blank.
 create_product.(
   %{product_category_id: bouquets_category.id, name: "Bouquet 2", featured: true},
   bouquet_prices,
@@ -147,7 +147,7 @@ create_product.(
   }
 )
 
-# One of a kind, and the small one has sold, so the Overview flags it as sold out.
+# Each variant is one of a kind, and the small one has sold, so the Overview flags it as sold out.
 pre_loved =
   create_product.(
     %{product_category_id: category.("pre-loved").id, name: "Pre-Loved Item"},
@@ -238,8 +238,8 @@ create_product.(
   bouquet_details
 )
 
-# One promotion per state the admin list tells apart: running, ended, not
-# started yet, and used up (its one use is the overdue order below).
+# These promotions cover each state in the admin list: running, ended, not
+# started yet, and used up. The overdue order below uses the last promotion's only redemption.
 for attrs <- [
       %{
         name: "Summer offer, 15% off",
@@ -278,15 +278,16 @@ for attrs <- [
   |> Ash.create!(authorize?: false)
 end
 
-# Hanna → Karin → Elin and Olle (cancelled) → Nils. Sanna's source was never
-# linked. Mikael's card is unopened; one is spare to scan.
+# Hanna's gift leads to Karin's order, then to Elin's and Olle's orders.
+# Olle's cancelled gift leads to Nils's order. Sanna's source order was never
+# linked to her card. Mikael's card is unopened, and one card is spare to scan.
 [linked_card_code, used_card_code, karin_card_code, cancelled_card_code, unlinked_card_code, _spare_card_code] =
   Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare 2026-11", 6, actor: Edenflowers.Actors.system_actor())
 
 Edenflowers.Pricing.create_newsletter_promotion!(authorize?: false)
 
-# One per confidence level and payment state: unpaid, overdue and paid. The
-# last is from a vendor without a VAT number.
+# These expenses cover each extraction confidence level and the unpaid, overdue
+# and paid states. The last expense is from a vendor without a VAT number.
 for {document_id, vendor, vat, date, total, vat_amount, currency, category, description, confidence, paid_on, due_on} <-
       [
         {"doc-001", "Pohjanmaan Kukkutukku", "FI89012345", ~D[2026-04-03], "875.00", "178.65", :eur,
@@ -403,15 +404,15 @@ today = DateTime.to_date(now)
 
 jennie = Ash.get!(User, %{email: "info@edenflowers.fi"}, authorize?: false)
 
-# Online course bookings. Ash.Seed for the same reason as orders below: checkout
-# confirms a booking only once Stripe has taken the money, and like a placed
-# order it keeps its PaymentIntent only on its Stripe payment. Elin cancelled
-# and was refunded. The past course has its history.
+# These online course bookings use Ash.Seed because checkout only confirms a
+# booking after Stripe has taken payment. As with placed orders below, the
+# PaymentIntent is stored on the payment, not the booking. Elin's booking is
+# cancelled and refunded, and the past course has a confirmed booking in its history.
 [
   {autumn_wreath, "Anna Svensson", "anna.svensson@example.com", 3, :confirmed, "sv-FI"},
   {autumn_wreath, "Elin Sjöberg", "elin.sjoberg@example.com", 1, :cancelled, "sv-FI"},
-  # No PaymentIntent: a fake one makes the ReconcilePayment cron fail against
-  # Stripe, so it stays an abandoned checkout instead.
+  # Leave the PaymentIntent unset so this remains an abandoned checkout.
+  # A fake PaymentIntent would make the ReconcilePayment job fail against Stripe.
   {autumn_wreath, "Pekka Mäkinen", "pekka.makinen@example.com", 1, :pending, "fi"},
   {midsummer_crown, "Ida Westerlund", "ida.westerlund@example.com", 2, :confirmed, "sv-FI"}
 ]
@@ -445,8 +446,8 @@ jennie = Ash.get!(User, %{email: "info@edenflowers.fi"}, authorize?: false)
         card_last4: "4444"
       })
 
-    # Cancelling refunds through Stripe, which refuses the made-up payments, so
-    # the refund is recorded as the webhook would.
+    # Record the refund as the webhook would. The cancellation action would
+    # ask Stripe to refund a payment that may be made up.
     if status == :cancelled, do: seed_refund.(payment, "re_seed_#{registration.reference}")
   end
 end)
@@ -457,8 +458,8 @@ CourseRegistration
 |> Ash.read_one!(authorize?: false)
 |> Edenflowers.Courses.remove_registration_seat!(authorize?: false)
 
-# Manual bookings, one per way Jennie is paid: at the course, already in cash,
-# and by Payment Link.
+# These manual bookings cover payment at the course, payment already received
+# in cash, and payment by Payment Link.
 for {name, email, seats, attrs} <- [
       {"Emma Nyström", "emma.nystrom@example.com", 1, %{payment_terms: :on_fulfillment}},
       {"Kristina Ahlroos", "kristina.ahlroos@example.com", 2,
@@ -477,7 +478,7 @@ for {name, email, seats, attrs} <- [
   |> Edenflowers.Courses.add_registration_manually!(actor: jennie)
 end
 
-# Placed orders. Checkout drives orders through a state machine and seals them
+# Checkout drives orders through a state machine and seals them
 # once placed, so normal Ash actions can't construct a finished order. Ash.Seed
 # writes attributes directly, bypassing transitions and policies: the right
 # escape hatch for fixtures.
@@ -528,7 +529,7 @@ end
 # Checkout enforces one card per order (SwapCardLineItem).
 card_line_item = fn -> %{line_item.("Dahlias", :medium, 1) | is_card: true} end
 
-# Inside the free delivery radius.
+# This address is inside the free delivery radius.
 nearby_address = %{
   delivery_address: "Gerbyntie 16, 65230 Vaasa",
   geocoded_address: "Gerbyvägen 16, 65230 Vasa",
@@ -537,7 +538,7 @@ nearby_address = %{
   distance: 1651
 }
 
-# Far enough out to pay for delivery.
+# This address is far enough from the shop to incur a delivery fee.
 distant_address = %{
   delivery_address: "Sundomintie 130, 65410 Sundom",
   geocoded_address: "Sundomvägen 130, 65410 Vasa",
@@ -546,7 +547,7 @@ distant_address = %{
   distance: 12_711
 }
 
-# Takes the order's attributes plus :fulfillment_option, :items (line item maps),
+# This helper takes the order's attributes plus :fulfillment_option, :items (line item maps),
 # an optional :promotion, and :payment_card ({brand, last4}, or nil if unpaid).
 seed_placed_order = fn attrs ->
   {option, attrs} = Map.pop!(attrs, :fulfillment_option)
@@ -565,7 +566,7 @@ seed_placed_order = fn attrs ->
           order_reference: next_reference.(),
           state: :placed,
           fulfillment_status: fulfillment_status,
-          # Already emailed, so the admin menu offers to resend rather than send.
+          # Mark the receipt as already emailed so the admin menu offers to resend it.
           receipt_emailed_at: DateTime.utc_now(),
           fulfillment_emailed_at: if(fulfillment_status == :fulfilled, do: DateTime.utc_now()),
           ordered_at: DateTime.utc_now(),
@@ -577,7 +578,7 @@ seed_placed_order = fn attrs ->
           quoted_free_delivery_fee: fee.free_delivery_fee,
           fulfillment_tax_rate: tax_rate.percentage,
           # Snapshot the promotion the same way ApplyPromotion does at checkout.
-          # LineItem.discount keys off order.discount_rate + promotion_id, so both
+          # LineItem.discount depends on order.discount_rate and promotion_id, so both
           # the relationship and the frozen columns must be set for totals to match.
           promotion_id: promotion && promotion.id,
           discount_rate: promotion && promotion.discount_rate,
@@ -637,7 +638,7 @@ fulfillment_date_for = fn days_out ->
 end
 
 orders = [
-  # A gift with a card, delivered today, outside the free delivery radius.
+  # This gift includes a card and is due today, outside the free delivery radius.
   Map.merge(distant_address, %{
     customer_name: "Mikael Lindholm",
     customer_email: "mikael.lindholm@example.fi",
@@ -649,7 +650,7 @@ orders = [
     card_message: "Happy birthday, with love.",
     items: [line_item.("Bouquet 2", :large, 1), card_line_item.()]
   }),
-  # Cart total well above the promo's €30 minimum so the discount applies.
+  # The cart total is well above the promotion's €30 minimum, so the discount applies.
   Map.merge(nearby_address, %{
     customer_name: "Liisa Mäkinen",
     customer_email: "liisa.makinen@example.fi",
@@ -661,9 +662,9 @@ orders = [
     promotion: promotion_by_code.("SUMMER15"),
     items: [line_item.("Bouquet 2", :large, 2), line_item.("Plant", :medium, 1)]
   }),
-  # Ordered a few days back and already delivered, so it lands in the Overview's
-  # completed side. Both dates sit in the past, in order. Its pass-it-on card
-  # brought in Karin's order.
+  # This order was placed a few days ago and is already delivered, so it appears
+  # in the Overview's completed section. Its order date precedes its delivery date.
+  # Its pass-it-on card brought in Karin's order.
   Map.merge(nearby_address, %{
     customer_name: "Hanna Järvinen",
     customer_email: "hanna.jarvinen@example.fi",
@@ -677,7 +678,7 @@ orders = [
     fulfillment_status: :fulfilled,
     items: [line_item.("Bouquet 2", :medium, 1)]
   }),
-  # Paid, but its pickup day has passed without Jennie marking it collected.
+  # This order is paid, but its pickup day has passed without Jennie marking it collected.
   %{
     customer_name: "Tuula Rantanen",
     customer_email: "tuula.rantanen@example.fi",
@@ -688,8 +689,8 @@ orders = [
     promotion: promotion_by_code.("MOR10"),
     items: [line_item.("Bouquet 2", :medium, 1)]
   },
-  # A large mixed cart with both VAT rates. The four below are changed after
-  # placing, further down.
+  # This large mixed cart covers both VAT rates. Erik's, Petra's, Oskar's and
+  # Nora's orders are edited or cancelled later in this script, after placement.
   %{
     customer_name: "Erik Sundström",
     customer_email: "erik.sundstrom@example.fi",
@@ -724,8 +725,9 @@ orders = [
     fulfillment_date: fulfillment_date_for.(4),
     items: [line_item.("Bouquet 1", :small, 1), line_item.("Plant", :medium, 1)]
   },
-  # With Mikael's, today's Overview has a timed delivery ahead of an untimed one,
-  # and a pickup. Karin received Hanna's gift and uses its code to send flowers to Elin.
+  # Together with Mikael's delivery and Ida's pickup, this gives today's Overview
+  # a timed delivery, an untimed delivery and a pickup. Karin received Hanna's
+  # gift and uses its code to send flowers to Elin.
   Map.merge(nearby_address, %{
     promotion: promotion_by_code.(used_card_code),
     customer_name: "Karin Öst",
@@ -749,7 +751,7 @@ orders = [
     fulfillment_time_start: ~T[15:00:00],
     items: [line_item.("Bouquet 1", :medium, 2)]
   },
-  # Tomorrow itself, not the next open day, so the Overview's Tomorrow always has a delivery.
+  # Use tomorrow rather than the next open day so the Overview's Tomorrow section always has a delivery.
   Map.merge(distant_address, %{
     customer_name: "Anders Björk",
     customer_email: "anders.bjork@example.fi",
@@ -813,14 +815,14 @@ for {attrs, index} <- Enum.with_index(orders) do
   )
 end
 
-# Subscriptions, one per state the admin list and account page show, each with
-# the order that started it and some with later deliveries (Occurrences).
-# Ash.Seed for the same reason as the orders above. As in the app, the schedule
-# runs on whole intervals from the first order's date: each Occurrence is the
-# next date on it, and next_fulfillment_date the one after the latest, on the
-# first order's weekday, its delivery day. Active next dates sit beyond the
-# lead time and the change cutoff, so the hourly occurrence job doesn't charge
-# them as soon as they're seeded, and customers can still change them.
+# These subscriptions cover each state shown in the admin list and account page.
+# Each has its initial order, and some have later delivery orders (Occurrences).
+# They use Ash.Seed to bypass checkout, as the placed orders above do.
+# Delivery dates advance by whole subscription intervals from the first order's
+# date, preserving its weekday. next_fulfillment_date follows the latest occurrence.
+# Active subscriptions' next dates are beyond the lead time and change cutoff,
+# so the hourly occurrence job does not charge them immediately after seeding
+# and customers can still change them.
 alias Edenflowers.Orders.Subscription
 
 weekly_bouquet = fn size -> variant_for.("Florist's choice bouquet", size) end
@@ -863,7 +865,7 @@ seed_subscription_order = fn subscription, user, attrs ->
 end
 
 subscriptions = [
-  # David's own, so the account page has one to try pause and change on.
+  # David's subscription lets him try pausing and changing it on his account page.
   %{
     email: "mail@dmccrea.me",
     name: "David McCrea",
@@ -875,8 +877,8 @@ subscriptions = [
     locale: "sv-FI",
     occurrences: [%{fulfillment_status: :fulfilled}]
   },
-  # An ordinary one running smoothly, with no state to sort out, so there's an
-  # active subscription to try things on besides David's own.
+  # This active subscription has no payment or scheduling problems, providing
+  # another subscription to try besides David's own.
   %{
     email: "emma.lindqvist@example.fi",
     name: "Emma Lindqvist",
@@ -888,8 +890,8 @@ subscriptions = [
     locale: "sv-FI",
     occurrences: [%{fulfillment_status: :fulfilled}]
   },
-  # A gift, paused before its second delivery was charged, so its next date
-  # stays put until it resumes.
+  # This gift subscription was paused before its second delivery was charged,
+  # so its next date stays unchanged until it resumes.
   %{
     email: "otto.makinen@example.fi",
     name: "Otto Mäkinen",
@@ -915,9 +917,9 @@ subscriptions = [
     locale: "en",
     occurrences: [%{fulfillment_status: :fulfilled}, %{paid?: false}]
   },
-  # Cancelled after its latest delivery was charged. That delivery, a day or
-  # two out, still comes, so the account page keeps the subscription until then
-  # and it's too late to call off.
+  # This subscription was cancelled after its latest delivery was charged.
+  # That delivery is still due and is too late to cancel, so the account page
+  # keeps showing the subscription until the delivery date.
   %{
     email: "jonas.berg@example.fi",
     name: "Jonas Berg",
@@ -929,9 +931,10 @@ subscriptions = [
     locale: "sv-FI",
     occurrences: [%{}]
   },
-  # Delivers on Mondays, which the shop has since closed. Her day picker still
-  # offers Monday, and the admin flags each Monday delivery for Jennie to agree
-  # another day. Its first delivery was the Monday four weeks before the next.
+  # This subscription delivers on Mondays, when the shop is now closed. The
+  # customer's day picker still offers Monday, and the admin flags each Monday
+  # delivery so Jennie can agree another day with the customer. The first delivery
+  # was on the Monday four weeks before the next one.
   %{
     email: "kaisa.virtanen@example.fi",
     name: "Kaisa Virtanen",
@@ -1009,12 +1012,12 @@ for attrs <- subscriptions do
   end
 end
 
-# Custom orders, payments and edits. Unlike the orders above, these go through
+# These custom orders, payments and edits go through
 # the real actions as Jennie, so the order log, the payment rows, balances and
-# payment links come out exactly as the app makes them. All pickups, so no
+# payment links come out exactly as the app makes them. All are pickups, so no
 # address is geocoded, and only the seeded Stripe payments and refunds call
-# Stripe. Every customer email is marked as already sent, for the same reason
-# as above.
+# Stripe. Customer emails are suppressed during order creation; seeded receipt
+# timestamps let the admin offer to resend receipts instead of sending them for the first time.
 alias Edenflowers.Orders
 alias Edenflowers.Payments
 
@@ -1049,7 +1052,7 @@ place_custom = fn attrs ->
   |> Orders.place_custom_order!(actor: jennie)
 end
 
-# Phoned in for a funeral: no email, so Jennie copies the payment link into a text message.
+# This funeral order was phoned in without an email address, so Jennie can text the payment link.
 place_custom.(%{
   customer_name: "Margareta Holm",
   customer_phone_number: "040 7654321",
@@ -1062,8 +1065,8 @@ place_custom.(%{
   ]
 })
 
-# Collected three weeks ago by a phone-only customer who promised to pay, so the
-# Overview flags the payment as overdue. Placed today and then backdated, as
+# This order was collected three weeks ago by a phone-only customer who promised
+# to pay, so the Overview flags the payment as overdue. Create it today and backdate it because
 # Jennie can't place an order in the past.
 fulfilled_unpaid =
   place_custom.(%{
@@ -1080,7 +1083,7 @@ Ash.Seed.update!(fulfilled_unpaid, %{
   fulfillment_date: fulfillment_date_for.(-21)
 })
 
-# Called off before it was paid.
+# This order was cancelled before it was paid.
 cancelled =
   place_custom.(%{
     customer_name: "Ulla Granqvist",
@@ -1103,7 +1106,7 @@ Orders.link_pass_it_on_card!(online_order.("Mikael Lindholm"), linked_card_code,
 Orders.link_pass_it_on_card!(online_order.("Karin Öst"), karin_card_code, actor: jennie)
 
 # Hanna's gift is seeded already delivered, too late for the order action, so
-# the card is linked directly, then scanned, which stops it moving.
+# the card is linked directly. Starting its validity simulates a scan and prevents reassignment.
 used_card = promotion_by_code.(used_card_code)
 Edenflowers.Pricing.link_card_to_gift_order!(used_card, online_order.("Hanna Järvinen").id, actor: jennie)
 
@@ -1123,8 +1126,8 @@ for code <- [karin_card_code, cancelled_card_code, unlinked_card_code] do
   Edenflowers.Pricing.start_promotion_validity!(promotion_by_code.(code), actor: Actors.system_actor())
 end
 
-# An online order the customer asked to add to by email after paying: it now
-# has a balance to collect and a payment link for just that.
+# This customer emailed to add an item after paying for an online order.
+# The order now has an outstanding balance and a payment link for that balance.
 erik = online_order.("Erik Sundström")
 
 kept_lines = Enum.map(erik.line_items, &%{"id" => &1.id, "quantity" => to_string(&1.quantity)})
@@ -1132,8 +1135,8 @@ kept_lines = Enum.map(erik.line_items, &%{"id" => &1.id, "quantity" => to_string
 Orders.edit_order!(erik, %{line_items: kept_lines ++ [catalogue_line.("Plant", :small, 1)]}, actor: jennie)
 Orders.open_payment_link!(erik, actor: jennie)
 
-# A custom order paid in part by link, the rest still owed. The link payment
-# is recorded as the Stripe webhook would, which may get there first.
+# This custom order is paid by link before an edit increases its total, leaving
+# a balance owed. Record the payment as Stripe's webhook would; the webhook may arrive first.
 part_paid =
   place_custom.(%{
     customer_name: "Johanna Lind",
@@ -1150,8 +1153,8 @@ Ash.Seed.update!(part_paid, %{payment_intent_id: link_payment.id})
 {:ok, outcome} = Payments.complete(link_payment)
 true = outcome in [:completed, :already_completed]
 
-# complete/1 looks the method up in Stripe, which a made-up PaymentIntent
-# isn't in, so the payment is named here instead.
+# Payments.complete/1 looks up the payment method in Stripe. A made-up PaymentIntent
+# does not exist there, so set its payment method type directly instead.
 unless seed_stripe? do
   Payment
   |> Ash.Query.filter(payment_intent_id == ^link_payment.id)
@@ -1174,25 +1177,26 @@ Orders.edit_order!(
   actor: jennie
 )
 
-# Called off and refunded in full. Ash.Seed because cancelling refunds through
-# Stripe, which refuses the made-up payments; seed_refund records it instead.
+# This order is cancelled and refunded in full. Use Ash.Seed to cancel it because
+# the cancellation action would ask Stripe to refund a possibly made-up payment.
+# seed_refund records the refund separately.
 petra = online_order.("Petra Holm")
 Ash.Seed.update!(petra, %{fulfillment_status: :cancelled, cancelled_at: DateTime.utc_now()})
 [petra_payment] = petra.payments
 
 seed_refund.(petra_payment, "re_seed_#{petra.order_reference}")
 
-# Called off the day before, so Jennie kept the payment.
+# This order was cancelled at short notice, so Jennie kept the payment.
 oskar = Ash.load!(online_order.("Oskar Wikström"), :amount_held, authorize?: false)
 Orders.cancel_order!(oskar, %{cancellation_charge: oskar.amount_held}, actor: jennie)
 
-# Paid, then the plant was out of stock: money to hand back through Stripe.
+# Removing an out-of-stock plant from this paid order leaves a refund owed through Stripe.
 nora = online_order.("Nora Back")
 [bouquet | _] = Enum.filter(nora.line_items, &(&1.product_name == "Bouquet 1"))
 
 Orders.edit_order!(nora, %{line_items: [%{"id" => bouquet.id, "quantity" => "1"}]}, actor: jennie)
 
-# Paid in cash, then the gift wrap was left off: money to hand back in person.
+# Removing gift wrapping from this cash-paid order leaves a refund owed in person.
 cash =
   place_custom.(%{
     customer_name: "Greta Lund",
@@ -1208,7 +1212,7 @@ cash = Orders.record_payment!(cash, cash.balance, :cash, actor: jennie)
 
 Orders.edit_order!(cash, %{line_items: [%{"id" => bouquet.id, "quantity" => "1"}]}, actor: jennie)
 
-# A free replacement for a returning customer whose first bouquet wilted.
+# This free replacement is for a returning customer whose first bouquet wilted.
 place_custom.(%{
   customer_name: "Liisa Mäkinen",
   customer_email: "liisa.makinen@example.fi",
@@ -1219,10 +1223,10 @@ place_custom.(%{
   line_items: [custom_line.("Replacement bouquet", "0.00")]
 })
 
-# Gift vouchers, sold through their own checkout and placed as the Stripe
-# webhook would. One per state the order page shows: emailed and part spent on
-# a course booking, a gift card still to collect at the shop, and one that
-# expired with money left, so Jennie can give it more time.
+# These gift vouchers go through their own checkout and are placed as Stripe's
+# webhook would place them. They cover an emailed voucher partly spent on a course,
+# a voucher card awaiting collection, and an expired voucher with money left
+# whose validity Jennie can extend.
 sell_gift_voucher = fn amount, attrs ->
   sale =
     amount
@@ -1280,8 +1284,8 @@ expired =
 Ash.Seed.update!(expired, %{ordered_at: DateTime.add(DateTime.utc_now(), -380, :day)})
 Ash.Seed.update!(expired_voucher, %{expires_on: Date.add(today, -15)})
 
-# Invoices, one of each state the admin shows, through the real actions as
-# Jennie. Sending goes to the dev mailbox (/dev/mailbox), so each invoice's
+# These invoices cover each state shown in the admin and use the real actions
+# as Jennie. Sending goes to the dev mailbox (/dev/mailbox), so each invoice's
 # history and email are the app's own. An invoice is dated the day it is issued,
 # so the overdue one is backdated afterwards: its PDF still shows today.
 invoice_line = fn description, unit_price, vat_rate ->
@@ -1296,7 +1300,7 @@ issue_and_send = fn attrs ->
   |> Payments.send_invoice!(actor: jennie)
 end
 
-# A wedding still being priced: a consumer draft, which needs no address.
+# This wedding invoice is still being priced and is a consumer draft, which needs no address.
 Payments.create_invoice!(
   %{
     buyer_name: "Anna Nyman",
@@ -1313,7 +1317,7 @@ Payments.create_invoice!(
   actor: jennie
 )
 
-# A company's standing order, a month late and paid in part by bank transfer.
+# This company's standing order is overdue and partly paid by bank transfer.
 # Its sent invoice makes the next send a reminder.
 overdue =
   issue_and_send.(%{
@@ -1334,7 +1338,7 @@ overdue = Ash.Seed.update!(overdue, %{invoice_date: Date.add(today, -38), due_da
 
 Payments.record_invoice_payment!(overdue, "120.00", %{paid_on: Date.add(today, -20)}, actor: jennie)
 
-# Paid in full by bank transfer.
+# This invoice is paid in full by bank transfer.
 paid =
   issue_and_send.(%{
     buyer_name: "Henrik Söderberg",
@@ -1345,7 +1349,7 @@ paid =
 
 Payments.record_invoice_payment!(paid, "95.00", actor: jennie)
 
-# Sent to the wrong buyer, so Jennie cancelled it with a credit note.
+# This invoice was sent to the wrong buyer, so Jennie cancelled it with a credit note.
 credited =
   issue_and_send.(%{
     buyer_name: "Pirjo Laine",
@@ -1356,8 +1360,8 @@ credited =
 
 Payments.cancel_invoice!(%{invoice_id: credited.id, reason: "Laskutettu väärälle asiakkaalle"}, actor: jennie)
 
-# Custom orders on invoice terms for the same company. Delivered today and
-# invoiced, so the order is locked until the invoice is credited.
+# This custom order is for the same company on invoice terms. It is delivered
+# today and invoiced, so the order is locked until the invoice is credited.
 invoiced_order =
   place_custom.(%{
     customer_name: "Mikael Lindqvist",
@@ -1374,8 +1378,8 @@ Payments.create_invoice_for_order!(invoiced_order.id, actor: jennie)
 |> Payments.issue_invoice!(actor: jennie)
 |> Payments.send_invoice!(actor: jennie)
 
-# Next week's, not invoiced yet: Create invoice prefills the company from its
-# latest invoice.
+# Next week's order is not invoiced yet. Create invoice prefills the company
+# details from its latest invoice.
 place_custom.(%{
   customer_name: "Mikael Lindqvist",
   customer_email: "office@kukka.fi",
@@ -1385,8 +1389,8 @@ place_custom.(%{
   line_items: [custom_line.("Joulujuhlan pöytäkukat", "380.00"), catalogue_line.("Bouquet 1", :large, 2)]
 })
 
-# Tags from links Jennie has shared, so the share drawer has chips to pick and
-# remove. Production starts with none.
+# These tags represent links Jennie has shared, giving the share drawer chips
+# to pick and remove. Production starts with none.
 for {parameter, value} <- [source: "newsletter", source: "instagram", medium: "social", campaign: "mothers-day-2026"] do
   Edenflowers.Marketing.use_tracking_tag!(parameter, value, actor: jennie)
 end

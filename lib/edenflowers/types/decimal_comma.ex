@@ -1,8 +1,8 @@
 defmodule Edenflowers.Types.DecimalComma do
   @moduledoc """
-  A decimal number typed the Finnish way too, with a decimal comma, kept as
-  precise as it was typed. `Edenflowers.Types.Price` is the one for euros,
-  rounded to cents.
+  Accepts decimal input with either a comma or a dot as the decimal separator,
+  preserving the entered precision. Use `Edenflowers.Types.Price` for euro
+  amounts that should be rounded to cents instead.
   """
   use Ash.Type.NewType, subtype_of: :decimal
 

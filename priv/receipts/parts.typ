@@ -1,12 +1,11 @@
-// Blocks the receipt, the invoice and the credit note print the same way, so
-// a customer sees one set of lines and one VAT breakdown whichever document
-// they hold, and an invoice and its credit note look like one series.
+// These shared blocks give receipts, invoices and credit notes consistent line
+// items and VAT breakdowns, so an invoice and its credit note look like a pair.
 #import "theme.typ": colors, fonts, type-scale, eyebrow, display, hairline, honey-rule
 
 #let shop = toml("shop.toml")
 
-// The page an invoice or a credit note is printed on, `title` top-left and
-// the logo top-right as on the receipt. The seller's details are in the
+// This page layout puts the invoice or credit note's title at the top left and
+// the logo at the top right, as on receipts. The seller's details are in the
 // footer, as on most Finnish invoices. Use as `show: invoice-page.with(…)`.
 #let invoice-page(seller, t, title, number, lang, body) = {
   set page(
@@ -48,8 +47,8 @@
   body
 }
 
-// Who the document is for beside its facts, as (label, value) pairs. A
-// company is addressed by name, with the person who ordered under it.
+// Show the buyer beside document facts supplied as (label, value) pairs.
+// Address a company by name, with the person who ordered beneath it.
 #let buyer-and-facts(buyer, facts, t) = {
   let lines(address) = if address != none { address.split("\n").join(linebreak()) }
   let buyer-lines = if buyer.company_name != none {
@@ -80,9 +79,9 @@
   )
 }
 
-// Column headers: quiet sans, mixed case, muted ink. Reserved for the
-// section heading above; the hairline rule alone separates header from
-// data. Eyebrow style stays unique to section-level labels.
+// Use small, mixed-case text in muted ink for column headers, reserving the
+// uppercase eyebrow style for section headings. A thin rule separates the
+// headers from the table's data.
 #let head(label) = table.cell(
   text(size: type-scale.small, fill: colors.ink-muted)[#label]
 )
@@ -126,9 +125,8 @@
 // The VAT is stated per rate, as AVL § 209 f asks of a business buyer's
 // invoice and kuittipakkolaki 658/2013 § 4 of a receipt for an in-person
 // payment (online sales fall outside that act). Prices are tax-inclusive, so the VAT is
-// *contained* in the total: this block decomposes the figure above it
-// and must never read as another addend, which is why it sits below
-// the rule rather than in the column.
+// already included in the total. Keep this breakdown separate from the totals
+// grid so readers do not mistake its tax amounts for additional charges.
 #let vat-breakdown(rows, t) = [
   #align(left, eyebrow(t("vat-breakdown")))
   #v(5pt)

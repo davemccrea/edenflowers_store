@@ -65,7 +65,8 @@ defmodule EdenflowersWeb.Admin.TimelineTest do
         )
         |> LazyHTML.from_fragment()
 
-      # Date headers are not events, so markers must follow the whole history's size.
+      # Count markers across the complete event history, not separately for each date group.
+      # Date headers must not add event markers of their own.
       assert length(document |> LazyHTML.query(".rounded-full") |> LazyHTML.to_tree()) == expected_markers
 
       if size == 1 do

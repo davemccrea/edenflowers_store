@@ -85,6 +85,6 @@ defmodule Edenflowers.Orders.Order.Changes.SendOrderDetailsEmail do
 
   defp payment_link_url(_changeset, order, _kind), do: EdenflowersWeb.PaymentLink.url_if_open(order)
 
-  # Atomic, so a caller holding a copy from before the failure still clears it.
+  # Clear the failure in the database even if the caller's stale record already has a nil timestamp.
   defp clear_failure(changeset), do: Ash.Changeset.atomic_update(changeset, :order_details_email_failed_at, nil)
 end

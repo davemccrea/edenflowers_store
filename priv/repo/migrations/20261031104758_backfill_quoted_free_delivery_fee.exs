@@ -12,10 +12,9 @@ defmodule Edenflowers.Repo.Migrations.BackfillQuotedFreeDeliveryFee do
     """
   end
 
-  # Runs after the drop's rollback re-adds the empty column. A free-delivery fee
-  # that is only partly free can't be expressed as in_free_delivery_zone, so
-  # those orders read as their full fee; restore a dump (`just rollback`) to
-  # keep them exact.
+  # The later DropInFreeDeliveryZone migration's rollback restores the empty column first.
+  # The old boolean cannot represent a partly waived delivery fee, so those orders
+  # revert to their full fee. Restore a database dump with `just rollback` to preserve exact fees.
   def down do
     execute """
     UPDATE orders

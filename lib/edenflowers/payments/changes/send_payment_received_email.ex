@@ -46,7 +46,7 @@ defmodule Edenflowers.Payments.Changes.SendPaymentReceivedEmail do
     end)
   end
 
-  @doc "The email for `record`'s payment of `amount`, loaded as this change loads it."
+  @doc "Builds the payment-received email for `amount`; the caller must load `record` as this change does."
   def email(record, amount), do: Email.payment_received(record, amount)
 
   defp email(order, _amount, email: :receipt), do: Email.purchase_receipt(order)
@@ -68,7 +68,7 @@ defmodule Edenflowers.Payments.Changes.SendPaymentReceivedEmail do
     |> Translations.in_own_locale()
   end
 
-  @doc "The latest positive payment's amount, or what's been paid when none is loaded."
+  @doc "Returns the latest positive payment's amount, or `amount_paid` if the loaded payments contain none."
   def latest_payment(record) do
     record.payments
     |> Enum.filter(&Decimal.positive?(&1.amount))
@@ -79,7 +79,7 @@ defmodule Edenflowers.Payments.Changes.SendPaymentReceivedEmail do
   defp reference(%Order{} = order), do: order.order_reference
   defp reference(registration), do: registration.reference
 
-  # Atomic, so a caller holding a copy from before the failure still clears it.
+  # Clear the failure in the database even if the caller's stale record already has a nil timestamp.
   defp logged(%{resource: Order} = changeset, edits) do
     changeset
     |> Ash.Changeset.set_context(%{paper_trail_metadata: Edits.for_log(edits)})

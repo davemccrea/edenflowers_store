@@ -30,8 +30,9 @@ defmodule EdenflowersWeb.Admin.ReportController do
 
   def show(conn, _params), do: send_resp(conn, :not_found, "Not found")
 
-  # Every PSU header the browser gives us: the bank wants all it requires or none.
-  # Behind Cloudflare, remote_ip is the tunnel's; Cloudflare passes on Jennie's.
+  # Forward the available browser headers as payment service user (PSU) headers
+  # for the bank request. Use Cloudflare's visitor IP rather than the tunnel's
+  # address, which is what conn.remote_ip contains behind Cloudflare.
   defp psu_headers(conn) do
     ip_address = List.first(get_req_header(conn, "cf-connecting-ip")) || to_string(:inet.ntoa(conn.remote_ip))
 

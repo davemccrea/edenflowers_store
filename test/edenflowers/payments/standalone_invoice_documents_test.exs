@@ -85,7 +85,7 @@ defmodule Edenflowers.Payments.StandaloneInvoiceDocumentsTest do
     {:ok, invoice} = Payments.issue_invoice(draft, actor: admin)
     {:ok, issued_pdf} = InvoicePdf.issued(invoice)
     assert <<"%PDF-", _::binary>> = issued_pdf
-    # Stands in for a template or translation change after issuance.
+    # Change the source content after issuance to verify that the stored PDF is reused, not rendered again.
     changed = Ash.Seed.update!(invoice, %{content: put_in(invoice.content, ["buyer", "name"], "Someone else")})
     assert InvoicePdf.issued(changed) == {:ok, issued_pdf}
     assert InvoicePdf.for_email(changed) == {:ok, issued_pdf}

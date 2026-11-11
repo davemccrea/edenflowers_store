@@ -284,7 +284,7 @@ defmodule Edenflowers.Orders.Order.Emails do
       change {PaymentChanges.QueueEmail, trigger: :send_fulfillment_email}
     end
 
-    # AshOban passes the error to these, which the errors page already shows.
+    # These actions only stamp the failed send; ErrorTracker already shows the underlying job error.
     update :record_fulfillment_email_failure do
       description "Marks that the fulfillment email ran out of attempts, for Jennie to see and send again."
       accept []

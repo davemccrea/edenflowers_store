@@ -138,8 +138,8 @@ defmodule EdenflowersWeb.Layouts do
 
   defp admin_path?(path), do: path == "/admin" or String.starts_with?(path, "/admin/")
 
-  # Umami counts shoppers, so the admin and staff browsing the shop stay out.
-  # Pay links do too: their URL is the payment token.
+  # Exclude admin pages and signed-in admins from shopper analytics. Also exclude
+  # payment-link pages so their secret URL tokens never reach Umami.
   defp umami_website_id(conn) do
     user = conn.assigns[:current_user]
 
@@ -148,9 +148,9 @@ defmodule EdenflowersWeb.Layouts do
     end
   end
 
-  # The Option+Click picker in element_picker.js only turns on for reviewers.
-  # On body, so the overscroll canvas and the flash group take the admin's colour as well. admin.css
-  # turns these into colours only on admin pages, so the storefront is untouched.
+  # Put the appearance variables on body so the overscroll background and flash
+  # group share the admin's colour. Only admin.css applies these variables, so
+  # browsing the storefront as an admin does not change its colours.
   defp admin_appearance_style(%{admin: true} = user) do
     "--admin-hue: #{user.admin_hue}; --admin-chroma: #{user.admin_chroma}; " <>
       "--admin-lightness: #{user.admin_lightness}; --admin-grain: #{user.admin_grain}"

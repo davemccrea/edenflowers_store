@@ -82,7 +82,7 @@ jobs:
             set -e
             cd /opt/edenflowers_store
 
-            # Only the app: recreating cloudflared on a newer image drops the whole site
+            # Update only the app; recreating cloudflared would interrupt access to the whole site.
             docker compose pull app
 
             # Run migrations before swapping traffic
@@ -93,8 +93,8 @@ jobs:
             # Each deploy leaves the previous image behind; rollback re-pulls it from the registry
             docker image prune -af
 
-      # `up -d` returns before the new container is serving, so resuming
-      # straight away catches the app mid-boot.
+      # `up -d` returns before the app is ready. Wait for its health endpoint
+      # before resuming uptime checks so a normal restart does not trigger an alert.
       - name: Wait for app to boot
         run: curl -fsS --retry 60 --retry-delay 2 --retry-all-errors https://edenflowers.fi/health
 

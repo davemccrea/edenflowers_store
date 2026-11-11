@@ -127,9 +127,9 @@ export function onDocumentPatch(start) {
   start();
 }
 
-// A snapshot escapes the clipping around it, so a carousel slide peeking in
-// from the side would fly in whole from off screen. "Nearly", because the
-// carousel's last slide can end a fraction of a pixel past the edge.
+// A transition snapshot ignores the carousel's clipping, so a partially visible
+// slide would animate in from outside the viewport. Require at least 90% of
+// its width to be visible, allowing small overhangs at the last slide.
 function onScreen(el) {
   const { left, right, width } = el.getBoundingClientRect();
   const visible =
@@ -153,9 +153,9 @@ function transition(start, afterStart = () => {}) {
 
 // LiveView only scrolls the new page to the top after the snapshot, so the
 // photo would land where it sits at the list's scroll, then jump.
-// The page's photo is larger than the card's, so it's rarely loaded yet.
-// Snapshotted now, an empty frame would grow. The page stays frozen while this
-// waits, so it waits no longer than a blink.
+// The page's larger photo may not be decoded yet; capturing it now could
+// animate an empty frame. Wait at most 300ms because the page stays frozen
+// until this promise settles.
 function waitForMorphPhoto() {
   window.scrollTo(0, 0);
   const img = document.querySelector("img.morph-photo, .morph-photo img");

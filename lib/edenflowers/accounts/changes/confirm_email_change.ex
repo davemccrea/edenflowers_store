@@ -11,7 +11,7 @@ defmodule Edenflowers.Accounts.Changes.ConfirmEmailChange do
 
   @impl true
   def change(changeset, _opts, _context) do
-    # A before_action, so the rate limit has already counted this attempt.
+    # Check the code in before_action, after the rate limiter has counted this attempt.
     Ash.Changeset.before_action(changeset, &confirm/1)
   end
 

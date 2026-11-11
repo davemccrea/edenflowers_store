@@ -354,7 +354,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       refute_enqueued(worker: Edenflowers.Pricing.Workers.SendNewsletterPromoEmail)
     end
 
-    # The order carries the hide decision, as a guest can't read the subscribed user.
+    # The order must remember that the newsletter checkbox should be hidden because
+    # a guest is not authorized to read the subscribed user's account.
     test "newsletter checkbox is hidden after a guest opts in and returns to step 1", %{conn: conn, order: order} do
       conn
       |> with_cart(order)
@@ -364,7 +365,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> check("Subscribe to the newsletter and get 15% off this order.", exact: false)
       |> click_button("Next")
       |> assert_has("h2", text: "Gift options")
-      # click_button re-matches the name with a space before the sr-only ": Your details", so it never matches.
+      # Use the LiveView selector because click_button re-matches the accessible name
+      # with an extra space before the screen-reader-only ": Your details" suffix.
       |> unwrap(&(&1 |> element("button", "Edit") |> render_click()))
       |> assert_has("[data-testid='checkout-step-1']")
       |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
@@ -795,7 +797,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       capture_log(fn ->
         Orders.remove_line_item!(order, non_card_line_item.id, authorize?: false)
-        # Destroy, reset and PubSub all run before the redirect; slow under a full suite.
+        # Allow time for deletion, checkout reset and PubSub handling before the redirect,
+        # especially when the full suite is running.
         assert_redirect(view, "/en", 1_000)
       end)
 

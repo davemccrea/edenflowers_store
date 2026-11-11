@@ -148,7 +148,7 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEntered do
     end
   end
 
-  # An address the form hasn't priced yet is priced as one that can't be.
+  # Without a delivery quote, leave the fee unknown rather than guessing an address's price.
   defp located(nil), do: {:error, :unknown}
 
   defp located(delivery_quote),

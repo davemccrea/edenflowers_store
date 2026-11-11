@@ -1,5 +1,6 @@
 defmodule Edenflowers.PaymentsTest do
-  # Sync because a test adds a CHECK (false) constraint to oban_jobs, and ALTER TABLE locks it for every test
+  # Run synchronously because a test adds a CHECK (false) constraint to oban_jobs.
+  # ALTER TABLE locks the table and would block concurrent tests that write jobs.
   use Edenflowers.DataCase, async: false
 
   import ExUnit.CaptureLog
@@ -141,7 +142,7 @@ defmodule Edenflowers.PaymentsTest do
         {:ok, %{id: "pi_john_#{System.unique_integer([:positive])}", client_secret: "pi_john_secret", amount: 0}}
       end)
 
-      # The same stale user both times, as the checkout's socket holds it.
+      # Reuse the same stale user struct to model the value retained by the checkout socket.
       assert {:ok, order, _secret} = Payments.setup(without_payment_intent(order), user)
       assert {:ok, _order, _secret} = Payments.setup(without_payment_intent(order), user)
     end
@@ -433,8 +434,8 @@ defmodule Edenflowers.PaymentsTest do
       registration = Courses.get_registration_by_id!(registration.id, authorize?: false)
       assert registration.payment_intent_id == nil
 
-      # Mox fails the test if cancelling calls cancel_payment_intent. Keeping
-      # everything paid leaves Stripe's refunds out of it.
+      # Mox rejects any unexpected cancel_payment_intent call. Retaining the full
+      # payment as the cancellation charge also avoids any need for a Stripe refund.
       assert {:ok, %{status: :cancelled}} =
                Courses.cancel_registration(registration, %{cancellation_charge: "170.00"}, authorize?: false)
     end

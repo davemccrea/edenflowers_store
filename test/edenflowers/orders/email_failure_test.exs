@@ -49,7 +49,7 @@ defmodule Edenflowers.Orders.EmailFailureTest do
     refute Code.ensure_loaded?(Edenflowers.Orders.Schedulers.SendOrderDetailsEmail)
   end
 
-  # What the worker does once a job's last attempt has failed.
+  # Invoke the worker's error handler as Oban would after the final failed attempt.
   defp fail_last_attempt(worker, order) do
     primary_key = %{"id" => order.id}
     job = %Oban.Job{attempt: 3, max_attempts: 3, args: %{"primary_key" => primary_key}}

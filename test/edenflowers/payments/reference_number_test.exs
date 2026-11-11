@@ -16,7 +16,7 @@ defmodule Edenflowers.Payments.ReferenceNumberTest do
   test "appends the Finnish 7-3-1 check digit" do
     assert ReferenceNumber.from_invoice_number(123) == "1232"
     assert ReferenceNumber.from_invoice_number(1_234_567) == "12345672"
-    # A sum already on a multiple of ten checks with 0.
+    # When the weighted sum is already a multiple of ten, the check digit is zero.
     assert ReferenceNumber.from_invoice_number(130) == "1300"
   end
 

@@ -102,7 +102,7 @@ defmodule Edenflowers.Pricing.Promotion do
                 calculation: :gift_order_linkable?,
                 message: "has already been opened, or its gift has been fulfilled or cancelled"}
 
-      # So a mistyped code can't take a card off the gift it went with.
+      # Refuse direct reassignment: a mistyped code must not move another gift's card onto this order.
       validate fn changeset, _context ->
         if is_nil(changeset.data.gift_order_id) or is_nil(Ash.Changeset.get_attribute(changeset, :gift_order_id)) do
           :ok
@@ -358,13 +358,13 @@ defmodule Edenflowers.Pricing.Promotion do
   end
 
   aggregates do
-    # Unauthorized so the card's page can greet a guest by name.
+    # Read the recipient name without order authorization so the card page can greet a guest.
     first :gift_recipient_name, :gift_order, :recipient_name do
       description "The full name of the recipient of the gift the card came with. Only its first name is shown."
       authorize? false
     end
 
-    # Unauthorized so a guest checking a code still counts everyone's orders.
+    # Count usage without order authorization so guests cannot bypass the limit by seeing only their own orders.
     count :usage, :orders do
       description "How many placed orders used the code, leaving out cancelled ones. Counted against `usage_limit`."
       filter expr(state == :placed and fulfillment_status != :cancelled)

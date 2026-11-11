@@ -128,7 +128,7 @@ defmodule EdenflowersWeb.CardDrawer do
     if Enum.all?(rest, &Decimal.equal?(&1.price, first.price)), do: first.price
   end
 
-  # Like the price: in the heading only when every card of the size shares it.
+  # Show details in the size heading only when they apply to every card in that size.
   defp shared_details(variants) do
     case variants |> Enum.map(&details/1) |> Enum.uniq() do
       [details] -> details
@@ -138,8 +138,8 @@ defmodule EdenflowersWeb.CardDrawer do
 
   defp details(variant), do: ProductType.describe(:card, variant)
 
-  # Words, not a character count: the counter under the message shows the
-  # exact limit, and a word count would differ from language to language.
+  # Describe the available space in words rather than suggesting a word limit,
+  # which would vary by language. The message field shows the exact character limit.
   defp message_room_label(:small), do: ~t"Room for a short note"
   defp message_room_label(:medium), do: ~t"Room for a few lines"
   defp message_room_label(:large), do: ~t"Room for a longer message"

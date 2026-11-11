@@ -23,8 +23,8 @@ defmodule Edenflowers.Courses.CourseRegistration.Customer do
   calculations do
     calculate :payment_instruction,
               :atom,
-              # Runs in Elixir from the loaded Balance, so the SQL doesn't inline
-              # another copy of the Balance chain (ADR 0007).
+              # Use the loaded balance in Elixir rather than repeating its
+              # dependent expressions in the SQL query (ADR 0007).
               fn records, _context ->
                 Enum.map(records, fn record ->
                   cond do

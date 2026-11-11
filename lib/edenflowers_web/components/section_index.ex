@@ -52,7 +52,8 @@ defmodule EdenflowersWeb.SectionIndex do
 
           this.update = () => {
             const line = window.innerHeight * 0.25;
-            // The last section may be too short to reach the line.
+            // Select the last section at the page bottom even if it is too short
+            // for its heading to reach the tracking line a quarter down the viewport.
             const atBottom =
               window.innerHeight + window.scrollY >=
               document.documentElement.scrollHeight - 2;

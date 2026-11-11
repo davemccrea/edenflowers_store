@@ -1,18 +1,11 @@
 defmodule EdenflowersWeb.ConnCase do
   @moduledoc """
-  This module defines the test case to be used by
-  tests that require setting up a connection.
+  Provides a connection, verified routes and connection helpers for web tests.
 
-  Such tests rely on `Phoenix.ConnTest` and also
-  import other functionality to make it easier
-  to build common data structures and query the data layer.
-
-  Finally, if the test case interacts with the database,
-  we enable the SQL sandbox, so changes done to the database
-  are reverted at the end of every test. If you are using
-  PostgreSQL, you can even run database tests asynchronously
-  by setting `use EdenflowersWeb.ConnCase, async: true`, although
-  this option is not recommended for other databases.
+  Every test starts a SQL sandbox owner so database changes are rolled back
+  afterwards. `async: true` gives each test an isolated database connection;
+  synchronous tests share theirs with other processes involved in the test.
+  Tests that change global application configuration must run synchronously.
   """
 
   use ExUnit.CaseTemplate
@@ -38,8 +31,9 @@ defmodule EdenflowersWeb.ConnCase do
   end
 
   @doc """
-  Makes `order` this browser's cart, as its first add to cart would: stamps it
-  with a visitor_id and puts that visitor_id in the session.
+  Associates `order` with this browser's session, as adding its first cart item
+  would. Reuses the order's visitor ID if present, or generates one, and stores
+  the same ID on the order and in the session.
   """
   def with_cart(conn, order) do
     visitor_id = order.visitor_id || Ecto.UUID.generate()
@@ -48,8 +42,8 @@ defmodule EdenflowersWeb.ConnCase do
   end
 
   @doc """
-  Signs `user` into the connection. `session` is for whatever else the page
-  reads from it.
+  Signs `user` into the connection and initializes the session with any
+  additional values supplied in `session`.
   """
   def log_in(conn, user, session \\ %{}) do
     conn
@@ -58,8 +52,8 @@ defmodule EdenflowersWeb.ConnCase do
   end
 
   @doc """
-  A setup callback for an admin's pages: signs a generated admin in, and puts
-  her in the context for the test to run actions as.
+  Signs in a generated admin for admin-page tests. Returns the authenticated
+  connection and the admin in the test context so actions can use that actor.
   """
   def log_in_admin(%{conn: conn}) do
     admin = Generator.generate(Generator.admin_user()) |> Generator.with_token()

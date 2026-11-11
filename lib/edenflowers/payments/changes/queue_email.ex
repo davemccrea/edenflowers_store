@@ -13,7 +13,7 @@ defmodule Edenflowers.Payments.Changes.QueueEmail do
 
   @impl true
   def change(changeset, opts, _context) do
-    # `arguments` names what the email's action takes from this one's, as `[amount: :amount_paid]`.
+    # Map email-action arguments to this action's arguments: [amount: :amount_paid] forwards amount_paid as amount.
     action_arguments =
       [subject: :subject, body: :body]
       |> Keyword.merge(opts[:arguments] || [])
@@ -30,7 +30,7 @@ defmodule Edenflowers.Payments.Changes.QueueEmail do
     end)
   end
 
-  # Queuing happens after the update, so it works the same on an atomic one.
+  # The after_action hook queues the email after either a normal or an atomic update.
   @impl true
   def atomic(changeset, opts, context), do: {:ok, change(changeset, opts, context)}
 end

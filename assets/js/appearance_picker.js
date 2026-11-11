@@ -9,9 +9,9 @@ const WAVE_DETENTS = 14;
  *
  * It keeps hue, chroma, lightness and grain as exact numbers while they
  * move, so the handle glides with the pointer, and rounds them only to save.
- * Draws them (handle, wave, dial), previews them on body's --admin-*
- * properties once per frame, pulses like Arc's detents as the dial and wave
- * pass a step, and pushes `update_appearance` once a change settles.
+ * It draws the handle, wave and dial, previews changes through body's --admin-*
+ * properties at most once per frame, and briefly enlarges the slider controls
+ * as they cross discrete steps. It pushes `update_appearance` once a change settles.
  */
 export default {
   mount() {
@@ -101,8 +101,8 @@ export default {
     cancelAnimationFrame(this.frame);
   },
 
-  // Grabbing the handle keeps the point under the finger where it is, as
-  // Arc's does. Pressing elsewhere in the field glides the handle there.
+  // Keep the initial grab offset so the handle does not jump under the finger.
+  // Pressing elsewhere in the field instead glides the handle to that point.
   startFieldDrag(event) {
     this.field.setPointerCapture(event.pointerId);
     const handleBox = this.handle.getBoundingClientRect();
@@ -185,7 +185,7 @@ export default {
     }, 250);
   },
 
-  // A small pulse of the control at each step, like Arc's detents.
+  // Briefly enlarge the control to mark each discrete slider step.
   pulse(element, peakScale = 1.06) {
     const now = performance.now();
     if (now - (this.lastPulse || 0) < 40) return;
@@ -211,8 +211,8 @@ export default {
       `${Math.round(hue)}°, ${Math.round(lightness)}%`,
     );
 
-    // The wave stays fixed on the track and runs up to the thumb, growing with
-    // the intensity, as Arc's does. While a slider is dragged it owns its value.
+    // Draw the wave from the track's start to the thumb, increasing its height
+    // with chroma. Do not overwrite native input values during a drag.
     const dragging = this.el.hasAttribute("data-dragging");
     if (!dragging) this.chromaInput.value = chroma;
     const wave = this.wavePath.ownerSVGElement.getBoundingClientRect();

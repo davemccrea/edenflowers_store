@@ -3,7 +3,8 @@ defmodule Edenflowers.Payments.Changes.PayWithGiftVoucherCode do
   Pays a Custom Order Jennie is placing from the Gift voucher whose
   `gift_voucher_code` she entered, through `pay_with_gift_voucher` once it's
   placed, so the voucher is refused and spent exactly as on an existing order.
-  A refused code fails the whole placing, its error on the code field.
+  If the code is refused, the whole order placement fails and the error is
+  attached to the gift voucher code field.
   """
   use Ash.Resource.Change
 
@@ -12,7 +13,7 @@ defmodule Edenflowers.Payments.Changes.PayWithGiftVoucherCode do
     Ash.Changeset.after_action(changeset, fn changeset, order ->
       code = Ash.Changeset.get_argument(changeset, :gift_voucher_code)
 
-      # The placing's own transaction rolls back on the returned error, after it's moved to the code field.
+      # Remap the error to gift_voucher_code before the outer placement transaction rolls back.
       with {:error, error} <-
              Ash.update(order, %{code: code},
                action: :pay_with_gift_voucher,

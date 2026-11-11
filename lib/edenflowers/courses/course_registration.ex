@@ -262,8 +262,9 @@ defmodule Edenflowers.Courses.CourseRegistration do
                     "cancellation fee on the places still held."
     end
 
-    # cancelled_unsettled?, paid? and payment_overdue? run in Elixir from loaded
-    # values, so the SQL doesn't inline another copy of the Balance chain (ADR 0007).
+    # Compute cancelled_unsettled?, paid? and payment_overdue? in Elixir using
+    # loaded values. This avoids repeating the balance calculation's dependent
+    # expressions in SQL (ADR 0007).
     calculate :cancelled_unsettled?,
               :boolean,
               fn records, _context -> Enum.map(records, &(&1.status == :cancelled and not &1.settled?)) end do

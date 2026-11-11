@@ -1,6 +1,7 @@
 defmodule Edenflowers.Types.Price do
   @moduledoc """
-  An amount in euros and cents. Typed the Finnish way too, with a decimal comma.
+  Accepts euro amounts typed with either a decimal comma or a dot and rounds
+  string input to cents.
   """
   use Ash.Type.NewType, subtype_of: :decimal
 

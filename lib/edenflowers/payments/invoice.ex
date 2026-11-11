@@ -28,10 +28,13 @@ defmodule Edenflowers.Payments.Invoice do
   defp config, do: Application.fetch_env!(:edenflowers, :invoices)
 
   @doc """
-  The invoice with `id`, its row locked until the transaction ends, then
-  loaded with `load` read after the lock, or nil. Cancelling it and paying it
-  both take the lock, so neither can commit on a status the other has just
-  changed: a Credit note never lands on money, nor money on a Credit note.
+  Reads the invoice with `id` under a row lock, then loads `load` after
+  acquiring the lock. Returns nil if no invoice exists. Call this inside a
+  transaction so the lock lasts through the caller's writes.
+
+  Both cancellation and payment recording take this lock and recheck the
+  invoice's state. This prevents a concurrent credit note and payment from
+  both being accepted for the same invoice.
   """
   def get_locked(id, load) do
     require Ash.Query
@@ -512,8 +515,9 @@ defmodule Edenflowers.Payments.Invoice do
                     "invoice can take a Payment, and never more than its amount_unpaid."
     end
 
-    # cancellable? to paid? and amount_unpaid run in Elixir from the loaded
-    # status, so the SQL doesn't repeat the status CASE (ADR 0007).
+    # Compute cancellable?, overdue?, payable?, partly_paid?, sendable?, paid?
+    # and amount_unpaid in Elixir using loaded values. This avoids repeating the
+    # SQL CASE expression for invoice status and its payment total (ADR 0007).
     calculate :cancellable?,
               :boolean,
               fn records, _context ->

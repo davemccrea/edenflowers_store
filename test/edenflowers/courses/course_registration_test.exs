@@ -233,8 +233,8 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
     end
   end
 
-  # Paid in person, as bookings could be before courses were paid by link,
-  # so handing money back needs no Stripe.
+  # Model a legacy booking paid in cash before course payments used payment links.
+  # Refunding this payment must not require a Stripe call.
   defp pay(registration, amount) do
     generate(payment(course_registration_id: registration.id, method: :cash, amount: Decimal.new(amount)))
     Ash.Seed.update!(registration, %{status: :confirmed})

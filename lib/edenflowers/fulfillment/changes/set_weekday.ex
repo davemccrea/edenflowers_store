@@ -70,7 +70,7 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekday do
     end)
   end
 
-  # Past-agnostic openness — would the rule + overrides leave this date open?
+  # Check the weekday rule and date overrides without treating past dates as closed.
   defp open?(calendar, date) do
     cond do
       date in calendar.disabled_dates -> false

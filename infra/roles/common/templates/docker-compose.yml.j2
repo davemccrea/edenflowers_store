@@ -6,7 +6,8 @@ services:
     # Oban waits up to 15s for running jobs; Docker's default 10s kills them mid-run.
     stop_grace_period: 20s
     network_mode: host
-    # MAINTENANCE_MODE, owned by `just maintenance` and the Maintenance workflow, not Ansible.
+    # Read MAINTENANCE_MODE from the file managed by `just maintenance` and the
+    # Maintenance workflow so provisioning does not reset the chosen mode.
     env_file: maintenance.env
     environment:
       PHX_SERVER: "true"
@@ -83,7 +84,7 @@ services:
     restart: unless-stopped
     network_mode: host
     init: true
-    # The server has no swap, so a runaway Umami must not starve the app.
+    # Limit Umami's memory use so it cannot consume all the memory needed by the app.
     mem_limit: 512m
     environment:
       DATABASE_URL: "postgresql://{{ umami_db_user }}:{{ umami_db_password }}@127.0.0.1:5432/{{ umami_db_name }}"

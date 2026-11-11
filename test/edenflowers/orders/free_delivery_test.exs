@@ -33,11 +33,11 @@ defmodule Edenflowers.Orders.FreeDeliveryTest do
     for {metres, charged} <- [
           {4000, "0"},
           {5000, "0"},
-          # 3.00 + 1.50 × 0.1
+          # Charge the 3.00 base price plus 1.50 per km for the 0.1 km beyond the free 5 km.
           {5100, "3.15"},
-          # 3.00 + 1.50 × 1
+          # Only 1 km is beyond the free distance, so the fee is 3.00 + 1.50 × 1.
           {6000, "4.50"},
-          # 3.00 + 1.50 × 5
+          # Only 5 km are beyond the free distance, so the fee is 3.00 + 1.50 × 5.
           {10_000, "10.50"}
         ] do
       order = delivered_to(ctx, [ctx.free, ctx.paid], metres)

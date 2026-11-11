@@ -14,20 +14,20 @@ defmodule Mix.Tasks.FetchMap do
 
   @shortdoc "Fetch the Vaasa location map from Mapbox"
 
-  # Composition spec. Dimensions are the Mapbox source; the render aspect is
-  # preserved (1097:1280 ≈ 800:940) so Imgproxy can pure-downscale to any DPR
-  # without re-cropping.
-  # Centred between the shop and Vaasa's market square, nearer the shop. On desktop the
-  # page crops up to ~27% off the top and bottom, which would hide the pin if
-  # the frame were centred on the market square itself.
+  # These dimensions give Mapbox roughly the same aspect ratio as the displayed map
+  # (1097:1280 ≈ 800:940). Imgproxy can then resize it for different screen pixel
+  # densities without changing the crop.
+  # The centre is between the shop and Vaasa's market square, nearer the shop.
+  # The desktop layout crops up to about 27% from the top and bottom; centring on
+  # the market square would put the shop's pin outside the visible area.
   @center {21.6083, 63.1120}
   @shop {21.6000, 63.1243}
   @zoom 12.5
   @width 1097
   @height 1280
   @style "davemccrea/cmp1rbxej001201r0c0z808jo"
-  # `pin-m` is Mapbox's medium built-in pin. Color is hex without `#`.
-  # Honey approximates --color-link-underline.
+  # Mapbox's built-in `pin-m` marker takes a hex colour without the leading `#`.
+  # This honey colour approximates the site's --color-link-underline.
   @marker_color "E8B33C"
   # Imgproxy caches an image for a year, so a re-styled map needs a new filename.
   @output_path "images/home-vaasa-map-10.png"
@@ -101,7 +101,7 @@ defmodule Mix.Tasks.FetchMap do
         access_token: token,
         logo: false,
         attribution: false,
-        # Skips Mapbox's CDN, which otherwise serves a render from before a style edit.
+        # Bypass Mapbox's cached image so style edits appear in the downloaded map.
         fresh: true,
         addlayer: JSON.encode!(@road_layer)
       )

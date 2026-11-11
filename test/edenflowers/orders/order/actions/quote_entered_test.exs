@@ -77,7 +77,7 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEnteredTest do
     assert Decimal.equal?(price.fulfillment_fee, order.fulfillment_fee)
   end
 
-  # As the form's quote, looked up when the address is typed.
+  # Build the same fee quote the form obtains when the delivery address is entered.
   defp delivery_quote(option, distance_m) do
     %{fulfillment_fee: fee, free_delivery_fee: free_delivery_fee} = Fee.calculate(option, distance_m)
     %{fee: fee, free_delivery_fee: free_delivery_fee}
@@ -153,7 +153,8 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEnteredTest do
     price = Orders.quote_entered_order!(nil, params, delivery_quote(ctx.delivery, 3500), actor: ctx.admin)
     {:ok, order} = Orders.place_custom_order(params, actor: ctx.admin)
 
-    # 5.00 + 1.00 × (3.5 − 2), rather than 8.50 for every km
+    # Charge the 5.00 base price plus 1.00 per km beyond the free 2 km:
+    # 5.00 + 1.00 × (3.5 − 2) = 6.50, rather than the full-distance fee of 8.50.
     assert Decimal.equal?(price.fulfillment_fee, "6.50")
     assert_priced_as_saved(price, order)
   end

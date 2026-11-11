@@ -5,7 +5,7 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekdayTest do
 
   describe "set_weekday/3" do
     test "turning a weekday :on prunes stale enabled_dates on that weekday" do
-      # 2024-04-15 is a Monday. Start with Mondays off and an on-override.
+      # Mondays are closed, but an enabled_dates override opens Monday 15 April 2024.
       calendar =
         struct!(
           ShopCalendar,
@@ -16,13 +16,13 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekdayTest do
       result = SetWeekday.set_weekday(calendar, :monday, :on)
 
       assert :monday in result.available_days
-      # The on-override is no longer needed — Mondays are open now.
+      # The opening override is no longer needed because the weekday rule now opens Mondays.
       refute ~D[2024-04-15] in result.enabled_dates
     end
 
     test "turning a weekday :on preserves disabled_dates on that weekday" do
-      # Mondays off, with Mon 2024-04-15 in disabled_dates (redundant but present).
-      # After turning Mondays on, the off-override is a genuine exception and must survive.
+      # Mondays are closed, so the disabled_dates entry for 15 April is initially redundant.
+      # Once Mondays are opened, that entry must remain to keep this particular date closed.
       calendar =
         struct!(
           ShopCalendar,
@@ -37,20 +37,20 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekdayTest do
     end
 
     test "turning a weekday :off prunes stale disabled_dates on that weekday" do
-      # Mondays on, with Mon 2024-04-15 in disabled_dates as an off-override.
+      # Mondays are open, but a disabled_dates override closes Monday 15 April 2024.
       calendar =
         struct!(ShopCalendar, disabled_dates: [~D[2024-04-15]])
 
       result = SetWeekday.set_weekday(calendar, :monday, :off)
 
       refute :monday in result.available_days
-      # The off-override is now redundant — Mondays are closed by rule.
+      # The closing override is now redundant because the weekday rule closes Mondays.
       refute ~D[2024-04-15] in result.disabled_dates
     end
 
     test "turning a weekday :off preserves enabled_dates on that weekday" do
-      # Mondays on, with Mon 2024-04-15 in enabled_dates (redundant but present).
-      # After turning Mondays off, the on-override is a genuine exception and must survive.
+      # Mondays are open, so the enabled_dates entry for 15 April is initially redundant.
+      # Once Mondays are closed, that entry must remain to keep this particular date open.
       calendar =
         struct!(ShopCalendar, enabled_dates: [~D[2024-04-15]])
 
@@ -82,7 +82,7 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekdayTest do
     # Mother's Day 2026 is a Sunday (~D[2026-05-10]).
 
     test "set_weekday :off preserves an open key date by adding an enabled override" do
-      # Sundays currently on. Mother's Day is open by the rule.
+      # The weekday rule currently opens Sundays, including Mother's Day.
       calendar = %ShopCalendar{}
 
       result = SetWeekday.set_weekday(calendar, :sunday, :off)
@@ -93,7 +93,7 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekdayTest do
     end
 
     test "set_weekday :on preserves a closed key date by adding a disabled override" do
-      # Sundays currently off. Mother's Day is closed by the rule.
+      # The weekday rule currently closes Sundays, including Mother's Day.
       calendar =
         struct!(ShopCalendar, available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday])
 

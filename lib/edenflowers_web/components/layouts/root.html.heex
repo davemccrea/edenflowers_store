@@ -76,7 +76,8 @@
       <link rel="manifest" href="/site.webmanifest?v=20261015" />
     <% end %>
 
-    <%!-- Runs before first paint so a reload doesn't start the home hero's animations or the thank-you flower's bloom it then skips. See the HomeHero and Petals hooks. --%>
+    <%!-- Restore the animation flags before first paint so a reload does not briefly start animations
+          that have already played this session. See the HomeHero and Petals hooks. --%>
     <script>
       try {
         if (sessionStorage.getItem("hero-seen"))
@@ -85,7 +86,7 @@
           document.documentElement.classList.add("order-bloomed");
       } catch {}
     </script>
-    <%!-- Photos come from imgproxy on another host; opening that connection now saves a first visit's LCP photo the wait. --%>
+    <%!-- Open the connection to imgproxy early so the main photo does not have to wait for it on a first visit. --%>
     <link rel="preconnect" href={Application.get_env(:imgproxy, :prefix)} />
     <%= if website_id = umami_website_id(@conn) do %>
       <%!-- Email links pre-fill the newsletter signup with ?email=, which must

@@ -166,7 +166,8 @@ defmodule Edenflowers.Email.PreviewTest do
     assert {:ok, _sent} = Courses.email_registration_confirmation(registration, %{}, actor: admin)
     assert_email_sent(fn email -> assert email.text_body == expected end)
 
-    # Jennie's rewrite starts from the preview, so it gets the link saving opened.
+    # The edited body starts from the unsaved preview, which contains a placeholder
+    # payment link. Sending must replace it with the saved registration's real link.
     edits = %{body: "Lovely to have you.\n\n" <> preview.text_body}
     assert {:ok, _sent} = Courses.email_registration_confirmation(registration, edits, actor: admin)
 

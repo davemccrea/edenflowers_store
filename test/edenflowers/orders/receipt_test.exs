@@ -1,5 +1,5 @@
 defmodule Edenflowers.Orders.ReceiptTest do
-  # build_payload/1 is pure — no DB needed.
+  # build_payload/1 works with supplied structs, so these tests do not need a database sandbox.
   use ExUnit.Case, async: true
 
   alias Edenflowers.Courses.Course
@@ -9,7 +9,8 @@ defmodule Edenflowers.Orders.ReceiptTest do
   alias Edenflowers.Orders.Receipt
   alias Edenflowers.Payments.Payment
 
-  # Structural diff against the fixtures — catches missing keys / nullability drift without coupling to arithmetic.
+  # Compare payload structure with the sample fixtures to catch missing keys and
+  # changes in which fields may be nil, independently of the money calculations.
   @sample_dir Path.join([:code.priv_dir(:edenflowers), "receipts", "sample"])
 
   describe "build_payload/1" do
@@ -35,7 +36,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
       assert payload.recipient_name == nil
       assert payload.delivery_address == nil
       assert payload.delivery_instructions == nil
-      # Mandatory for pickup (order.ex) so Jennie can text when it's ready.
+      # Pickup orders require a contact number so Jennie can text when the order is ready.
       assert payload.contact_phone_number == "+358 40 555 0123"
     end
 
@@ -65,7 +66,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
       order = build_delivery_order(locale: "fi")
       payload = Receipt.build_payload(order)
 
-      # NBSP (U+00A0) doesn't match \s in default mode.
+      # Match the non-breaking space (U+00A0) explicitly because the default \s does not include it.
       assert payload.items_subtotal =~ ~r/\d+,\d{2}\x{00A0}€/u
 
       [line | _] = payload.line_items
@@ -135,8 +136,9 @@ defmodule Edenflowers.Orders.ReceiptTest do
           ]
         )
 
-      # 25.5%: 39.90 goods + 9.00 fee = 48.90 gross → 38.96 net, 9.94 VAT.
-      # 14%:   12.00 gross → 10.53 net, 1.47 VAT.  Never gross × rate.
+      # Prices already include VAT, so extract tax from gross rather than multiplying gross by the rate.
+      # At 25.5%, 39.90 of goods plus the 9.00 fee gives 38.96 net and 9.94 VAT.
+      # At 14%, the 12.00 gross amount gives 10.53 net and 1.47 VAT.
       assert [standard, reduced] = Receipt.build_payload(order).vat_breakdown
 
       assert standard == %{rate: "25.5%", base: "38,96 €", tax: "9,94 €", gross: "48,90 €"}
@@ -393,8 +395,8 @@ defmodule Edenflowers.Orders.ReceiptTest do
     end)
   end
 
-  # Cents, so the balance assertions compare what the customer actually reads
-  # rather than the unrounded Decimals behind it.
+  # Convert displayed money to cents so balance assertions compare the amounts
+  # customers read, rather than the unrounded Decimal values behind them.
   defp parse_eur(formatted) do
     formatted
     |> String.replace(~r/[^0-9,.\-]/u, "")

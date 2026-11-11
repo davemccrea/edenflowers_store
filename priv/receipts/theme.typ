@@ -1,5 +1,5 @@
-// Brand tokens — mirrors assets/css/app.css. OKLCH→sRGB conversions
-// are perceptual, not bit-identical.
+// These brand values mirror assets/css/app.css. The sRGB colours visually
+// approximate the CSS OKLCH colours rather than matching them exactly.
 
 #let colors = (
   primary: rgb("#294735"),         // --color-primary
@@ -23,11 +23,11 @@
   body: 10pt,
   small: 8.5pt,
   micro: 7.5pt,
-  display: 26pt,    // section-title equivalent — masthead serif moment
-  quote: 14pt,      // card-message pull-quote
+  display: 26pt,    // This is the serif masthead size, matching the section-title role in CSS.
+  quote: 14pt,      // This size is intended for card-message quotations.
 )
 
-// Sans, uppercase, tracked — mirrors `.eyebrow` in CSS.
+// Match `.eyebrow` in CSS with uppercase sans-serif text and wide letter spacing.
 #let eyebrow(body, fill: colors.ink-muted) = text(
   font: fonts.sans,
   size: type-scale.eyebrow,
@@ -37,7 +37,7 @@
   upper(body),
 )
 
-// Crimson Text, light, tight tracking — mirrors `.section-title` in CSS.
+// Match `.section-title` in CSS with light Crimson Text and tight letter spacing.
 #let display(body, fill: colors.ink, size: type-scale.display) = text(
   font: fonts.serif,
   size: size,
@@ -52,8 +52,8 @@
   stroke: 0.5pt + colors.rule,
 )
 
-// 2pt honey underline. Set `length: auto` (default of `line`) so callers
-// can size it to the text it accents.
+// This honey-coloured underline accepts an explicit length so callers can
+// size it to the text it accents.
 #let honey-rule(length: 100%) = line(
   length: length,
   stroke: 2pt + colors.honey,

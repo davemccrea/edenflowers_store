@@ -125,7 +125,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
 
     test "charges the base price plus every km from the shop", %{option: option} do
       assert {"4.50", _} = fees(option, 0)
-      # 4.50 + 1.60 × 7.25
+      # The full fee includes the 4.50 base price plus 1.60 for each of the 7.25 km.
       assert {"16.10", _} = fees(option, 7250)
     end
 
@@ -138,16 +138,17 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
     end
 
     test "past 5 km a free-delivery cart pays the base price and only the km beyond 5", %{option: option} do
-      # 4.50 + 1.60 × 0.001 rounds to the base price: it jumps by the base price at the boundary.
+      # Just beyond the free 5 km, the base price applies again. The extra metre
+      # adds less than a cent, so the discounted fee rounds to the 4.50 base price.
       assert fees(option, 5001) == {"12.50", "4.50"}
 
-      # 4.50 + 1.60 × 1
+      # The discounted fee is the 4.50 base price plus 1.60 for the 1 km beyond the free distance.
       assert fees(option, 6000) == {"14.10", "6.10"}
 
-      # 4.50 + 1.60 × 2.25
+      # The discounted fee charges the base price plus only the 2.25 km beyond the free distance.
       assert fees(option, 7250) == {"16.10", "8.10"}
 
-      # 4.50 + 1.60 × 14.999 = 28.4984
+      # The discounted fee is 4.50 + 1.60 × 14.999 = 28.4984, rounded to 28.50.
       assert fees(option, 19_999) == {"36.50", "28.50"}
     end
 
@@ -165,7 +166,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
     end
   end
 
-  # Both fees as strings, so "4.50" and "4.5" don't compare equal.
+  # Return strings so assertions also check decimal precision: "4.50" differs from "4.5".
   defp fees(option, distance) do
     %{error: nil, fulfillment_fee: fee, free_delivery_fee: free_delivery_fee} =
       Fulfillment.Fee.calculate(option, distance)

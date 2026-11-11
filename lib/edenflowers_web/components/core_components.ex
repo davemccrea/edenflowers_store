@@ -570,15 +570,17 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  # A checkbox that has to be ticked is never what a non-nil boolean means.
+  # A non-null boolean may be false. Do not infer HTML `required` for a checkbox,
+  # because the browser would then require it to be checked.
   defp required?(%{required: nil, type: type}, field) when type not in ["checkbox", "hidden"] do
     not_nil?(field) or validated_present?(field.form.source, field.field)
   end
 
   defp required?(assigns, _field), do: assigns.required || false
 
-  # AshPhoenix looks up the attribute before the action's argument, so an argument that shares
-  # an attribute's name (Invoice's `record_payment` `amount`) would take the attribute's allow_nil?.
+  # Prefer the action argument's `allow_nil?` when it shares an attribute's name,
+  # as Invoice's `record_payment` argument `amount` does. AshPhoenix checks the
+  # attribute first, which can give this action's input the wrong required state.
   defp not_nil?(%{form: %{source: %AshPhoenix.Form{source: %Ash.Changeset{} = changeset}}, field: name})
        when is_atom(name) do
     input =
@@ -590,9 +592,10 @@ defmodule EdenflowersWeb.CoreComponents do
 
   defp not_nil?(field), do: Keyword.get(Phoenix.HTML.Form.input_validations(field.form, field.field), :required, false)
 
-  # AshPhoenix only reports `allow_nil? false`. This adds the action's `present/1` validations
-  # that always apply, so a field required only that way is marked too. Conditional ones
-  # (another `where`, or `at_least`) can't be known here: pass `required`.
+  # Also mark fields required by `present/1` validations that always apply to this
+  # action; AshPhoenix only reports `allow_nil? false`. Other `where` conditions
+  # and count-based rules cannot establish that a particular field is required
+  # here, so callers must pass `required` explicitly for those cases.
   defp validated_present?(%AshPhoenix.Form{source: %Ash.Changeset{action: action, resource: resource}}, field)
        when is_atom(field) do
     validations =

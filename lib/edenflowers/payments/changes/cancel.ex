@@ -55,8 +55,8 @@ defmodule Edenflowers.Payments.Changes.Cancel do
     |> Ash.Changeset.after_action(&queue_email(&1, &2, cancelled_by))
   end
 
-  # Onto the purchase's one Gift voucher. Unlike Stripe's refund, nothing
-  # outside can refuse this, so it's in the cancel's own transaction.
+  # Restore voucher funds in the cancellation transaction: unlike Stripe,
+  # this refund has no external service whose result could outlive a rollback.
   defp put_back_on_vouchers(changeset, record) do
     with %Decimal{} = amount <- changeset.context[:back_on_voucher],
          true <- Decimal.positive?(amount),
@@ -105,7 +105,7 @@ defmodule Edenflowers.Payments.Changes.Cancel do
     end
   end
 
-  @doc "What `money/2` and cancelling need loaded."
+  @doc "Lists the fields and calculations callers must load before calculating cancellation money with `money/2`."
   def load,
     do: [
       :cancellable?,

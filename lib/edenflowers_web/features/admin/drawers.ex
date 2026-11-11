@@ -102,8 +102,8 @@ defmodule EdenflowersWeb.Admin.Drawers do
     """
   end
 
-  # What cancelling with the charge typed so far refunds or leaves to collect,
-  # as the cancel action works it out, or nil while the charge isn't an amount.
+  # Preview the refund or remaining balance using the cancellation action's own
+  # calculation. Return nil while the entered charge is invalid or negative.
   defp cancel_outcome(payable, charge) do
     with {:ok, charge} <- Ash.Type.cast_input(Edenflowers.Types.Price, charge),
          charge = charge || payable.default_cancellation_charge,
@@ -202,17 +202,17 @@ defmodule EdenflowersWeb.Admin.Drawers do
   end
 
   @doc """
-  The subject and text Jennie rewrote in a `customer_email`, as the
-  `subject` and `body` arguments of the action that sends it, or nothing to
-  send it as built.
+  Returns the edited `subject` and `body` as arguments for the action that sends
+  the email. Returns an empty map when editing is off, so the action uses its
+  generated email instead.
   """
   def email_edits(%{"edit_email" => "true"} = params), do: %{subject: params["subject"], body: params["body"]}
   def email_edits(_params), do: %{}
 
   @doc """
-  `email_edits/1` as an AshPhoenix form's `transform_params`: the action gets
-  the `subject` and `body` only while "Edit the email" is ticked, which stays
-  a param of the form alone.
+  Provides the `email_edits/1` behaviour as an AshPhoenix `transform_params`
+  callback. Remove `subject` and `body` unless "Edit the email" is checked;
+  `edit_email` controls the form only and is not an action argument.
   """
   def keep_email_edits(_form, %{"edit_email" => "true"} = params, _action), do: params
   def keep_email_edits(_form, params, _action), do: Map.drop(params, ["subject", "body"])
@@ -220,9 +220,9 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :form, Phoenix.HTML.Form, required: true
 
   @doc """
-  Why a drawer's action was refused, when none of its inputs shows it: an
-  error naming no field, or one the drawer has no input for, like a credit
-  note refused for its invoice's sake.
+  Shows action errors that cannot appear beside a drawer input. These include
+  errors without a field and errors for fields absent from the drawer, such as
+  an invoice error that prevents creating a credit note.
   """
   def refusal(assigns) do
     assigns = assign(assigns, :message, refusal_message(assigns.form.source))
@@ -250,9 +250,9 @@ defmodule EdenflowersWeb.Admin.Drawers do
 
   defp refusal_message(_form), do: nil
 
-  # A change's own `add_error(changeset, message)` names no fields, so AshPhoenix
-  # leaves it out of the form's errors. Anything else, like a database failure,
-  # has no words for Jennie.
+  # Recover fieldless messages added by `add_error(changeset, message)`, which
+  # AshPhoenix omits from formatted form errors. Use a generic message for
+  # failures such as database errors that have no customer-readable explanation.
   defp unformatted_message([]), do: nil
 
   defp unformatted_message(errors) do
@@ -263,9 +263,8 @@ defmodule EdenflowersWeb.Admin.Drawers do
   end
 
   @doc """
-  `failure`, the flash for an action Jennie ran from a button, followed by
-  why the action refused in its own words, when it has some for her: a
-  database failure has none.
+  Appends an action's readable refusal reason to the supplied `failure` message.
+  Technical errors, such as database failures, leave the supplied message unchanged.
   """
   def refusal_text(error, failure) do
     case error |> Ash.Error.to_error_class() |> Map.get(:errors, []) |> Enum.find_value(&error_text/1) do
@@ -451,9 +450,10 @@ defmodule EdenflowersWeb.Admin.Drawers do
   end
 
   @doc """
-  Every way Jennie records money herself, a Gift voucher by its code; Stripe
-  records its own. Not a Gift voucher on an order that doesn't accept one, a
-  Gift voucher sale. A course booking always does.
+  Lists the payment methods Jennie can record manually. Stripe is excluded
+  because its payments are recorded automatically. Gift vouchers are included
+  unless the record rejects them, as a gift voucher sale does; course bookings
+  accept them.
   """
   def payment_method_options(record) do
     excluded = if Map.get(record, :accepts_gift_voucher?, true), do: [:stripe], else: [:stripe, :voucher]

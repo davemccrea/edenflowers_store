@@ -34,8 +34,9 @@ defmodule EdenflowersWeb.PaymentLink do
   def path_for(%{payment_link_token: token}) when is_binary(token), do: ~p"/pay/orders/#{token}"
 
   @doc """
-  Assigns `payable`. `reload` reads it again by its token, as the page's
-  mount did.
+  Stores the payable record and whether Stripe returned a successful redirect.
+  The `reload` callback must read the record again by its payment-link token,
+  using the same lookup as the page's mount.
   """
   def mount(socket, payable, params, reload) do
     socket
@@ -90,7 +91,7 @@ defmodule EdenflowersWeb.PaymentLink do
     put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")
   end
 
-  @doc "For the record's paid broadcast."
+  @doc "Reloads the payable after its paid broadcast and clears the Stripe-return waiting state."
   def paid(%{assigns: %{reload: reload}} = socket) do
     {:ok, payable} = reload.()
     assign(socket, payable: payable, returned_from_stripe?: false)

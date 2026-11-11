@@ -56,8 +56,8 @@ defmodule Edenflowers.Orders.Order.Customer do
   calculations do
     calculate :payment_instruction,
               :atom,
-              # Runs in Elixir from loaded values, so the SQL doesn't inline
-              # another copy of the Balance chain (ADR 0007).
+              # Use loaded values in Elixir rather than repeating the balance
+              # calculation's dependent expressions in SQL (ADR 0007).
               fn records, _context ->
                 Enum.map(records, fn record ->
                   due_at_fulfillment? =

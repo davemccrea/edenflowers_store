@@ -32,7 +32,7 @@ defmodule Edenflowers.Email.Edits do
   @doc "The log's record of a rewritten email, for `paper_trail_metadata`."
   def for_log(edits), do: %{email_subject: edits[:subject], email_body: edits[:body]}
 
-  @doc "The token a preview puts in a payment link that sending will open."
+  @doc "Returns the placeholder token used in previews before sending creates the real payment link."
   def placeholder_token, do: "new-link"
 
   defp with_payment_link(body, nil), do: body

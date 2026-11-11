@@ -525,7 +525,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
   defp closed_meanwhile?(_socket), do: false
 
-  # An edit refused for an invoiced order's sake names no field to mark.
+  # An invoiced order can reject edits with a fieldless error. Surface that
+  # reason instead of only telling Jennie to check individual inputs.
   defp save_error(form) do
     form
     |> AshPhoenix.Form.raw_errors()
@@ -802,9 +803,9 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp ok_quote(%{status: :ok} = quote), do: %{fee: quote.fee, free_delivery_fee: quote.free_delivery_fee}
   defp ok_quote(_quote), do: nil
 
-  # The price follows the form, the card and the delivery quote, so after mount
-  # they're only set through these, which reprice. Not on every render, as
-  # pricing looks up variants, options and tax rates.
+  # Recalculate the price whenever the form, selected card or delivery quote
+  # changes. Use these setters after mount rather than pricing on every render,
+  # because pricing reads variants, fulfillment options and tax rates.
   defp put_form(socket, form), do: socket |> assign(:form, form) |> assign_price()
   defp put_card(socket, variant_id), do: socket |> assign(:card_variant_id, variant_id) |> assign_price()
   defp put_delivery_quote(socket, quote), do: socket |> assign(:delivery_quote, quote) |> assign_price()
@@ -849,7 +850,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
   defp lines_in_order(lines), do: lines
 
-  # A quote for an address or option no longer in the form says nothing.
+  # Ignore a quote if the form's address or fulfillment option has changed since it was calculated.
   defp current_quote(quote, form, option_id) do
     address = String.trim(form[:delivery_address].value || "")
     if quoted?(quote, address, option_id), do: quote
@@ -938,7 +939,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   attr :bow_colours, :list, required: true
   attr :tax_rate_options, :list, required: true
 
-  # A line the order already has: its product is fixed, only how many changes.
+  # Existing catalogue lines allow quantity changes, but not a different product.
   defp order_line(%{line: %{source: %{type: :update}}} = assigns) do
     ~H"""
     <.line_row line={@line}>

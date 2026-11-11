@@ -86,7 +86,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Payment do
       require_atomic? false
     end
 
-    # confirm_payment without Stripe; keep the two in step.
+    # Keep this voucher-only confirmation path in sync with confirm_payment.
     update :confirm_paid_by_voucher do
       description "Confirms a pending checkout its Gift voucher pays for in full, as confirm_payment does once " <>
                     "Stripe has charged a card: records the voucher payment and queues the confirmation email. " <>
@@ -97,7 +97,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Payment do
       validate present(:gift_voucher_id)
       change transition_state(:confirmed)
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
-      # A PaymentIntent from paying by card before the voucher went on.
+      # Cancel any PaymentIntent opened before the voucher covered the booking.
       change PaymentChanges.CancelOpenPaymentIntent
       change PaymentChanges.PayFromVoucher
       change PaymentChanges.RequireSettled

@@ -61,9 +61,10 @@ defmodule Edenflowers.Payments.InvoicePdf do
   end
 
   @doc """
-  The frozen content with its labels. Once part of it is paid, a resend asks
-  only for the rest: its lines and total stay as issued, then the payments
-  and what is left, and the payment details and barcode carry what is left.
+  Builds the PDF payload from frozen invoice content and translated labels.
+  For a partly paid invoice, keep the original lines and total, then add the
+  amount already paid and the remaining balance. The payment barcode uses
+  that remaining balance so a resend does not ask for the original total again.
   """
   def payload(%Invoice{content: content, locale: locale} = invoice) do
     content
@@ -165,8 +166,10 @@ defmodule Edenflowers.Payments.InvoicePdf do
     )
   end
 
-  # The VAT-exclusive unit price the VAT Act asks for beside it, in cents by the shop's one rule. The
-  # line's own base is rounded once from its gross, so it may differ by a cent from this times the quantity.
+  # Include the VAT-exclusive unit price for the VAT Act's invoice requirement,
+  # rounded to cents alongside the inclusive price.
+  # Multiplying this rounded unit price by the quantity can differ from the line's
+  # taxable base, which is rounded after calculating the full line amount.
   defp price_excl_vat(line),
     do: Vat.net_of_vat(decimal(line["unit_price"]), Decimal.div(decimal(line["vat_rate"]), 100))
 

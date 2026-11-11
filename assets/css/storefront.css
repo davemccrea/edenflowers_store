@@ -15,9 +15,9 @@
 /* The headline comes into focus rather than sliding, matching the rotator below.
    It starts at 1% rather than 0: Chrome skips text first painted at opacity 0 as
    an LCP candidate, so the headline only counted once the web font swapped in.
-   No blur is filled outside its own run: WebKit fills the missing keyframe as
-   blur(0px), which keeps the text in a filter layer clipped to its box, cutting
-   off descenders and italic overhang and leaving it soft. */
+   Do not retain the blur filter outside the animation. WebKit interpolates a
+   missing filter keyframe as blur(0px), which keeps the text in a clipped filter
+   layer, cutting off descenders and italic overhang and leaving the text soft. */
 @keyframes hero-focus {
   from {
     opacity: 0.01;
@@ -181,7 +181,8 @@
   }
 }
 
-/* Transform-only, so LCP is unaffected. The parent needs overflow-hidden. */
+/* Animate only the transform so this does not delay Largest Contentful Paint.
+   The parent must hide overflow to clip the moving image. */
 @keyframes hero-zoom-settle {
   from {
     transform: scale(1.04);
@@ -661,11 +662,11 @@
   }
 }
 
-/* A product or course card's photo grows into its page's (page_transitions.js).
-   Both frames show the same photo, so only the page's is drawn, from the
-   start: the card's, drawn too, ghosts through it.
-   The two frames differ in shape, so the snapshot fills the moving frame and
-   crops rather than stretching. Unclipped, the crop spills past the frame. */
+/* page_transitions.js animates a product or course card's photo into the detail
+   page's photo. Show only the new snapshot throughout the animation so the old
+   copy of the same photo does not show through it.
+   The frames differ in shape, so crop the snapshot to fill the moving frame
+   rather than stretching it. Clip overflow to keep the crop inside the frame. */
 .morph-photo {
   view-transition-name: morph-photo;
 }

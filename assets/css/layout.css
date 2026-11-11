@@ -84,8 +84,8 @@ html:has(dialog.slide-drawer:modal) {
   overflow: hidden;
 }
 
-/* Undo the UA's centred dialog box so the drawer runs full height against
-   one edge. The inner div owns the width and background. */
+/* Override the browser's centred dialog styles so the drawer fills the height
+   along one edge. Its inner div sets the drawer's width and background. */
 .slide-drawer {
   inset-block: 0;
   height: auto;

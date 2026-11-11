@@ -50,7 +50,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
     end
 
     test "counts a new interval from the last delivery, so more often starts sooner", context do
-      # Every 4 weeks, last delivered yesterday.
+      # The four-week schedule puts the next delivery 27 days away after yesterday's delivery.
       subscription = subscription_for(context, interval_weeks: 4, next_fulfillment_date: days_from_today(27))
 
       weekly = Orders.change_subscription!(subscription, %{interval_weeks: 1}, actor: context.customer)
@@ -67,7 +67,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
     end
 
     test "counts from the latest delivery even when the next date is off the schedule", context do
-      # Weekly, but its next date was left four weeks after the last delivery.
+      # The subscription is weekly, but its saved next date is too far ahead of the latest delivery.
       subscription = subscription_for(context, interval_weeks: 1, next_fulfillment_date: days_from_today(29))
 
       Ash.Seed.update!(generate(order(state: :placed, fulfillment_date: days_from_today(1))), %{
@@ -80,7 +80,8 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
     end
 
     test "moves a new date that falls inside the charge window on along the new schedule", context do
-      # Every 4 weeks, last delivered 5 days ago: weekly would make it 2 days away.
+      # The last delivery was five days ago. Switching from four-weekly to weekly
+      # would put the next delivery two days away, inside the charge window.
       subscription = subscription_for(context, interval_weeks: 4, next_fulfillment_date: days_from_today(23))
 
       weekly = Orders.change_subscription!(subscription, %{interval_weeks: 1}, actor: context.customer)
@@ -105,7 +106,8 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
       assert Date.day_of_week(weekly.next_fulfillment_date) == 2
     end
 
-    # Never back, so two deliveries are never closer together than the interval.
+    # Moving to a new weekday must move the next delivery forward, not shorten
+    # the interval by moving it backwards.
     test "moves forward to the first date on a new delivery day", context do
       friday = first_on_or_after(days_from_today(14), 5)
       subscription = subscription_for(context, next_fulfillment_date: friday)

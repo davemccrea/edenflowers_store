@@ -2,8 +2,8 @@
 
 #let shop = toml("shop.toml")
 
-// One set of inks for every style: Christmas is cream with snowflakes and a
-// greeting.
+// All styles share these base colours. Christmas styles add snowflakes,
+// a greeting and the accent colour defined below.
 #let ink = (
   page: colors.cream,
   body: colors.cream-content,
@@ -28,13 +28,14 @@
   christmas_green: colors.primary,
 )
 
-// Small print that snow would make hard to read: (left, top, right, bottom)
-// from the page's top left, with a little room around each.
+// Keep snow away from these small-print areas to preserve readability.
+// Each rectangle is (left, top, right, bottom), measured from the page's top left
+// and padded to leave space around the text.
 #let small-print = (
-  (12mm, 26mm, 46mm, 36mm), // "Gift voucher"
-  (12mm, 112mm, 100mm, 140mm), // How to use it, the terms and the contact line
-  (150mm, 8mm, 196mm, 44mm), // The logo's lettering
-  (142mm, 110mm, 204mm, 140mm), // Code and last day
+  (12mm, 26mm, 46mm, 36mm), // Keep the gift-voucher heading clear.
+  (12mm, 112mm, 100mm, 140mm), // Keep instructions, terms and contact details clear.
+  (150mm, 8mm, 196mm, 44mm), // Keep the logo's lettering clear.
+  (142mm, 110mm, 204mm, 140mm), // Keep the code and expiry date clear.
 )
 #let clear-of-small-print(x, y, size) = small-print.all(((left, top, right, bottom)) => (
   x + size < left or x > right or y + size < top or y > bottom
@@ -43,12 +44,12 @@
 #let next(state) = calc.rem(state * 1103515245 + 12345, 2147483648)
 #let pick(state, n) = calc.rem(calc.quo(state, 65536), n)
 
-// Snow over the whole card: each side is cut into a grid and some cells get one
-// flake, anywhere inside, so the snow is even and flakes never overlap. A small
+// Divide both sides of the card into grids and place at most one snowflake
+// inside each cell, distributing the snow without overlapping flakes. A small
 // seeded generator picks the cells, flakes and sizes, so a voucher's snow is
-// the same every time it's printed. (flake, x, y, size, fill) from the page's
-// top left. The SVGs pad each flake, so a size is about a third larger than
-// the flake drawn.
+// the same every time it's printed. Each result is (flake, x, y, size, fill),
+// with coordinates measured from the page's top left. The SVGs pad each flake,
+// so its size is about a third larger than the flake drawn.
 #let snowfall(seed, accent) = {
   let rows = 8
   let row-height = 148mm / rows
@@ -81,12 +82,12 @@
   flakes
 }
 
-// A Gift voucher, in the one language the buyer chose for whoever receives
-// it. `voucher` is a flat dict, see sample/voucher.*.json. Labels arrive
+// Render a gift voucher in the language the buyer chose for its recipient.
+// `voucher` is a flat dictionary; see sample/voucher.*.json. Labels arrive
 // translated by Gettext; amounts and dates arrive pre-formatted.
 //
-// A ticket: who it's to and the buyer's words fill the page, and a stub
-// holds the amount, code and last day.
+// Use a ticket layout: the recipient and buyer's message fill the main area,
+// while the stub holds the amount, code and expiry date.
 #let voucher(voucher) = {
   for key in ("lang", "labels", "seller", "style", "snow_seed", "amount", "code", "expires_on", "recipient_name", "message") {
     assert(key in voucher, message: "voucher: missing key `" + key + "` (set to none if absent)")
@@ -111,7 +112,7 @@
     flipped: true,
     margin: 0mm,
     fill: ink.page,
-    // The stub's green is drawn here, under the snow, so flakes fall behind its text too.
+    // Draw the stub's background before the snow so flakes appear behind its text too.
     background: {
       place(top + right, rect(width: stub-width, height: 100%, fill: if christmas { accent } else { ink.stub }))
       if christmas {
@@ -123,7 +124,7 @@
   )
   set document(title: t("gift-voucher"), author: voucher.seller.name, date: none)
   set text(font: fonts.sans, size: type-scale.body, fill: ink.body, lang: voucher.lang)
-  // Tight within a label and its value; groups are spaced apart explicitly.
+  // Keep labels close to their values and add space between groups explicitly.
   set par(leading: 0.6em, spacing: 5pt, justify: false)
 
   let gift = block(inset: (x: 15mm, y: 14mm), width: 100%, height: 100%, grid(
@@ -139,7 +140,7 @@
       #if voucher.recipient_name != none [
         #text(font: fonts.serif, size: 15pt, style: "italic", fill: ink.muted)[#t("to")]
         #v(2pt)
-        // A long name drops a size rather than wrap onto a third line.
+        // Use smaller text for long names to reduce the chance of a third line.
         #let name-size = if voucher.recipient_name.clusters().len() > 18 { 22pt } else { 30pt }
         #text(font: fonts.serif, size: name-size, fill: ink.strong)[#voucher.recipient_name]
         #v(10pt)

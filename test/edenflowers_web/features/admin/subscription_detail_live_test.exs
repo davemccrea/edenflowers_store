@@ -138,8 +138,9 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
     render_async(first_view)
     render_async(second_view)
 
-    # Seeded rows don't notify. The subscription's own job creates its
-    # Occurrence and then places it, and that update is what its page hears.
+    # Seeding an order does not broadcast a notification. The real subscription
+    # job creates an order and then places it through an action that broadcasts.
+    # The payment action below supplies a broadcast for this seeded order.
     order = placed_order(subscription_id: first.id, payment_intent_id: nil)
     refute has_element?(first_view, ~s|[data-item-id="#{order.id}"]|)
 

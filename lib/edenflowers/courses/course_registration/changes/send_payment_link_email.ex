@@ -1,7 +1,7 @@
 defmodule Edenflowers.Courses.CourseRegistration.Changes.SendPaymentLinkEmail do
   @moduledoc """
-  Emails a course customer the private link for paying a remaining balance:
-   as a Payment reminder for an already confirmed booking.
+  Sends a Payment reminder for an already confirmed course booking, including
+  the private link where the customer can pay the remaining balance.
   """
 
   use Ash.Resource.Change

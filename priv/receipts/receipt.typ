@@ -9,10 +9,9 @@
 // seller in the footer arrives in `order.seller`. All currency / date / VAT values
 // arrive pre-formatted as strings; labels arrive translated by Gettext.
 #let receipt(order) = {
-  // Schema contract. Typst has no struct types, so we assert keys
-  // exist up-front rather than discovering a missing field mid-render.
-  // Required: read unconditionally on every receipt. Optional: key must
-  // still be present in the dict; the value may be `none`.
+  // Typst has no struct types, so assert that payload keys exist before rendering.
+  // Required fields are read on every receipt. Optional fields must also have
+  // keys in the dictionary, but their values may be `none`.
   let required = (
     "lang", "labels", "seller", "order_reference", "ordered_at",
     "customer_name", "customer_email",
@@ -94,11 +93,10 @@
   set par(leading: 0.65em, justify: false)
 
   // ── Masthead ────────────────────────────────────────────────────────
-  // Serif "Receipt" leads the page — top-left is the reading-order anchor,
-  // so the document type identifies itself before the brand mark. Logo
-  // sits top-right as an editorial sign-off. Inline `Label: value` lines
-  // use weight (not colour) to distinguish value from label — keeps the
-  // page on one ink tone for content, one (muted) for chrome.
+  // Put the receipt title at the top left so readers identify the document
+  // before seeing the logo at the top right. Inline `Label: value` lines use
+  // font weight rather than colour to distinguish values from labels, keeping
+  // one ink tone for content and a muted tone for supporting details.
   grid(
     columns: (auto, 1fr),
     align: (left + top, right + top),
@@ -119,10 +117,9 @@
   v(18pt)
 
   // ── Customer + Fulfillment ──────────────────────────────────────────
-  // Fulfillment block self-contains its date — no separate "Date" eyebrow.
-  // The date is a property of the fulfillment (when to deliver / when to
-  // collect), not a top-level field. Delivery and pickup share the same
-  // shape: who/where, then a single inline date line at the bottom.
+  // Keep the delivery or pickup date inside the fulfillment block rather than
+  // giving it a separate heading. Both blocks show who and where first,
+  // followed by the date at the bottom.
   let date-label = if order.fulfillment_method == "delivery" {
     t("delivery-date")
   } else if order.fulfillment_method == "course" {
@@ -191,16 +188,14 @@
     ],
   )
 
-  // Tighter gap before the card-message annotation, so it sits closer to
-  // its parent (Customer/Fulfillment) rather than reading as its own
-  // section. If there's no message, the full section break carries
-  // through to the Order section directly.
+  // Use a smaller gap before the card message to group it with the customer
+  // and fulfillment details. Without a message, keep the full section gap
+  // before the order lines.
   v(if order.card_message != none { 12pt } else { 20pt })
 
   // ── Card message ────────────────────────────────────────────────────
-  // Treated as an annotation, not a section: eyebrow + body-size serif
-  // italic, no frame. Same voice as delivery instructions (also a
-  // customer-authored aside).
+  // Style the card message as a customer-authored aside, like delivery
+  // instructions: a small uppercase label and body-sized serif italics, without a frame.
   if order.card_message != none {
     // A voucher's message goes on the voucher, not a greeting card.
     eyebrow(if order.fulfillment_method == "gift-voucher" { t("voucher-message") } else { t("card-message") })
@@ -218,10 +213,9 @@
   v(10pt)
 
   // ── Totals ──────────────────────────────────────────────────────────
-  // Single grid keeps row spacing under one `row-gutter` knob instead of
-  // compounding paragraph spacing between separate grid calls. The
-  // grand-total row is set off by a 0.5pt rule above (classic invoice
-  // convention — "below the line") and a small size bump on the amount.
+  // Keep totals in one grid so `row-gutter` controls their spacing without
+  // adding paragraph gaps between separate grids. A thin rule and bold text
+  // distinguish the grand total from the preceding amounts.
   let fee-label = if order.fulfillment_method == "delivery" {
     t("delivery-fee")
   } else {
@@ -235,10 +229,9 @@
     totals-rows.push(([#fee-label], [#order.fulfillment_fee]))
   }
 
-  // Three-column layout: label (auto), flexible gap (1fr), value (auto).
-  // Auto-sizes labels to their widest content so locale variants like
-  // Swedish "Hemleveransavgift" and "Betalat totalt" never wrap. The 1fr
-  // gap keeps the value column flush-right within a 60% block.
+  // Size the label and value columns to their content, with a flexible gap
+  // between them. This gives long translated labels room and keeps amounts
+  // aligned to the right within the 60%-wide totals block.
   let row(label, value) = (
     [#label],
     [],
@@ -278,9 +271,9 @@
         text(weight: "bold")[#t("total-paid")],
         [],
         text(features: ("tnum",), weight: "bold")[#order.grand_total],
-        // How it was paid, dated, under the total it pays, as on a till
-        // receipt. Payments from before methods were recorded arrive empty
-        // and aren't listed.
+        // List payment methods, dates and amounts beneath the total, as on a
+        // till receipt. Older records without payment details arrive as an
+        // empty payment list and do not add rows.
         ..if order.payments.len() > 0 { (grid.cell(colspan: 3)[#v(2pt)],) },
         ..order.payments.map(payment => (
           grid.cell(align: left + horizon, paid-with(payment)),
@@ -304,17 +297,17 @@
     ]
   ]
 
-  // Minimum gap + elastic spacer. The minimum guarantees breathing
-  // room above the band even when the page is dense; the `1fr` absorbs
-  // all remaining vertical space so the band anchors to the bottom of
+  // Combine a minimum gap with a flexible spacer. The minimum keeps space
+  // above the closing message even on a dense page; the `1fr` absorbs
+  // all remaining vertical space so the message sits at the bottom of
   // the content area on sparser layouts (pickup, few line items). On a
   // multi-page receipt the `1fr` has no slack to absorb and becomes a
-  // no-op, so the band flows naturally after totals.
+  // no-op, so the message follows the totals naturally.
   v(20pt)
   v(1fr)
 
   // ── Closing ─────────────────────────────────────────────────────────
-  // Centred, unboxed. The honey rule echoes the one under the header so
+  // Centre the closing message without a box. The honey rule echoes the header so
   // the page opens and closes on the same accent.
   block(
     width: 100%,

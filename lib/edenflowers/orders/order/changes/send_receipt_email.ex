@@ -84,7 +84,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
     end
   end
 
-  @doc "The order with what its emails and their attachments need."
+  @doc "Loads the order's relationships and calculations needed to build its email and PDF attachments."
   def load_for_send(order) do
     Ash.load!(
       order,
@@ -106,6 +106,6 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
     )
   end
 
-  # Atomic, so a caller holding a copy from before the failure still clears it.
+  # Clear the failure in the database even if the caller's stale record already has a nil timestamp.
   defp clear_failure(changeset), do: Ash.Changeset.atomic_update(changeset, :receipt_email_failed_at, nil)
 end
