@@ -60,7 +60,7 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   """
   def change_payment(form, params, target, actor) do
     form = change_payment_form(form, params, target, actor)
-    [payment_form: form, preview: DrawerPreview.build(:payment, form.source.data, form)]
+    [payment_form: form] ++ DrawerPreview.changed(:payment, form.source.data, form, target)
   end
 
   defp change_payment_form(form, params, ["payment", "payment_method"], actor) do
@@ -116,7 +116,7 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   """
   def change_refund(form, params, target) do
     form = change_refund_form(form, params, target)
-    [refund_form: form, preview: DrawerPreview.build(:refunded, form.source.data, form)]
+    [refund_form: form] ++ DrawerPreview.changed(:refunded, form.source.data, form, target)
   end
 
   defp change_refund_form(form, params, ["refund", "payment_method"]),

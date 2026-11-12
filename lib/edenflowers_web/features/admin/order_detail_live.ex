@@ -655,9 +655,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply, assign(socket, cancelling: nil, cancel_form: nil)}
   end
 
-  def handle_event("validate_cancel", %{"cancel" => params}, socket) do
+  def handle_event("validate_cancel", %{"cancel" => params} = event, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.cancel_form, params)
-    {:noreply, socket |> assign(:cancel_form, form) |> assign_preview(:cancelled, form)}
+    preview = DrawerPreview.changed(:cancelled, socket.assigns.order, form, event["_target"])
+    {:noreply, socket |> assign(:cancel_form, form) |> assign(preview)}
   end
 
   def handle_event("submit_cancel", %{"cancel" => params}, socket) do

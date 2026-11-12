@@ -22,7 +22,8 @@ defmodule EdenflowersWeb.Admin.PaymentActionsTest do
       params = Map.merge(params, %{"payment_method" => "voucher", "code" => "INVALID"})
       state = PaymentActions.change_payment(state[:payment_form], params, ["payment", "payment_method"], admin)
       assert state[:payment_form].source.action == :pay_with_gift_voucher
-      assert state[:preview].text_body =~ "30,00"
+      # In person again, so no receipt is ticked and none is previewed.
+      assert state[:preview] == nil
 
       params = %{
         "payment_method" => "cash",
@@ -35,10 +36,17 @@ defmodule EdenflowersWeb.Admin.PaymentActionsTest do
 
       state = PaymentActions.change_payment(state[:payment_form], params, ["payment", "payment_method"], admin)
       assert state[:payment_form].source.action == :record_payment
+      state = PaymentActions.change_payment(state[:payment_form], params, ["payment", "email_receipt?"], admin)
       assert state[:payment_form][:subject].value == "Thank you"
       assert state[:payment_form][:body].value == "Your payment arrived."
       assert state[:preview].text_body =~ "12,50"
       refute state[:preview].text_body =~ "30,00"
+
+      # Her own wording doesn't change the email as built, so it isn't built again.
+      params = Map.put(params, "body", "Your payment arrived. Thank you!")
+      state = PaymentActions.change_payment(state[:payment_form], params, ["payment", "body"], admin)
+      assert state[:payment_form][:body].value == "Your payment arrived. Thank you!"
+      refute Keyword.has_key?(state, :preview)
       assert_no_email_sent()
     end
 
@@ -53,6 +61,10 @@ defmodule EdenflowersWeb.Admin.PaymentActionsTest do
 
       state = PaymentActions.change_refund(form, params, ["refund", "payment_method"])
       assert state[:refund_form][:email_customer?].value in [false, "false"]
+      assert state[:preview] == nil
+
+      params = Map.put(params, "email_customer?", "true")
+      state = PaymentActions.change_refund(state[:refund_form], params, ["refund", "email_customer?"])
       assert state[:preview].text_body =~ "12,50"
       assert state[:preview].text_body =~ "in cash"
 
