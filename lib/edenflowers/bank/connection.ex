@@ -36,8 +36,8 @@ defmodule Edenflowers.Bank.Connection do
     defaults [:read]
 
     action :sync_payments do
-      description "Reads the shop's booked bank transactions, marks paid the expenses they pay and records " <>
-                    "the invoice payments they bring. " <>
+      description "Reads the shop's booked bank transactions, marks paid the expenses they pay, records " <>
+                    "the invoice payments they bring and stores the account's balance. " <>
                     "Does nothing without Enable Banking configured, which only production is, " <>
                     "or without a current consent."
 
@@ -64,6 +64,12 @@ defmodule Edenflowers.Bank.Connection do
       end
 
       run Edenflowers.Bank.Actions.BookedTransactions
+    end
+
+    update :record_balance do
+      description "Stores what the bank says the account holds, as of now."
+      accept [:available_balance, :booked_balance]
+      change set_attribute(:balance_read_at, &DateTime.utc_now/0)
     end
 
     read :current do
@@ -105,6 +111,7 @@ defmodule Edenflowers.Bank.Connection do
     bypass actor_attribute_equals(:system, true) do
       authorize_if action_type(:read)
       authorize_if action(:sync_payments)
+      authorize_if action(:record_balance)
     end
 
     bypass actor_attribute_equals(:admin, true) do
@@ -144,10 +151,31 @@ defmodule Edenflowers.Bank.Connection do
       allow_nil? false
     end
 
+    attribute :available_balance, :decimal do
+      description "Euros Jennie can spend: the booked balance less what's reserved, such as card payments. " <>
+                    "Nil until the first read, or when the bank doesn't say."
+    end
+
+    attribute :booked_balance, :decimal do
+      description "Euros on the statement. Nil until the first read, or when the bank doesn't say."
+    end
+
+    attribute :balance_read_at, :utc_datetime do
+      description "When the balances were last read from the bank."
+    end
+
     create_timestamp :inserted_at
   end
 
   calculations do
+    calculate :balance, :decimal, expr(available_balance || booked_balance) do
+      description "The one figure to show as the account's balance: what can be spent, else what's booked."
+    end
+
+    calculate :reserved, :boolean, expr(available_balance != booked_balance) do
+      description "Money is reserved but not booked yet, so the available and booked balances differ."
+    end
+
     calculate :expired, :boolean, expr(valid_until <= now()) do
       description "The consent has ended, so nothing is read until Jennie connects again."
     end
