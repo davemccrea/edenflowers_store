@@ -13,13 +13,13 @@ defmodule Edenflowers.Email.Preview do
   alias Edenflowers.Accounts.Calculations.NamePart
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Courses.CourseRegistration.Changes.PriceBooking
+  alias Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail
   alias Edenflowers.Email
   alias Edenflowers.Email.Edits
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Order.Changes.SendFulfillmentEmail
   alias Edenflowers.Orders.Order.Changes.SendOrderDetailsEmail
   alias Edenflowers.Orders.Order.Changes.SendReceiptEmail
-  alias Edenflowers.Orders.Receipt
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Orders.Subscription.Changes.SendSubscriptionCancelledEmail
   alias Edenflowers.Payments.Changes.Cancel
@@ -161,6 +161,7 @@ defmodule Edenflowers.Email.Preview do
   defp booking_load(:cancelled), do: [:course, :first_name, :payments | Cancel.load()]
   defp booking_load(:refunded), do: [:course, :first_name, :payments, :paid_through_stripe]
 
+  defp booking_load(:confirmation), do: SendConfirmationEmail.load()
   defp booking_load(:receipt), do: SendPaymentReceivedEmail.load(CourseRegistration)
 
   defp booking_load(_kind),
@@ -173,13 +174,7 @@ defmodule Edenflowers.Email.Preview do
       :payment_link_open?
     ]
 
-  defp booking_email(:confirmation, registration, _inputs) do
-    email = Email.course_confirmation(registration)
-
-    if Decimal.positive?(registration.amount_paid),
-      do: Swoosh.Email.attachment(email, Receipt.attachment("", registration.reference)),
-      else: email
-  end
+  defp booking_email(:confirmation, registration, _inputs), do: SendConfirmationEmail.email(registration, "")
 
   defp booking_email(:course_reminder, registration, _inputs),
     do: Email.course_reminder(registration)
