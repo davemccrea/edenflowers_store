@@ -69,6 +69,9 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
   defp refund_form(:order, _order), do: "#order-refund-form"
   defp refund_form(:booking, registration), do: "#refund-#{registration.id}-form"
 
+  defp payment_form(:order, _order), do: "#order-balance-form"
+  defp payment_form(:booking, registration), do: "#payment-#{registration.id}-form"
+
   defp refund(view, parent, record, params),
     do: view |> form(refund_form(parent, record), refund: params) |> render_submit()
 
@@ -182,6 +185,24 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
         assert has_element?(view, ~s|#{selector} input[name="refund[note]"][value="A small apology"]|)
         assert has_element?(view, preview, "20,00 € in cash")
         refute has_element?(view, preview, "A small apology")
+      end
+
+      test "reopening a payment keeps the form and its receipt preview aligned", %{conn: conn} do
+        record = build(@parent)
+        {view, _panel} = open(conn, @parent, record)
+        selector = payment_form(@parent, record)
+        preview = String.replace_suffix(selector, "-form", "-email-preview")
+
+        view
+        |> form(selector, payment: %{amount: "50", payment_method: "cash", email_receipt?: "true"})
+        |> render_change()
+
+        assert has_element?(view, preview, "50,00 €")
+
+        render_click(view, "open_settlement", %{"id" => record.id})
+
+        assert has_element?(view, ~s|#{selector} input[name="payment[amount]"][value="50"]|)
+        assert has_element?(view, preview, "50,00 €")
       end
 
       test "a payment recorded by mistake is undone, once", %{conn: conn} do

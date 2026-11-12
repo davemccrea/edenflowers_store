@@ -281,15 +281,15 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
 
     socket = if socket.assigns.settling_id == id, do: socket, else: assign_settlement_forms(socket, registration)
 
+    {kind, form} =
+      if mode == :refund,
+        do: {:refunded, socket.assigns.refund_form},
+        else: {:payment, socket.assigns.payment_form}
+
     {:noreply,
      socket
      |> assign(settling_id: id, settlement_mode: mode)
-     |> assign(
-       :preview,
-       if(mode == :refund and socket.assigns.refund_form,
-         do: DrawerPreview.build(:refunded, registration, socket.assigns.refund_form)
-       )
-     )
+     |> assign(:preview, form && DrawerPreview.build(kind, registration, form))
      |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-show"})}
   end
 
