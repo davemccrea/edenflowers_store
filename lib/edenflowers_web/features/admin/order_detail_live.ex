@@ -85,28 +85,21 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               </span>
               <%!-- Worded to stand alone, so the badges need no captions. --%>
               <span id="order-status" class="inline-flex flex-wrap items-center gap-1.5">
+                <%!-- The job first, then the money, then what is left to do, then background. --%>
                 <%!-- Flex, so the pill is a flex item like its siblings: inside a
                      plain span the inherited line-height would offset it. --%>
-                <span :if={@order.payment_status} class="inline-flex items-center">
-                  <span class="sr-only">{~t"Payment:"}</span>
-                  <.payment_status_badge status={@order.payment_status} />
-                </span>
                 <span class="inline-flex items-center">
                   <span class="sr-only">{~t"Fulfillment:"}</span>
                   <.fulfillment_status_badge status={@order.fulfillment_status} method={@order.fulfillment_method} />
                 </span>
-                <.gift_badge
-                  :if={@order.gift && !@order.gift_voucher_sale?}
-                  recipient_name={presence(@order.recipient_name)}
-                />
-                <%!-- The order that started it too, not only its Occurrences. --%>
-                <.subscription_badge
-                  :if={@order.subscription_id}
-                  navigate={~p"/admin/subscriptions/#{@order.subscription_id}"}
-                />
-                <.badge :if={@order.voucher_card_to_hand_over?} tone={:attention} icon="hero-pencil-square">
-                  {~t"Card to write"}
-                </.badge>
+                <%!-- Below xl an unsettled order shows the amount pill instead: it says the same and more. --%>
+                <span
+                  :if={@order.payment_status}
+                  class={["items-center", if(@order.settled?, do: "inline-flex", else: "hidden xl:inline-flex")]}
+                >
+                  <span class="sr-only">{~t"Payment:"}</span>
+                  <.payment_status_badge status={@order.payment_status} />
+                </span>
                 <%!-- The payment card sits below the job on narrow screens; this says money is waiting there. --%>
                 <.badge
                   :if={!@order.settled?}
@@ -119,6 +112,18 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                     else: ~t"To refund #{amount = Format.currency(Decimal.abs(@order.balance), @locale)}"}
                   <.icon name="hero-arrow-down" class="h-3 w-3" />
                 </.badge>
+                <.badge :if={@order.voucher_card_to_hand_over?} tone={:attention} icon="hero-pencil-square">
+                  {~t"Card to write"}
+                </.badge>
+                <.gift_badge
+                  :if={@order.gift && !@order.gift_voucher_sale?}
+                  recipient_name={presence(@order.recipient_name)}
+                />
+                <%!-- The order that started it too, not only its Occurrences. --%>
+                <.subscription_badge
+                  :if={@order.subscription_id}
+                  navigate={~p"/admin/subscriptions/#{@order.subscription_id}"}
+                />
               </span>
             </span>
           </:subtitle>
