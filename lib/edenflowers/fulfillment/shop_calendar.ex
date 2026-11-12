@@ -70,6 +70,10 @@ defmodule Edenflowers.Fulfillment.ShopCalendar do
       # sets, so it can't be expressed as a single DB expression.
       require_atomic? false
       argument :date, :date, allow_nil?: false
+
+      validate compare(:date, greater_than_or_equal_to: &Edenflowers.ShopTime.today/0),
+        message: "has passed"
+
       change Changes.ToggleDate
     end
 

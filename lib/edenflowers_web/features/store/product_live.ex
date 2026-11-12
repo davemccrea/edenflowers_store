@@ -721,10 +721,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
   defp has_subscription?(nil), do: false
 
-  defp has_subscription?(user) do
-    Orders.list_my_subscriptions!(actor: user)
-    |> Enum.any?(&(&1.state != :cancelled))
-  end
+  defp has_subscription?(user), do: Orders.list_my_running_subscriptions!(actor: user) != []
 
   # The cart's rules say why in their own message, already translated.
   defp add_error_message(%Ash.Error.Invalid{errors: [%{message: message} | _]}) when is_binary(message), do: message

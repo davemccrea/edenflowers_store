@@ -107,7 +107,7 @@ defmodule Edenflowers.Courses.Course do
              )
 
       prepare Edenflowers.Preparations.RankByMatch
-      prepare build(sort: [date: :desc], load: [:seats_booked])
+      prepare build(sort: [date: :desc], load: [:seats_booked, :ended?])
     end
 
     read :admin_show do
@@ -119,6 +119,7 @@ defmodule Edenflowers.Courses.Course do
                   :seats_booked,
                   :ended?,
                   bookings: [
+                    :cancelled?,
                     :amount_paid,
                     :amount_held,
                     :holds_money?,
@@ -146,7 +147,7 @@ defmodule Edenflowers.Courses.Course do
                     "booking is still to settle."
 
       pagination offset?: true, countable: true, required?: false
-      prepare build(default_sort: [date: :asc, start_time: :asc], load: [:seats_booked, :to_settle?])
+      prepare build(default_sort: [date: :asc, start_time: :asc], load: [:seats_booked, :ended?, :to_settle?])
     end
   end
 

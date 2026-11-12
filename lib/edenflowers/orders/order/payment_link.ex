@@ -45,6 +45,7 @@ defmodule Edenflowers.Orders.Order.PaymentLink do
                 load: [
                   :payment_link_open?,
                   :paid?,
+                  :cancelled?,
                   :payment_status,
                   :customer_status,
                   :pickup_message_pending?,

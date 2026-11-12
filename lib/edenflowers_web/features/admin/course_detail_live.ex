@@ -516,7 +516,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     case Courses.get_course_for_admin(id, actor: socket.assigns.current_user) do
       {:ok, course} ->
         course = Translations.translate(course)
-        {cancelled, registrations} = Enum.split_with(course.bookings, &(&1.status == :cancelled))
+        {cancelled, registrations} = Enum.split_with(course.bookings, & &1.cancelled?)
 
         {:ok,
          assign(socket,

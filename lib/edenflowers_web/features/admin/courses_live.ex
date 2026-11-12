@@ -26,8 +26,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     {:ok,
      socket
      |> assign(:page_title, ~t"Courses")
-     |> assign(:locale, Localize.get_locale())
-     |> assign(:today, Edenflowers.ShopTime.today())}
+     |> assign(:locale, Localize.get_locale())}
   end
 
   @impl true
@@ -104,7 +103,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             <span class="flex flex-wrap gap-1">
               <.badge :if={course.draft} tone={:neutral}>{~t"Draft"}</.badge>
               <.badge :if={!course.draft} tone={:success}>{~t"Published"}</.badge>
-              <.badge :if={Date.before?(course.date, @today)} tone={:tag}>{dpgettext("admin", "course", "Past")}</.badge>
+              <.badge :if={course.ended?} tone={:tag}>{dpgettext("admin", "course", "Past")}</.badge>
               <.badge :if={course.to_settle?} tone={:warning}>{~t"To settle"}</.badge>
             </span>
           </:col>

@@ -52,7 +52,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
           />
 
           <%= cond do %>
-            <% @payable.fulfillment_status == :cancelled -> %>
+            <% @payable.cancelled? -> %>
               <.heading reference={@payable.order_reference}>{~t"Order cancelled"}</.heading>
               <p class="leading-relaxed" data-testid="pay-cancelled">
                 {~t"This order has been cancelled, so there is nothing to pay. If you have any questions, just get in touch."}
@@ -93,7 +93,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
           <section class="mt-8" aria-label={~t"Order #{reference = @payable.order_reference}"}>
             <p
               :if={
-                @payable.fulfillment_status != :cancelled and not @payable.refunded? and
+                not @payable.cancelled? and not @payable.refunded? and
                   not (@paid? and @payable.fulfillment_status == :fulfilled)
               }
               class="mb-4 leading-relaxed"
@@ -206,7 +206,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
 
     title =
       cond do
-        order.fulfillment_status == :cancelled -> ~t"Order cancelled"
+        order.cancelled? -> ~t"Order cancelled"
         order.refunded? -> ~t"Order refunded"
         order.paid? or socket.assigns.returned_from_stripe? -> ~t"Thank you for your order"
         true -> ~t"Pay for your order"

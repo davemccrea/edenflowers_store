@@ -251,6 +251,13 @@ defmodule Edenflowers.Orders.Subscription do
       prepare build(sort: [next_fulfillment_date: :asc], load: [:user, product_variant: :product])
     end
 
+    read :mine_running do
+      description "The actor's own subscriptions that aren't cancelled, paused and held ones included, so the " <>
+                    "product page can say they already have one."
+
+      filter expr(user_id == ^actor(:id) and not cancelled?)
+    end
+
     read :mine do
       description "The actor's own subscriptions for their account page, leaving out cancelled ones " <>
                     "unless their final delivery is still on its way."
@@ -259,7 +266,7 @@ defmodule Edenflowers.Orders.Subscription do
       filter expr(user_id == ^actor(:id) and (state != :cancelled or exists(booked_occurrence, true)))
 
       prepare build(
-                sort: [inserted_at: :asc],
+                sort: [cancelled?: :asc, inserted_at: :asc],
                 load: [
                   :changes_closed?,
                   :changeable?,
@@ -488,7 +495,7 @@ defmodule Edenflowers.Orders.Subscription do
       authorize_if action([:pause, :resume, :cancel, :change])
     end
 
-    policy action([:read, :mine, :pause, :resume, :cancel, :change, :replace_card]) do
+    policy action([:read, :mine, :mine_running, :pause, :resume, :cancel, :change, :replace_card]) do
       authorize_if expr(user_id == ^actor(:id))
     end
   end
@@ -591,6 +598,10 @@ defmodule Edenflowers.Orders.Subscription do
   end
 
   calculations do
+    calculate :cancelled?, :boolean, expr(state == :cancelled) do
+      description "Whether the customer or Jennie has ended it."
+    end
+
     calculate :match_rank,
               :integer,
               expr(fragment("least(?, ?)", match_rank(user.name, ^arg(:term)), match_rank(user.email, ^arg(:term)))) do

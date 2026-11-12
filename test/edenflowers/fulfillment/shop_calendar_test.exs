@@ -61,6 +61,14 @@ defmodule Edenflowers.Fulfillment.ShopCalendarTest do
     refute_receive %Phoenix.Socket.Broadcast{topic: "shop_calendar:changed"}
   end
 
+  test "a day that has passed can't be opened or closed" do
+    admin = generate(admin_user())
+    yesterday = Date.add(Edenflowers.ShopTime.today(), -1)
+
+    assert {:error, %Ash.Error.Invalid{}} =
+             Fulfillment.toggle_date(Fulfillment.get_shop_calendar!(), yesterday, actor: admin)
+  end
+
   test "only an admin changes it" do
     customer = generate(admin_user(admin: false))
 

@@ -48,6 +48,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Payment do
                   :course,
                   :first_name,
                   :paid?,
+                  :cancelled?,
                   :upcoming?,
                   :seats_held,
                   :total_due,

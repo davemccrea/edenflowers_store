@@ -17,6 +17,7 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEntered do
   voucher whose code came with a new order would pay on placing it, by
   `PayFromVoucher`'s rule. `paid` is what an edited order has been paid, or for
   a new one what the voucher will pay, and `balance` what's left of the total.
+  `voucher_covers?` says the voucher pays all of it, so no payment terms apply.
   """
   use Ash.Resource.Actions.Implementation
 
@@ -59,6 +60,7 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEntered do
        vat: sum(vat_rows, :vat),
        total: total,
        voucher_pays: voucher_pays,
+       voucher_covers?: Decimal.positive?(voucher_pays) and Decimal.eq?(voucher_pays, total),
        paid: paid,
        balance: Decimal.sub(total, paid)
      }}

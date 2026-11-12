@@ -138,6 +138,7 @@ defmodule Edenflowers.Orders.Order.Admin do
                   :customer_name,
                   :order_reference,
                   :fulfillment_date,
+                  :overdue?,
                   :fulfillment_time_start,
                   :fulfillment_time_end,
                   :fulfillment_option_name,
