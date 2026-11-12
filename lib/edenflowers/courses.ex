@@ -57,6 +57,7 @@ defmodule Edenflowers.Courses do
     resource Edenflowers.Courses.Course do
       define :get_course_by_id, action: :read, get_by: [:id]
       define :get_course_by_slug, action: :read, get_by: [:slug]
+      define :get_course_for_admin, action: :admin_show, get_by: [:id]
       define :current_course_slug, action: :current_slug, args: [:param]
       define :list_upcoming_courses, action: :upcoming
       define :search_courses, action: :search, args: [:term]

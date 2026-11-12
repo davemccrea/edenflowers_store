@@ -516,28 +516,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   end
 
   defp load_course(socket, id) do
-    load = [
-      :seats_booked,
-      :ended?,
-      bookings: [
-        :amount_paid,
-        :amount_held,
-        :balance,
-        :to_collect?,
-        :to_refund?,
-        :cancelled_unsettled?,
-        :refund_methods,
-        :default_refund_method,
-        :refundable?,
-        :seats_held,
-        :payment_link_open?,
-        :payment_reminder?,
-        :refunds,
-        payments: [:undoable?]
-      ]
-    ]
-
-    case Courses.get_course_by_id(id, actor: socket.assigns.current_user, load: load) do
+    case Courses.get_course_for_admin(id, actor: socket.assigns.current_user) do
       {:ok, course} ->
         course = Translations.translate(course)
         {cancelled, registrations} = Enum.split_with(course.bookings, &(&1.status == :cancelled))
@@ -562,9 +541,9 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   defp registration_actions(assigns) do
     ~H"""
     <.actions_menu id={"registration-actions-#{@registration.id}"}>
-      <li :if={stripe_payment_intent_id(@registration)}>
+      <li :if={@registration.stripe_payment_intent_id}>
         <.link
-          href={StripeAPI.dashboard_payment_url(stripe_payment_intent_id(@registration))}
+          href={StripeAPI.dashboard_payment_url(@registration.stripe_payment_intent_id)}
           target="_blank"
           rel="noopener"
         >
@@ -572,7 +551,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         </.link>
       </li>
       <.actions_menu_button
-        :if={@registration.status == :confirmed}
         menu={"registration-actions-#{@registration.id}"}
         phx-click="open_email"
         aria-haspopup="dialog"
@@ -616,7 +594,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         {undo_label(payment, @locale)}
       </.actions_menu_button>
       <.actions_menu_button
-        :if={@registration.seats_held > 1}
+        :if={@registration.seat_removable?}
         menu={"registration-actions-#{@registration.id}"}
         phx-click="remove_seat"
         phx-value-id={@registration.id}
@@ -662,10 +640,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     </li>
     """
   end
-
-  # A paid booking's PaymentIntent is on its Payment; a pending one's is still on the booking.
-  defp stripe_payment_intent_id(registration),
-    do: Enum.find_value(registration.payments, & &1.payment_intent_id) || registration.payment_intent_id
 
   attr :registration, :map, required: true
   attr :locale, :string, required: true
@@ -715,10 +689,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
       else: ~t"Undo #{amount} payment"
   end
 
-  defp paid?(registration), do: Decimal.positive?(registration.amount_paid)
-
   defp remove_seat_confirmation(registration) do
-    if paid?(registration) do
+    if registration.holds_money? do
       ~t"This does not refund. Refund the seat here afterwards. Remove one seat from this booking?"
     else
       ~t"Remove one seat from this booking?"

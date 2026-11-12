@@ -431,4 +431,39 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
     assert {:error, error} = Courses.remove_registration_seat(registration, actor: admin)
     assert Exception.message(error) =~ "cancel the booking to remove its last seat"
   end
+
+  test "a seat can be removed only from a confirmed booking holding more than one" do
+    removable? = fn registration ->
+      Ash.load!(registration, :seat_removable?, authorize?: false, reuse_values?: false).seat_removable?
+    end
+
+    confirmed = generate(course_registration(status: :confirmed, seats: 2))
+    assert removable?.(confirmed)
+
+    refute removable?.(Courses.remove_registration_seat!(confirmed, authorize?: false))
+    refute removable?.(generate(course_registration(status: :cancelled, seats: 2)))
+  end
+
+  test "removing a seat refuses a cancelled booking" do
+    registration = generate(course_registration(status: :cancelled, seats: 2))
+
+    assert {:error, error} = Courses.remove_registration_seat(registration, authorize?: false)
+    assert Exception.message(error) =~ "is not confirmed"
+    assert Ash.reload!(registration, authorize?: false).removed_seats == 0
+  end
+
+  test "a booking's Stripe PaymentIntent is its Payment's, or its own while a payment is pending" do
+    intent = fn registration ->
+      Ash.load!(registration, :stripe_payment_intent_id, authorize?: false).stripe_payment_intent_id
+    end
+
+    pending = generate(course_registration(status: :confirmed, payment_intent_id: "pi_pending"))
+    assert intent.(pending) == "pi_pending"
+
+    paid = generate(course_registration(status: :confirmed, payment_intent_id: nil))
+    generate(payment(course_registration_id: paid.id, amount: paid.amount, payment_intent_id: "pi_paid"))
+    assert intent.(paid) == "pi_paid"
+
+    assert intent.(generate(course_registration(status: :confirmed))) == nil
+  end
 end
