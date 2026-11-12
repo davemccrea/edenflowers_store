@@ -111,6 +111,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               <ShareLinkDrawer.open_button
                 :if={@form.source.type == :update && !@form.source.data.draft}
                 id="share-product-link"
+                compact
               />
               <.button type="submit" variant="primary" size="sm">
                 {~t"Save"}
