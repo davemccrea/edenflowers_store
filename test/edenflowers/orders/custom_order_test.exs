@@ -589,7 +589,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
       [edit | _placed] = OrderLog.entries(versions, [], "en-GB")
 
-      assert edit.title == "Edited"
+      assert edit.title == "Edited · Delivery address, Fulfillment fee"
       assert {"Delivery address", "Kyrkvägen 5"} in edit.details
       assert {"Fulfillment fee", "17,00 €"} in edit.details
       refute List.keymember?(edit.details, "Items", 0)

@@ -10,6 +10,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
   alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Pricing.Promotion
+  alias EdenflowersWeb.Admin.OrderLog
   alias EdenflowersWeb.Admin.PromotionsLive
   alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
@@ -317,7 +318,12 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
     # A save that changed nothing still leaves a version.
     if changes != [],
-      do: %{id: "version-#{version.id}", at: version.version_inserted_at, title: ~t"Edited", details: changes}
+      do: %{
+        id: "version-#{version.id}",
+        at: version.version_inserted_at,
+        title: OrderLog.edited_title(changes),
+        details: changes
+      }
   end
 
   defp history_label(:name), do: ~t"Name"

@@ -113,6 +113,33 @@ defmodule EdenflowersWeb.Admin.TimelineTest do
     end
   end
 
+  test "an edit's title names up to two changed fields and counts the rest" do
+    assert OrderLog.edited_title([]) == "Edited"
+    assert OrderLog.edited_title([{"Date", "1.11.2020"}]) == "Edited · Date"
+
+    assert OrderLog.edited_title([{"Date", "x"}, {"Recipient", "x"}, {"Email", "x"}, {"Items", ["x"]}]) ==
+             "Edited · Date, Recipient +2"
+  end
+
+  test "day headings say Today and Yesterday, then the weekday and date" do
+    today = Edenflowers.ShopTime.today()
+
+    entries =
+      for days_ago <- 0..2 do
+        at = DateTime.new!(Date.add(today, -days_ago), ~T[12:00:00], Edenflowers.ShopTime.timezone())
+        %{id: "#{days_ago}", at: at, title: "event", details: []}
+      end
+
+    headings =
+      render_component(&Components.history_timeline/1, id: "history", entries: entries, locale: "en-GB")
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query("h3")
+      |> Enum.map(&(LazyHTML.text(&1) |> String.trim()))
+
+    assert ["Today", "Yesterday", weekday_and_date] = headings
+    assert weekday_and_date =~ ~r/^\w{3} \d/
+  end
+
   test "groups history by Helsinki day and shows each date once with local event times" do
     entries =
       [
@@ -128,8 +155,10 @@ defmodule EdenflowersWeb.Admin.TimelineTest do
     headings = document |> LazyHTML.query("h3") |> LazyHTML.to_tree()
     assert length(headings) == 2
     assert length(document |> LazyHTML.query("#history > li[id^=history-entry-]") |> LazyHTML.to_tree()) == 3
-    assert document |> LazyHTML.query("#history-date-2020-11-01") |> LazyHTML.text() |> String.trim() == "1.11.2020"
-    assert document |> LazyHTML.query("#history-date-2020-10-31") |> LazyHTML.text() |> String.trim() == "31.10.2020"
+    assert document |> LazyHTML.query("#history-date-2020-11-01") |> LazyHTML.text() |> String.trim() == "Sun 1.11.2020"
+
+    assert document |> LazyHTML.query("#history-date-2020-10-31") |> LazyHTML.text() |> String.trim() ==
+             "Sat 31.10.2020"
 
     assert document |> LazyHTML.query("time") |> Enum.map(&(LazyHTML.text(&1) |> String.trim())) == [
              "00:30",

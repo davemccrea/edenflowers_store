@@ -63,11 +63,30 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     }
   end
 
+  @doc """
+  An edit's title names what changed, so the row needn't be opened to find out:
+  "Edited · Date, Recipient +2". `changes` are the entry's details, label first.
+  """
+  def edited_title([]), do: ~t"Edited"
+
+  def edited_title(changes) do
+    {named, rest} = changes |> Enum.map(&elem(&1, 0)) |> Enum.split(2)
+    fields = Enum.join(named, ", ") <> if(rest == [], do: "", else: " +#{length(rest)}")
+
+    gettext_comment(
+      "%{fields} names up to two changed fields, like \"Date, Recipient +2\". Keep it short: it is a row title."
+    )
+
+    ~t"Edited · #{fields}"
+  end
+
   defp entry(version, locale, order) do
+    changes = field_details(version, locale) ++ items_details(version)
+
     %{
       id: "version-#{version.id}",
       at: version.version_inserted_at,
-      title: title(version, order),
+      title: if(version.version_action_name == :edit, do: edited_title(changes), else: title(version, order)),
       warning?:
         version.version_action_name in [
           :record_fulfillment_email_failure,
@@ -78,7 +97,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
           :record_payment_failed_email_failure,
           :place_unpaid_occurrence
         ],
-      details: field_details(version, locale) ++ items_details(version) ++ message_details(version)
+      details: changes ++ message_details(version)
     }
   end
 
@@ -116,7 +135,6 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     do: ~t"Placed online"
 
   defp title(%{version_action_name: :place_unpaid_occurrence}), do: ~t"Placed, but the saved card was refused"
-  defp title(%{version_action_name: :edit}), do: ~t"Edited"
   defp title(%{version_action_name: :update_florist_note}), do: ~t"Florist note changed"
 
   defp title(%{version_action_name: :link_pass_it_on_card} = version),
