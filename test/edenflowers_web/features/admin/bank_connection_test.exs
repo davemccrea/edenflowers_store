@@ -105,14 +105,6 @@ defmodule EdenflowersWeb.Admin.BankConnectionTest do
     refute has_element?(view, "#bank-balance-booked")
   end
 
-  defp record_balance(connection, available, booked) do
-    Edenflowers.Bank.record_bank_balance!(
-      connection,
-      %{available_balance: available, booked_balance: booked},
-      actor: Edenflowers.Actors.system_actor()
-    )
-  end
-
   test "a callback with someone else's state stores nothing", %{conn: conn} do
     Req.Test.stub(EnableBankingAPI, fn _conn -> flunk("Enable Banking was called") end)
     state = BankController.sign_state(%{id: Ash.UUID.generate()})
@@ -141,6 +133,14 @@ defmodule EdenflowersWeb.Admin.BankConnectionTest do
 
   defp seed_connection(valid_until) do
     Ash.Seed.seed!(Connection, %{session_id: "session-1", account_ids: ["account-1"], valid_until: valid_until})
+  end
+
+  defp record_balance(connection, available, booked) do
+    Edenflowers.Bank.record_bank_balance!(
+      connection,
+      %{available_balance: available, booked_balance: booked},
+      actor: Edenflowers.Actors.system_actor()
+    )
   end
 
   defp assert_signed(conn) do

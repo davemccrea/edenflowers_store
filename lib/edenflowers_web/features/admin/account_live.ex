@@ -17,7 +17,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
   alias Edenflowers.Events
   alias Edenflowers.External.EnableBankingAPI
   alias Edenflowers.Format
-  alias EdenflowersWeb.Admin.BankController
+  alias EdenflowersWeb.Admin.BankConnection
   alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Admin.PushSubscriptions
 
@@ -162,19 +162,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
 
   def handle_event("validate_avatar", _params, socket), do: {:noreply, socket}
 
-  def handle_event("connect_bank", _params, socket) do
-    user = socket.assigns.current_user
-    state = BankController.sign_state(user)
-
-    case Bank.bank_authorization_url(state, url(~p"/admin/bank/callback"), actor: user) do
-      {:ok, url} ->
-        {:noreply, redirect(socket, external: url)}
-
-      {:error, error} ->
-        Logger.error("Starting a bank connection failed: #{inspect(error)}")
-        {:noreply, put_flash(socket, :error, ~t"The bank couldn't be reached. Please try again.")}
-    end
-  end
+  def handle_event("connect_bank", _params, socket), do: BankConnection.connect(socket)
 
   def handle_event("push_subscribed", params, socket),
     do: {:reply, PushSubscriptions.subscribe(params, socket.assigns.current_user), socket}
