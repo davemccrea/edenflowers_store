@@ -50,6 +50,36 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       end)
     end
 
+    test "shows today's weather, but not with another day's orders", %{conn: conn} do
+      now = DateTime.to_iso8601(DateTime.utc_now())
+      on_exit(fn -> :persistent_term.erase(Edenflowers.External.WeatherAPI) end)
+
+      Req.Test.stub(Edenflowers.External.WeatherAPI, fn conn ->
+        Req.Test.json(conn, %{
+          "properties" => %{
+            "timeseries" => [
+              %{
+                "time" => now,
+                "data" => %{
+                  "instant" => %{"details" => %{"air_temperature" => -2.2}},
+                  "next_1_hours" => %{"summary" => %{"symbol_code" => "heavyrain"}}
+                }
+              }
+            ]
+          }
+        })
+      end)
+
+      {:ok, view, _html} = live(conn, ~p"/admin")
+
+      assert render_async(view) =~ "High -2°, low -2°"
+      assert has_element?(view, "#today-weather", "Rain")
+
+      tomorrow = Date.add(Edenflowers.ShopTime.today(), 1)
+      view |> element("#day-#{tomorrow} a") |> render_click()
+      refute has_element?(view, "#today-weather")
+    end
+
     test "refreshes a note from another page", %{conn: conn, admin: admin} do
       order = open_order("New note", :pickup, 0)
       {:ok, view, _html} = live(conn, ~p"/admin")

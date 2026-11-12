@@ -12,6 +12,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   alias Edenflowers.Courses
   alias Edenflowers.Events
   alias Edenflowers.External.EnableBankingAPI
+  alias Edenflowers.External.WeatherAPI
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Availability
@@ -77,6 +78,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               orders_by_date={@orders_by_date}
               calendar={@calendar}
               today={@today}
+              weather={@weather}
               locale={@locale}
             />
             <div class="grid min-w-0 gap-6 max-xl:order-last sm:grid-cols-2 sm:items-start">
@@ -186,6 +188,11 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
   def handle_info(_message, socket), do: {:noreply, socket}
 
+  # A forecast that can't be read leaves the weather out.
+  @impl true
+  def handle_async(:weather, {:ok, {:ok, weather}}, socket), do: {:noreply, assign(socket, :weather, weather)}
+  def handle_async(:weather, _result, socket), do: {:noreply, assign(socket, :weather, nil)}
+
   # A day off the strip, such as yesterday's after midnight, falls back to today.
   defp selected_day(day, [today | _] = days), do: if(day in days, do: day, else: today)
 
@@ -235,6 +242,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     same_day_last_month = Date.shift(today, month: -1)
 
     socket
+    |> fetch_weather()
     |> assign(:calendar, Fulfillment.get_shop_calendar!(actor: actor))
     |> assign(:bank_connection, bank_connection(actor))
     |> assign(:report_month, previous_month())
@@ -257,6 +265,19 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       :last_month_sales,
       Orders.sales_summary!(Date.beginning_of_month(same_day_last_month), same_day_last_month, actor: actor)
     )
+  end
+
+  # A forecast already held shows at once. Otherwise it is read in the background,
+  # with the weather on the page left as it is until the answer comes.
+  defp fetch_weather(socket) do
+    case WeatherAPI.cached() do
+      nil ->
+        socket = assign_new(socket, :weather, fn -> nil end)
+        if connected?(socket), do: start_async(socket, :weather, &WeatherAPI.today/0), else: socket
+
+      weather ->
+        assign(socket, :weather, weather)
+    end
   end
 
   # Largest first, either way.
@@ -855,6 +876,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   attr :orders_by_date, :map, required: true
   attr :calendar, :map, required: true
   attr :today, Date, required: true
+  attr :weather, :map, required: true, doc: "today's, or nil while unknown"
   attr :locale, :any, required: true
 
   # Nine days because Jennie buys from the wholesaler anywhere from a day to a week ahead.
@@ -863,6 +885,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     <section id="overview-orders" aria-labelledby="overview-orders-title" class="admin-card p-4 sm:p-5">
       <div class="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
         <h2 id="overview-orders-title" class="text-base-content text-base font-semibold">{~t"Orders"}</h2>
+        <.weather :if={@weather && @day == @today} weather={@weather} />
         <.link
           navigate={~p"/admin/orders"}
           class="text-primary touch-target inline-flex items-center py-1 text-sm hover:underline"
@@ -918,6 +941,31 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     </script>
     """
   end
+
+  attr :weather, :map, required: true
+
+  defp weather(assigns) do
+    {emoji, label} = weather_condition(assigns.weather.condition)
+    assigns = assign(assigns, emoji: emoji, label: label)
+
+    ~H"""
+    <p id="today-weather" class="text-base-content/75 mr-auto flex items-center gap-1.5 text-sm tabular-nums">
+      <span aria-hidden="true" title={@label}>{@emoji}</span>
+      <span class="sr-only">{@label}</span>
+      {~t"High #{high = @weather.high}°, low #{low = @weather.low}°"}
+    </p>
+    """
+  end
+
+  # Emoji because Heroicons has no rain or snow.
+  defp weather_condition(:thunder), do: {"⛈️", ~t"Thunder"}
+  defp weather_condition(:sleet), do: {"🌨️", ~t"Sleet"}
+  defp weather_condition(:snow), do: {"❄️", ~t"Snow"}
+  defp weather_condition(:rain), do: {"🌧️", ~t"Rain"}
+  defp weather_condition(:fog), do: {"🌫️", ~t"Fog"}
+  defp weather_condition(:partly_cloudy), do: {"⛅", ~t"Partly cloudy"}
+  defp weather_condition(:cloudy), do: {"☁️", ~t"Cloudy"}
+  defp weather_condition(:clear), do: {"☀️", ~t"Clear"}
 
   attr :date, Date, required: true
   attr :count, :integer, required: true

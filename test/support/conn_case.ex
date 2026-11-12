@@ -26,6 +26,8 @@ defmodule EdenflowersWeb.ConnCase do
     Edenflowers.DataCase.setup_sandbox(tags)
     Edenflowers.DataCase.stub_card_lookup()
     Edenflowers.DataCase.stub_papra_update()
+    # The Overview asks for the weather; tests that show it stub a forecast.
+    Req.Test.stub(Edenflowers.External.WeatherAPI, &Plug.Conn.send_resp(&1, 503, ""))
     # Visitors with no language preference get Swedish; tests read as an English browser.
     {:ok, conn: Phoenix.ConnTest.build_conn() |> Plug.Conn.put_req_header("accept-language", "en")}
   end
