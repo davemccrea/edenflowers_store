@@ -203,7 +203,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                   empty?={@customer_search_empty?}
                   focus="customer_focus"
                 />
-                <div class="grid gap-4 sm:grid-cols-2">
+                <%!-- Language sits with the customer it is picked for, keeping the details column short enough for a laptop screen. --%>
+                <div class="grid gap-4 md:grid-cols-[minmax(0,4fr)_minmax(0,5fr)_9rem]">
                   <.input
                     field={@form[:buyer_name]}
                     label={~t"Name"}
@@ -219,6 +220,13 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                     required
                     class="input w-full"
                     autocomplete="off"
+                  />
+                  <.input
+                    field={@form[:locale]}
+                    type="select"
+                    label={~t"Invoice language"}
+                    options={Enum.map(Locales.all(), &{Locales.name(&1), &1})}
+                    class="select w-full"
                   />
                 </div>
                 <div class="mt-4">
@@ -251,7 +259,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                     min="0"
                     max="365"
                     label={~t"Payment term (days)"}
-                    class="input w-full"
+                    class="input w-24 tabular-nums xl:w-full"
                     help={issue_dates_hint(@form[:payment_term_days].value, @locale)}
                   />
                   <.input
@@ -259,14 +267,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                     type="date"
                     label={~t"Date of supply or advance payment"}
                     required
-                    class="input w-full"
-                  />
-                  <.input
-                    field={@form[:locale]}
-                    type="select"
-                    label={~t"Language"}
-                    options={Enum.map(Locales.all(), &{Locales.name(&1), &1})}
-                    class="select w-full"
+                    class="input w-44 xl:w-full"
                   />
                 </div>
                 <details
@@ -282,7 +283,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                       class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-90"
                     />
                   </summary>
-                  <div class="mt-4 space-y-4">
+                  <div class="mt-4 max-w-xs space-y-4">
                     <.input
                       field={@form[:customer_reference]}
                       label={~t"Customer reference"}
@@ -299,7 +300,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
               </section>
             </div>
 
-            <section id="invoice-lines" class="mt-10" aria-labelledby="invoice-lines-heading">
+            <section id="invoice-lines" class="mt-8" aria-labelledby="invoice-lines-heading">
               <h2 id="invoice-lines-heading" class="text-base-content text-base font-semibold xl:sr-only">{~t"Items"}</h2>
               <div
                 aria-hidden="true"
@@ -315,10 +316,10 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                 <.inputs_for :let={line_form} field={@form[:lines]}>
                   <fieldset
                     id={"invoice-line-#{line_form.index}"}
-                    class={["relative grid grid-cols-2 items-start gap-3 py-4 xl:[&_label>span:first-child]:sr-only", line_columns()]}
+                    class={["relative flex flex-wrap items-start gap-3 py-4 xl:[&_label>span:first-child]:sr-only xl:grid", line_columns()]}
                   >
                     <legend class="sr-only">{~t"Item"} {line_form.index + 1}</legend>
-                    <div class="col-span-2 min-w-0 xl:col-span-1">
+                    <div class="w-full min-w-0">
                       <.input
                         field={line_form[:description]}
                         id={"line-#{line_form.index}-description"}
@@ -327,35 +328,42 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                         class="input w-full"
                       />
                     </div>
-                    <.input
-                      field={line_form[:quantity]}
-                      value={decimal_comma(line_form[:quantity].value)}
-                      id={"line-#{line_form.index}-quantity"}
-                      label={~t"Qty"}
-                      required
-                      inputmode="decimal"
-                      class="input w-full tabular-nums"
-                    />
-                    <.input
-                      field={line_form[:unit_price]}
-                      value={decimal_comma(line_form[:unit_price].value)}
-                      id={"line-#{line_form.index}-price"}
-                      label={~t"Price each (€)"}
-                      required
-                      inputmode="decimal"
-                      class="input w-full tabular-nums"
-                    />
-                    <.input
-                      field={line_form[:vat_rate]}
-                      id={"line-#{line_form.index}-vat"}
-                      type="select"
-                      label={~t"VAT"}
-                      required
-                      value={normalize_decimal(line_form[:vat_rate].value)}
-                      options={vat_options(@tax_rates, line_form[:vat_rate].value)}
-                      class="select w-full"
-                    />
-                    <p class="text-base-content self-end pb-2.5 text-right tabular-nums xl:self-start xl:pt-2.5 xl:pb-0">
+                    <%!-- Below xl the fields keep the widths their values need instead of stretching. --%>
+                    <div class="w-18 xl:w-auto">
+                      <.input
+                        field={line_form[:quantity]}
+                        value={decimal_comma(line_form[:quantity].value)}
+                        id={"line-#{line_form.index}-quantity"}
+                        label={~t"Qty"}
+                        required
+                        inputmode="decimal"
+                        class="input w-full tabular-nums"
+                      />
+                    </div>
+                    <div class="w-28 xl:w-auto">
+                      <.input
+                        field={line_form[:unit_price]}
+                        value={decimal_comma(line_form[:unit_price].value)}
+                        id={"line-#{line_form.index}-price"}
+                        label={~t"Price each (€)"}
+                        required
+                        inputmode="decimal"
+                        class="input w-full tabular-nums"
+                      />
+                    </div>
+                    <div class="w-38 xl:w-auto">
+                      <.input
+                        field={line_form[:vat_rate]}
+                        id={"line-#{line_form.index}-vat"}
+                        type="select"
+                        label={~t"VAT"}
+                        required
+                        value={normalize_decimal(line_form[:vat_rate].value)}
+                        options={vat_options(@tax_rates, line_form[:vat_rate].value)}
+                        class="select w-full"
+                      />
+                    </div>
+                    <p class="text-base-content ml-auto self-end pb-2.5 text-right tabular-nums xl:self-start xl:pt-2.5 xl:pb-0">
                       <span class="sr-only">{~t"Total"}</span>
                       {line_total(line_form, @locale)}
                     </p>
