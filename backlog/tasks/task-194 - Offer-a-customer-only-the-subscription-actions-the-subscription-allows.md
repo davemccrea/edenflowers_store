@@ -4,6 +4,7 @@ title: Offer a customer only the subscription actions the subscription allows
 status: needs-triage
 assignee: []
 created_date: '2026-11-12 06:22'
+updated_date: '2026-11-12 06:38'
 labels:
   - spec
   - developers
@@ -48,3 +49,16 @@ Load `pausable?`, `resumable?` and `cancellable?` in the `:mine` read and have t
 - [ ] #1 The account page shows pause, resume and cancel from pausable?, resumable? and cancellable?, and no longer gates them on state
 - [ ] #2 For each subscription state, the account page offers the same buttons as before
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-11-12 06:38
+
+---
+
+Not dispatched (Ponytail review of the plan, 2026-11-12): pausable?, resumable? and cancellable? are state == :active, state == :paused and state in [:active, :paused, :payment_failed] (subscription.ex:678-691), and the account page's buttons already match them exactly. Nothing a customer sees would change. Do it in passing next time subscription_manager.ex is edited, or archive as wontfix. David has not chosen between those.
+
+---
+<!-- COMMENTS:END -->
