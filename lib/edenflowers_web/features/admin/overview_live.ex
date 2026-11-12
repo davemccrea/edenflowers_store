@@ -664,7 +664,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             <.badge tone={:success}>{~t"Connected"}</.badge>
         <% end %>
       </h3>
-      <dl :if={@connection && @connection.balance} id="bank-balance" class="mb-3">
+      <dl :if={@connection && @connection.balance} id="bank-balance" class="[&:not(:last-child)]:mb-3">
         <dt class="text-base-content/75">
           {if @connection.available_balance, do: ~t"Available", else: ~t"Balance"}
         </dt>
@@ -678,16 +678,17 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           {balance_read(@connection.balance_read_at, @locale)}
         </dd>
       </dl>
-      <p class="text-base-content/75 [&:not(:last-child)]:mb-3">
+      <p
+        :if={is_nil(@connection) or @connection.expired or @connection.renewal_due}
+        class="text-base-content/75 [&:not(:last-child)]:mb-3"
+      >
         <%= cond do %>
           <% is_nil(@connection) -> %>
             {~t"Connect it to mark expenses and invoices paid as payments leave or arrive."}
           <% @connection.expired -> %>
             {~t"The connection ended on #{date = Format.date(@connection.valid_until, @locale)}. Connect again to keep payments up to date."}
-          <% @connection.renewal_due -> %>
-            {~t"It ends on #{date = Format.date(@connection.valid_until, @locale)}. Connect again to keep payments up to date."}
           <% true -> %>
-            {~t"Connected until #{date = Format.date(@connection.valid_until, @locale)}"}
+            {~t"It ends on #{date = Format.date(@connection.valid_until, @locale)}. Connect again to keep payments up to date."}
         <% end %>
       </p>
       <.button
