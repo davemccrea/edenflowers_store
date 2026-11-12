@@ -275,10 +275,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   def handle_event("open_settlement", %{"id" => id} = params, socket) do
     registration = booking(socket.assigns.course, id)
 
-    mode =
-      if params["mode"] == "refund" or registration.to_refund?,
-        do: :refund,
-        else: :settle
+    mode = PaymentActions.settlement_mode(registration, params)
 
     socket = if socket.assigns.settling_id == id, do: socket, else: assign_settlement_forms(socket, registration)
 
@@ -402,8 +399,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   end
 
   def handle_event("open_cancel", %{"id" => id}, socket) do
-    registration = PaymentActions.load_for_cancel(booking(socket.assigns.course, id))
-    form = PaymentActions.cancel_form(registration, socket.assigns.current_user)
+    form = PaymentActions.cancel_form(booking(socket.assigns.course, id), socket.assigns.current_user)
+    registration = form.source.data
 
     {:noreply,
      socket

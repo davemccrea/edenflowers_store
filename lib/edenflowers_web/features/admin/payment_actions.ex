@@ -14,20 +14,24 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   alias EdenflowersWeb.Admin.DrawerPreview
   alias EdenflowersWeb.Admin.Drawers
 
-  @doc "Loads what the cancel drawer shows about the money (`Changes.Cancel.load/0`)."
-  def load_for_cancel(payable), do: Ash.load!(payable, Cancel.load(), authorize?: false)
-
   @doc """
-  The cancel drawer's form on the payable's `cancel` action, for a payable
-  from `load_for_cancel/1`. The cancellation charge starts at
+  The cancel drawer's form on the payable's `cancel` action. Its data is the
+  payable with what the drawer shows about the money loaded
+  (`Changes.Cancel.load/0`). The cancellation charge starts at
   `default_cancellation_charge`.
   """
   def cancel_form(payable, actor) do
+    payable = Ash.load!(payable, Cancel.load(), authorize?: false)
+
     form(payable, :cancel, "cancel", actor, %{
       "cancellation_charge" => Decimal.to_string(payable.default_cancellation_charge, :normal),
       "email_customer?" => "true"
     })
   end
+
+  @doc "The form the settlement drawer opens on: the refund form for money owed back, or for the menu's Refund."
+  def settlement_mode(payable, params),
+    do: if(params["mode"] == "refund" or payable.to_refund?, do: :refund, else: :settle)
 
   @doc """
   The record payment form, on `record_payment`, or on `pay_with_gift_voucher`

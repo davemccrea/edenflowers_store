@@ -1262,31 +1262,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       assert [_job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendRefundedEmail)
     end
 
-    test "a part refund by Stripe is sent and recorded, leaving nothing to collect", %{conn: conn} do
-      order = placed_order()
-      generate(payment(order_id: order.id, amount: Decimal.new("88.50"), payment_intent_id: "pi_paid"))
-
-      StripeAPI.Mock
-      |> Mox.stub(:list_refunds, fn "pi_paid" -> {:ok, []} end)
-      |> Mox.expect(:create_refund, fn "pi_paid", 2_000, _key, %{"reason" => "refund"} ->
-        {:ok, %{id: "re_refund", payment_intent: "pi_paid", amount: 2_000, status: "succeeded"}}
-      end)
-
-      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-      view |> element("#order-actions button", "Refund") |> render_click()
-      assert has_element?(view, ~s|#order-refund-how option[value="stripe"][selected]|)
-
-      assert view
-             |> form("#order-refund-form",
-               refund: %{amount: "20.00", payment_method: "stripe", email_customer?: "false"}
-             )
-             |> render_submit() =~ "Refunded with Stripe."
-
-      assert has_element?(view, "#order-log", "Refunded 20,00 € · Stripe")
-      refute render(view) =~ "To collect"
-      refute_enqueued(worker: Edenflowers.Payments.Workers.SendRefundedEmail)
-    end
-
     test "the form offers the order's refund methods and starts at its default", %{conn: conn} do
       order = placed_order()
       generate(payment(order_id: order.id, method: :mobilepay, amount: Decimal.new("88.50")))

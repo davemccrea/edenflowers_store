@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :keep_label, :string, required: true
   attr :stale, :boolean, default: false
   attr :form, :any, default: nil
-  attr :payable, :any, default: nil, doc: "the order or booking, from `PaymentActions.load_for_cancel/1`"
+  attr :payable, :any, default: nil, doc: "the order or booking, the data of `PaymentActions.cancel_form/2`"
   attr :email, :string, default: nil, doc: "the customer's address, or nil when they have none"
   attr :locale, :string, required: true
   attr :preview, Swoosh.Email, default: nil
