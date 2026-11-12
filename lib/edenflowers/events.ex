@@ -28,6 +28,7 @@ defmodule Edenflowers.Events do
   def admin_bookings, do: ["admin", "bookings"]
   def admin_courses, do: ["admin", "courses"]
   def admin_products, do: ["admin", "products"]
+  def admin_product_categories, do: ["admin", "product_categories"]
   def admin_promotions, do: ["admin", "promotions"]
   def admin_welcome_offer, do: ["admin", "welcome_offer"]
   def admin_invoices, do: ["admin", "invoices"]

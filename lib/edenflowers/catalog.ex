@@ -40,6 +40,9 @@ defmodule Edenflowers.Catalog do
 
     resource Edenflowers.Catalog.ProductCategory do
       define :list_categories, action: :public
+      define :list_all_categories, action: :in_store_order
+      define :set_category_visibility, action: :set_visibility, args: [:visibility]
+      define :move_category, action: :move, args: [:direction]
       define :get_category_by_slug, action: :public_by_slug, args: [:slug]
     end
   end

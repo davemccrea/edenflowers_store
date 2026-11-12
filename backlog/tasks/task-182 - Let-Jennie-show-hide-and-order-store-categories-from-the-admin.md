@@ -1,7 +1,7 @@
 ---
 id: TASK-182
 title: 'Let Jennie show, hide and order store categories from the admin'
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-11-07 08:07'
 labels:
@@ -22,9 +22,10 @@ Jennie can set each product category's visibility (public, draft, hidden) and it
 
 ProductCategory already has `visibility` and `position` (lib/edenflowers/catalog/product_category.ex); the store reads them. What's missing is admin UI.
 
-Open questions:
-- A new admin categories page, or edit controls on the products page?
-- Should she also edit name, description and translations, or create new categories?
-- How to reorder: drag, or up/down buttons (admin PWA is iOS only)?
-- Where does the Gift voucher link sit if Bouquets is hidden? It currently goes after Bouquets, or at the end without it.
+Decisions (grilled 2026-11-11):
+- Own page at /admin/products/categories, opened from a 'Categories' button on the Products page. Not in the main nav.
+- Only visibility and order. Names, descriptions, translations, creating and deleting stay with a developer.
+- Up/down buttons save at once and renumber every category, Hidden and Draft ones included, in one list.
+- Public, Hidden and Draft are all offered, each explained in one line, and save at once. Making a category with published products a Draft asks first and names how many products leave the store.
+- The store's Gift voucher link always sits last in the ribbon.
 <!-- SECTION:DESCRIPTION:END -->
