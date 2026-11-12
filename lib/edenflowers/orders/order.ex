@@ -991,10 +991,6 @@ defmodule Edenflowers.Orders.Order do
                     "pays afterwards, and an Occurrence whose card was refused is placed unpaid."
     end
 
-    calculate :holds_money?, :boolean, expr(amount_held > 0) do
-      description "Some of the customer's money is still with the shop: paid, and not all refunded."
-    end
-
     calculate :cancellable_by_customer?,
               :boolean,
               expr(

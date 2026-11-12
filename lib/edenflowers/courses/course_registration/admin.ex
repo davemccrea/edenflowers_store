@@ -10,6 +10,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
   import Edenflowers.Actors
 
   alias Edenflowers.Courses.CourseRegistration.Changes
+  alias Edenflowers.Orders.Validations.Holds
   alias Edenflowers.Payments.Changes, as: PaymentChanges
 
   @locales Edenflowers.Locales.all()
@@ -137,6 +138,13 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
       description "Frees one place of a group booking when someone drops out. Refunds nothing: the seat's price " <>
                     "is left as a Balance for Jennie to refund. The last seat needs cancel instead."
 
+      validate attribute_equals(:status, :confirmed), message: "is not confirmed"
+
+      # The course page offers Remove a seat on the same calculation.
+      validate {Holds, calculation: :seat_removable?, message: "cancel the booking to remove its last seat"},
+        only_when_valid?: true
+
+      # Two removals at once both pass the validation; only this stops the second taking the last seat.
       change atomic_update(
                :removed_seats,
                expr(

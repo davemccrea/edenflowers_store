@@ -230,6 +230,24 @@ defmodule Edenflowers.Courses.CourseRegistration do
       description "Places the booking still holds: seats bought less those Jennie removed when someone dropped out."
     end
 
+    calculate :seat_removable?, :boolean, expr(status == :confirmed and seats_held > 1) do
+      description "Whether Jennie can take one seat off it: confirmed and holding more than one. The last seat " <>
+                    "needs a cancel."
+    end
+
+    calculate :stripe_payment_intent_id,
+              :string,
+              fn records, _context ->
+                Enum.map(records, fn record ->
+                  Enum.find_value(record.payments, & &1.payment_intent_id) || record.payment_intent_id
+                end)
+              end do
+      load [:payment_intent_id, payments: [:payment_intent_id]]
+
+      description "The PaymentIntent to look the booking up by in Stripe: its Payment's once paid, or the " <>
+                    "booking's own while a payment is pending. Nil when Stripe was never involved."
+    end
+
     calculate :amount_invoiced, :decimal, expr(0) do
       description "Always 0: a company's course is a private course, invoiced on its own, never a booking."
     end

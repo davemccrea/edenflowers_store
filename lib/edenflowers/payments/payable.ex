@@ -284,6 +284,10 @@ defmodule Edenflowers.Payments.Payable do
                     "count as taking and handing back money."
     end
 
+    calculate :holds_money?, :boolean, expr(amount_held > 0) do
+      description "Some of the customer's money is still with the shop: paid, and not all refunded."
+    end
+
     calculate :payable?, :boolean, expr(balance > 0 and not refunded?) do
       description "Whether there is something a PaymentIntent can charge: a Balance to collect, and not refunded."
     end

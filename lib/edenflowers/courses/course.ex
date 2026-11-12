@@ -110,6 +110,37 @@ defmodule Edenflowers.Courses.Course do
       prepare build(sort: [date: :desc], load: [:seats_booked])
     end
 
+    read :admin_show do
+      description "A course with its bookings and everything the admin course page and its drawers show, " <>
+                    "including what Jennie may still do with each booking."
+
+      prepare build(
+                load: [
+                  :seats_booked,
+                  :ended?,
+                  bookings: [
+                    :amount_paid,
+                    :amount_held,
+                    :holds_money?,
+                    :balance,
+                    :to_collect?,
+                    :to_refund?,
+                    :cancelled_unsettled?,
+                    :refund_methods,
+                    :default_refund_method,
+                    :refundable?,
+                    :seats_held,
+                    :seat_removable?,
+                    :stripe_payment_intent_id,
+                    :payment_link_open?,
+                    :payment_reminder?,
+                    :refunds,
+                    payments: [:undoable?]
+                  ]
+                ]
+              )
+    end
+
     read :admin_list do
       description "Courses for the admin list, paginated, soonest first, with seats booked and whether any " <>
                     "booking is still to settle."
