@@ -711,8 +711,8 @@ defmodule EdenflowersWeb.Admin.Components do
   """
   def timeline_item(assigns) do
     ~H"""
-    <li id={@id} class={["group/timeline relative last:pb-0", if(@compact?, do: "pb-4", else: "pb-5")]}>
-      <div class={[@markers? && "pl-7", @children != [] && "relative", @children != [] && if(@compact?, do: "pb-4", else: "pb-5")]}>
+    <li id={@id} class={["group/timeline relative last:pb-0", if(@compact?, do: "pb-2", else: "pb-5")]}>
+      <div class={[@markers? && "pl-7", @children != [] && "relative", @children != [] && if(@compact?, do: "pb-2", else: "pb-5")]}>
         <span
           :if={@markers? && @connect?}
           class={["bg-base-content/20 left-[5px] absolute top-5 -bottom-1 w-px", @children == [] && "group-last/timeline:hidden"]}
@@ -782,7 +782,7 @@ defmodule EdenflowersWeb.Admin.Components do
 
   defp history_day(assigns) do
     ~H"""
-    <li id={"#{@id}-day-#{@group.date}"} role="presentation" class={["relative pb-2 not-first:pt-2", @markers? && "pl-7"]}>
+    <li id={"#{@id}-day-#{@group.date}"} role="presentation" class={["relative pb-2 not-first:pt-4", @markers? && "pl-7"]}>
       <span
         :if={@markers? && @connect?}
         class="bg-base-content/20 left-[5px] absolute top-1 -bottom-1 w-px"
@@ -827,8 +827,8 @@ defmodule EdenflowersWeb.Admin.Components do
         phx-mounted={JS.ignore_attributes(["open"])}
         class="group"
       >
-        <%!-- The 44px touch target overhangs the row, so expandable rows keep the same pitch as plain ones. --%>
-        <summary class="-mx-1 cursor-pointer list-none px-1 pointer-coarse:-my-3 pointer-coarse:py-3 hover:bg-base-content/5 focus-visible:bg-base-content/5 group-open:pointer-coarse:mb-0">
+        <%!-- The 36px touch target overhangs the row, so expandable rows keep the same pitch as plain ones. --%>
+        <summary class="-mx-1 cursor-pointer list-none px-1 pointer-coarse:-my-2 pointer-coarse:py-2 hover:bg-base-content/5 focus-visible:bg-base-content/5 group-open:pointer-coarse:mb-0">
           <.history_heading title={@title} at={@at} locale={@locale} warning?={@warning?} expandable />
         </summary>
         {render_slot(@details)}
