@@ -36,9 +36,11 @@ button:is(.btn, [type="submit"]):is(
     .phx-submit-loading,
     .phx-click-loading,
     [aria-busy="true"]
-  )
-  > * {
-  animation: button-content-hide 0s 300ms forwards;
+  ) {
+  & > *,
+  &::before {
+    animation: button-content-hide 0s 300ms forwards;
+  }
 }
 
 /* Use the components layer so the spinner's relative positioning does not
