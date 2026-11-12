@@ -4,8 +4,8 @@ defmodule Edenflowers.Payments.Changes.SendPaymentReceivedEmail do
   `amount` argument, or else the latest payment. The `email: :receipt`
   option sends a neutral copy of an order's receipt instead of announcing
   a new payment. Fulfillment does not affect either email. A successful send stamps
-  `receipt_emailed_at`, and on an order clears `receipt_email_failed_at` and
-  logs Jennie's rewrite of the email, if she made one.
+  `receipt_emailed_at`, logs Jennie's rewrite of the email, if she made one,
+  and on an order clears `receipt_email_failed_at`.
   """
   use Ash.Resource.Change
 
@@ -86,5 +86,6 @@ defmodule Edenflowers.Payments.Changes.SendPaymentReceivedEmail do
     |> Ash.Changeset.atomic_update(:receipt_email_failed_at, nil)
   end
 
-  defp logged(changeset, _edits), do: changeset
+  defp logged(changeset, edits),
+    do: Ash.Changeset.set_context(changeset, %{paper_trail_metadata: Edits.for_log(edits)})
 end

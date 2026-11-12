@@ -26,7 +26,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub],
-    extensions: [AshStateMachine, AshOban],
+    extensions: [AshStateMachine, AshOban, AshPaperTrail.Resource],
     fragments: [
       Edenflowers.Payments.Payable,
       Edenflowers.Courses.CourseRegistration.Checkout,
@@ -68,6 +68,36 @@ defmodule Edenflowers.Courses.CourseRegistration do
       transition(:confirm_paid_by_voucher, from: :pending, to: :confirmed)
       transition(:cancel, from: :confirmed, to: :cancelled)
     end
+  end
+
+  # The course page's History. Money isn't here: each Payment is its own record.
+  paper_trail do
+    change_tracking_mode :changes_only
+    create_version_on_destroy? false
+    store_action_name? true
+    ignore_attributes [:inserted_at, :updated_at]
+    sensitive_attributes :redact
+
+    # The subject and text Jennie sent in place of the template's, if she rewrote the email.
+    metadata :email_subject, :string
+    metadata :email_body, :string
+
+    # on_actions only filters updates; an unfinished website checkout isn't a booking yet.
+    ignore_actions [:register]
+
+    on_actions [
+      :confirm_payment,
+      :confirm_paid_by_voucher,
+      :open_payment_link,
+      :email_payment_link,
+      :send_payment_reminder,
+      :send_payment_received_email,
+      :send_confirmation_email,
+      :email_receipt,
+      :send_reminder_email,
+      :remove_seat,
+      :cancel
+    ]
   end
 
   actions do

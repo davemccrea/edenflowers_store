@@ -65,6 +65,8 @@ defmodule Edenflowers.Courses do
 
     resource Edenflowers.Courses.FormerCourseSlug
 
+    resource Edenflowers.Courses.CourseRegistration.Version
+
     resource Edenflowers.Courses.CourseRegistration do
       define :list_my_registrations, action: :mine
       define :list_unsettled_registrations, action: :unsettled

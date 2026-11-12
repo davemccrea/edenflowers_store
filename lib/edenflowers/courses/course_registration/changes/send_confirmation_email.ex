@@ -18,11 +18,15 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail d
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       registration = load_for_send(changeset.data)
+      edits = Edits.from_changeset(changeset)
 
-      case deliver(registration, Edits.from_changeset(changeset)) do
+      case deliver(registration, edits) do
         :ok ->
           Logger.info("Sent confirmation email for course registration #{registration.id}")
-          stamp_sent(changeset, registration)
+
+          changeset
+          |> Ash.Changeset.set_context(%{paper_trail_metadata: Edits.for_log(edits)})
+          |> stamp_sent(registration)
 
         {:error, error} ->
           Ash.Changeset.add_error(changeset, "Failed to send confirmation email: #{inspect(error)}")

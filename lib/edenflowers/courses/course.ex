@@ -136,6 +136,8 @@ defmodule Edenflowers.Courses.Course do
                     :payment_link_open?,
                     :payment_reminder?,
                     :refunds,
+                    :receipt_available?,
+                    :paper_trail_versions,
                     payments: [:undoable?]
                   ]
                 ]

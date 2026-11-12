@@ -17,6 +17,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
   alias Edenflowers.Translations
+  alias EdenflowersWeb.Admin.CourseLog
   alias EdenflowersWeb.Admin.DrawerPreview
   alias EdenflowersWeb.Admin.Drawers
   alias EdenflowersWeb.Admin.EmailDrawer
@@ -179,6 +180,20 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
             </ul>
           </details>
         </section>
+
+        <.widget id="course-log" title={~t"History"} class="mt-6">
+          <.history_timeline :if={@log != []} id="course-history" entries={@log} locale={@locale}>
+            <:details :let={entry}>
+              <dl class="mt-2 space-y-2">
+                <div :for={{label, value} <- entry.details}>
+                  <dt :if={label} class="text-base-content/75 text-xs">{label}</dt>
+                  <dd class="text-base-content/85 whitespace-pre-line break-words">{value}</dd>
+                </div>
+              </dl>
+            </:details>
+          </.history_timeline>
+          <.blank :if={@log == []} />
+        </.widget>
       </.admin_page>
       <.admin_drawer
         id="course-reminder-drawer"
@@ -524,6 +539,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
            registrations: registrations,
            cancelled_unsettled: Enum.filter(cancelled, & &1.cancelled_unsettled?),
            cancelled_settled: Enum.reject(cancelled, & &1.cancelled_unsettled?),
+           log: CourseLog.entries(course.bookings, Localize.get_locale()),
            bcc: registrations |> Enum.map(& &1.email) |> Enum.uniq() |> Enum.join(",")
          )}
 
@@ -568,6 +584,12 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
       >
         {~t"Send payment reminder"}
       </.actions_menu_button>
+      <li :if={@registration.receipt_available?}>
+        <.link href={~p"/courses/bookings/#{@registration.id}/receipt"} target="_blank" rel="noopener">
+          {~t"View receipt"}
+          <.icon name="hero-arrow-top-right-on-square" class="h-3.5 w-3.5" />
+        </.link>
+      </li>
       <.actions_menu_button
         :if={@registration.refundable?}
         menu={"registration-actions-#{@registration.id}"}
@@ -666,7 +688,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   attr :registration, :map, required: true
   attr :locale, :string, required: true
 
-  # A booking has no history, so its row lists what was handed back.
+  # The row lists what was handed back, so it reads without finding the booking in the History.
   defp refunds(assigns) do
     ~H"""
     <p :for={refund <- @registration.refunds} class="text-base-content/75 text-sm">

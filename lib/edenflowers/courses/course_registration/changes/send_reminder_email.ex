@@ -15,14 +15,18 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmail do
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       registration = load_for_send(changeset.data)
+      edits = Edits.from_changeset(changeset)
 
       case registration
            |> Email.course_reminder()
-           |> Edits.apply_to(Edits.from_changeset(changeset))
+           |> Edits.apply_to(edits)
            |> Mailer.deliver() do
         {:ok, _result} ->
           Logger.info("Sent reminder email for course registration #{registration.id}")
-          Ash.Changeset.force_change_attribute(changeset, :reminder_emailed_at, DateTime.utc_now())
+
+          changeset
+          |> Ash.Changeset.set_context(%{paper_trail_metadata: Edits.for_log(edits)})
+          |> Ash.Changeset.force_change_attribute(:reminder_emailed_at, DateTime.utc_now())
 
         {:error, error} ->
           Ash.Changeset.add_error(changeset, "Failed to send reminder email: #{inspect(error)}")

@@ -28,13 +28,18 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendPaymentLinkEmail do
   end
 
   defp deliver(changeset, registration, url) do
+    edits = Edits.from_changeset(changeset)
+
     case registration
          |> email(url)
-         |> Edits.apply_to(Edits.from_changeset(changeset), url)
+         |> Edits.apply_to(edits, url)
          |> Mailer.deliver() do
       {:ok, _result} ->
         Logger.info("Sent payment link email for course registration #{registration.id}")
-        Ash.Changeset.force_change_attribute(changeset, :payment_link_emailed_at, DateTime.utc_now())
+
+        changeset
+        |> Ash.Changeset.set_context(%{paper_trail_metadata: Edits.for_log(edits)})
+        |> Ash.Changeset.force_change_attribute(:payment_link_emailed_at, DateTime.utc_now())
 
       {:error, error} ->
         Ash.Changeset.add_error(changeset, "Failed to send payment link email: #{inspect(error)}")

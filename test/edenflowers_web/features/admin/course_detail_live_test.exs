@@ -657,6 +657,37 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
     assert Decimal.equal?(reloaded.amount, "255.00")
   end
 
+  test "the History lists what happened to each booking and its payments, naming the participant", %{
+    conn: conn,
+    admin: admin
+  } do
+    registration = generate(course_registration(status: :confirmed, seats: 2, name: "Ada Lovelace"))
+    other = generate(course_registration(course_id: registration.course_id, status: :confirmed, name: "Grace Hopper"))
+
+    Courses.remove_registration_seat!(registration, actor: admin)
+    Courses.record_registration_payment!(registration, Decimal.new("10.00"), :cash, actor: admin)
+
+    Courses.cancel_registration!(other, %{email_customer?: false, cancellation_reason: "Fell ill"}, actor: admin)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
+
+    assert has_element?(view, "#course-history", "Seat removed · Ada Lovelace")
+    assert has_element?(view, "#course-history", "· Cash · Ada Lovelace")
+    assert has_element?(view, "#course-history", "Cancelled · Grace Hopper")
+    assert has_element?(view, "#course-history", "Fell ill")
+  end
+
+  test "a booking's menu links to its receipt only once money is recorded", %{conn: conn} do
+    paid = generate(course_registration(status: :confirmed))
+    generate(payment(course_registration_id: paid.id, amount: paid.amount))
+    unpaid = generate(course_registration(course_id: paid.course_id, status: :confirmed))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{paid.course_id}")
+
+    assert has_element?(view, ~s|a[href="/courses/bookings/#{paid.id}/receipt"]|, "View receipt")
+    refute has_element?(view, ~s|a[href="/courses/bookings/#{unpaid.id}/receipt"]|)
+  end
+
   describe "refund" do
     defp paid_booking(payment_opts, registration_opts \\ []) do
       registration =
