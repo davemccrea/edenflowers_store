@@ -6,8 +6,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
-  require Logger
-
   import EdenflowersWeb.Admin.Components
 
   alias Edenflowers.Bank
@@ -19,7 +17,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Orders
   alias Edenflowers.Translations
-  alias EdenflowersWeb.Admin.BankController
+  alias EdenflowersWeb.Admin.BankConnection
   alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Admin.PushSubscriptions
   alias EdenflowersWeb.Layouts
@@ -153,19 +151,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     end
   end
 
-  def handle_event("connect_bank", _params, socket) do
-    user = socket.assigns.current_user
-    state = BankController.sign_state(user)
-
-    case Bank.bank_authorization_url(state, url(~p"/admin/bank/callback"), actor: user) do
-      {:ok, url} ->
-        {:noreply, redirect(socket, external: url)}
-
-      {:error, error} ->
-        Logger.error("Starting a bank connection failed: #{inspect(error)}")
-        {:noreply, put_flash(socket, :error, ~t"The bank couldn't be reached. Please try again.")}
-    end
-  end
+  def handle_event("connect_bank", _params, socket), do: BankConnection.connect(socket)
 
   # Only today, so a page left open overnight can't toggle yesterday.
   def handle_event("toggle-date", %{"date" => date}, socket) do
