@@ -21,22 +21,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendOrderDetailsEmail do
     Ash.Changeset.before_action(changeset, fn changeset ->
       # Read fresh: the admin page's copy can predate a payment, and the
       # email says what's owed.
-      order =
-        Ash.get!(
-          Edenflowers.Orders.Order,
-          changeset.data.id,
-          load: [
-            :customer_first_name,
-            :grand_total,
-            :amount_paid,
-            :balance,
-            :payment_link_open?,
-            :payable?,
-            :cancelled?,
-            line_items: [:subtotal]
-          ],
-          authorize?: false
-        )
+      order = Ash.get!(Edenflowers.Orders.Order, changeset.data.id, load: load(), authorize?: false)
 
       case Keyword.fetch!(opts, :email) do
         :payment_reminder when not order.payable? -> Ash.Changeset.add_error(changeset, "has nothing to pay")
@@ -48,7 +33,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendOrderDetailsEmail do
 
   defp deliver(changeset, order, kind) do
     edits = Edits.from_changeset(changeset)
-    url = payment_link_url(changeset, order, kind)
+    url = payment_link_url(order, kind, Ash.Changeset.get_attribute(changeset, :payment_link_token))
 
     case order |> email(kind, url) |> Edits.apply_to(edits, url) |> Mailer.deliver() do
       {:ok, _result} ->
@@ -64,26 +49,41 @@ defmodule Edenflowers.Orders.Order.Changes.SendOrderDetailsEmail do
     end
   end
 
-  defp email(order, :order_details, url), do: Email.order_details(order, url)
-  defp email(order, :order_updated, url), do: Email.order_updated(order, url)
-  defp email(order, :subscription_payment_failed, url), do: Email.subscription_payment_failed(order, url)
-  defp email(order, :payment_reminder, url), do: Email.payment_reminder(order, url)
+  @doc "What the order is loaded with to build its email."
+  def load do
+    [
+      :customer_first_name,
+      :grand_total,
+      :amount_paid,
+      :balance,
+      :payment_link_open?,
+      :payable?,
+      :cancelled?,
+      line_items: [:subtotal]
+    ]
+  end
+
+  @doc "The `kind` email for an order loaded with `load/0`, giving the payment link at `url` if there is one."
+  def email(order, :order_details, url), do: Email.order_details(order, url)
+  def email(order, :order_updated, url), do: Email.order_updated(order, url)
+  def email(order, :subscription_payment_failed, url), do: Email.subscription_payment_failed(order, url)
+  def email(order, :payment_reminder, url), do: Email.payment_reminder(order, url)
+
+  @doc """
+  The payment link the `kind` email gives. A reminder gives the link sending
+  it opens, whose `token` isn't in the order read before yet; any other
+  email gives a link only while one is open.
+  """
+  def payment_link_url(order, :payment_reminder, token),
+    do: EdenflowersWeb.PaymentLink.url_for(%{order | payment_link_token: token})
+
+  def payment_link_url(order, _kind, _token), do: EdenflowersWeb.PaymentLink.url_if_open(order)
 
   # A reminder isn't the order's details, so the menu still offers to send them.
   defp stamp(changeset, :payment_reminder), do: changeset
 
   defp stamp(changeset, _kind),
     do: Ash.Changeset.force_change_attribute(changeset, :order_details_emailed_at, DateTime.utc_now())
-
-  # A reminder's link may have been opened by this action, so it isn't in the order read above yet.
-  defp payment_link_url(changeset, order, :payment_reminder) do
-    EdenflowersWeb.PaymentLink.url_for(%{
-      order
-      | payment_link_token: Ash.Changeset.get_attribute(changeset, :payment_link_token)
-    })
-  end
-
-  defp payment_link_url(_changeset, order, _kind), do: EdenflowersWeb.PaymentLink.url_if_open(order)
 
   # Clear the failure in the database even if the caller's stale record already has a nil timestamp.
   defp clear_failure(changeset), do: Ash.Changeset.atomic_update(changeset, :order_details_email_failed_at, nil)

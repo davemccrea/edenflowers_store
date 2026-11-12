@@ -16,6 +16,7 @@ defmodule Edenflowers.Email.Preview do
   alias Edenflowers.Email
   alias Edenflowers.Email.Edits
   alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders.Order.Changes.SendOrderDetailsEmail
   alias Edenflowers.Orders.Order.Changes.SendReceiptEmail
   alias Edenflowers.Orders.Receipt
   alias Edenflowers.Orders.Subscription
@@ -80,10 +81,7 @@ defmodule Edenflowers.Email.Preview do
 
     url = if entered_link?(entered, order), do: link_url(entered)
 
-    case kind do
-      :order_details -> Email.order_details(entered, url)
-      :order_updated -> Email.order_updated(entered, url)
-    end
+    SendOrderDetailsEmail.email(entered, kind, url)
   end
 
   @doc """
@@ -137,7 +135,7 @@ defmodule Edenflowers.Email.Preview do
   defp order_load(:cancelled), do: [:customer_first_name, :payments | Cancel.load()]
   defp order_load(:refunded), do: [:customer_first_name, :payments, :paid_through_stripe]
   defp order_load(:receipt), do: [:gift_voucher_sale? | order_load(:gift_voucher)] ++ totals_load()
-  defp order_load(_kind), do: totals_load()
+  defp order_load(_kind), do: SendOrderDetailsEmail.load()
 
   defp totals_load,
     do: [
@@ -150,15 +148,10 @@ defmodule Edenflowers.Email.Preview do
       line_items: [:subtotal]
     ]
 
-  defp order_email(:order_details, order, _inputs),
-    do: Email.order_details(order, EdenflowersWeb.PaymentLink.url_if_open(order))
-
-  # Sending it opens the link, so it reads as it will once open.
-  defp order_email(:payment_link, order, _inputs),
-    do: Email.order_details(order, link_url(order))
-
-  defp order_email(:payment_reminder, order, _inputs),
-    do: Email.payment_reminder(order, link_url(order))
+  defp order_email(kind, order, _inputs) when kind in [:order_details, :payment_reminder] do
+    url = SendOrderDetailsEmail.payment_link_url(order, kind, link_token(order))
+    SendOrderDetailsEmail.email(order, kind, url)
+  end
 
   # A Gift voucher sale's payment is answered with the voucher itself.
   defp order_email(:receipt, %{gift_voucher_sale?: true} = order, inputs), do: order_email(:gift_voucher, order, inputs)
@@ -235,11 +228,10 @@ defmodule Edenflowers.Email.Preview do
     Swoosh.Email.attachment(email, Receipt.attachment("", reference))
   end
 
-  # A link not yet opened has no token until sending opens it.
-  defp link_url(%{payment_link_token: nil} = payable),
-    do: EdenflowersWeb.PaymentLink.url_for(%{payable | payment_link_token: Edits.placeholder_token()})
+  defp link_url(payable), do: EdenflowersWeb.PaymentLink.url_for(%{payable | payment_link_token: link_token(payable)})
 
-  defp link_url(payable), do: EdenflowersWeb.PaymentLink.url_for(payable)
+  # A link not yet opened has no token until sending opens it.
+  defp link_token(payable), do: payable.payment_link_token || Edits.placeholder_token()
 
   defp refund_details(inputs),
     do: %{amount: refund(inputs), payment_method: inputs[:payment_method] || :stripe}
