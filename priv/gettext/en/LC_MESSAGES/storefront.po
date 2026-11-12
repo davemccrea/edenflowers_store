@@ -172,12 +172,12 @@ msgstr ""
 msgid "After %{date}"
 msgstr ""
 
-#: lib/edenflowers/courses/course.ex:222
+#: lib/edenflowers/courses/course.ex:223
 #, elixir-autogen, elixir-format
 msgid "After that, %{fee}% of the price is kept."
 msgstr ""
 
-#: lib/edenflowers/courses/course.ex:221
+#: lib/edenflowers/courses/course.ex:222
 #, elixir-autogen, elixir-format
 msgid "After that, the booking can't be refunded."
 msgstr ""
@@ -447,7 +447,7 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: lib/edenflowers/courses/course.ex:217
+#: lib/edenflowers/courses/course.ex:218
 #, elixir-autogen, elixir-format
 msgid "Cancel at least %{days} days before the course for a full refund."
 msgstr ""
@@ -4028,17 +4028,17 @@ msgstr ""
 msgid "My account"
 msgstr ""
 
-#: lib/edenflowers/courses/course.ex:238
+#: lib/edenflowers/courses/course.ex:239
 #, elixir-autogen, elixir-format
 msgid "After that, %{fee}% of the price is charged."
 msgstr ""
 
-#: lib/edenflowers/courses/course.ex:237
+#: lib/edenflowers/courses/course.ex:238
 #, elixir-autogen, elixir-format
 msgid "After that, the full price is charged."
 msgstr ""
 
-#: lib/edenflowers/courses/course.ex:233
+#: lib/edenflowers/courses/course.ex:234
 #, elixir-autogen, elixir-format
 msgid "Cancel at least %{days} days before the course at no cost."
 msgstr ""

@@ -4,6 +4,7 @@ defmodule Edenflowers.Orders.Workers.EmailShopTest do
   import Swoosh.TestAssertions
   import Generator
 
+  alias Edenflowers.Courses
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Workers.EmailShop
 
@@ -13,6 +14,27 @@ defmodule Edenflowers.Orders.Workers.EmailShopTest do
     Orders.finalize_checkout!(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
 
     assert_enqueued worker: EmailShop, args: %{"order_id" => order.id}
+  end
+
+  test "a customer paying for a course booking queues the email" do
+    registration = generate(course_registration(payment_intent_id: "pi_test"))
+
+    Courses.confirm_registration_payment!(registration, "pi_test", %{amount_paid: registration.amount},
+      actor: Edenflowers.Actors.system_actor()
+    )
+
+    assert_enqueued worker: EmailShop, args: %{"notice" => "new", "registration_id" => registration.id}
+  end
+
+  test "tells the shop's inbox about a new course booking, linking to it in the admin" do
+    registration = generate(course_registration(status: :confirmed, reference: "1043"))
+
+    assert :ok = perform_job(EmailShop, %{"notice" => "new", "registration_id" => registration.id})
+
+    assert_email_sent(fn email ->
+      assert email.subject == "Ny kursbokning 1043"
+      assert email.text_body =~ "/admin/courses/#{registration.course_id}?booking=#{registration.id}"
+    end)
   end
 
   test "nothing is queued without a shop address" do

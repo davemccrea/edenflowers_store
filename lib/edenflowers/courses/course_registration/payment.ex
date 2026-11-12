@@ -11,6 +11,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Payment do
   import Edenflowers.Actors
 
   alias Edenflowers.Courses.CourseRegistration.Validations
+  alias Edenflowers.Orders.Changes.NotifyShop
   alias Edenflowers.Payments.Changes, as: PaymentChanges
   alias Edenflowers.Payments.Validations, as: PaymentValidations
 
@@ -65,8 +66,9 @@ defmodule Edenflowers.Courses.CourseRegistration.Payment do
     # does a payment for other places than the booking now has, revised while
     # it was in flight: the difference is left as a balance for Jennie.
     update :confirm_payment do
-      description "Confirms a pending checkout when Stripe reports its payment, records the Payment and " <>
-                    "queues the confirmation email. Books the places even over capacity; refuses a repeat."
+      description "Confirms a pending checkout when Stripe reports its payment, records the Payment, " <>
+                    "queues the confirmation email and notifies the shop. Books the places even over capacity; " <>
+                    "refuses a repeat."
 
       argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal, allow_nil?: false
@@ -82,6 +84,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Payment do
       change PaymentChanges.PayFromVoucher
       change PaymentChanges.ReportAmountMismatch
       change {PaymentChanges.QueueEmail, trigger: :send_confirmation_email}
+      change NotifyShop
 
       require_atomic? false
     end
@@ -89,7 +92,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Payment do
     # Keep this voucher-only confirmation path in sync with confirm_payment.
     update :confirm_paid_by_voucher do
       description "Confirms a pending checkout its Gift voucher pays for in full, as confirm_payment does once " <>
-                    "Stripe has charged a card: records the voucher payment and queues the confirmation email. " <>
+                    "Stripe has charged a card: records the voucher payment, queues the confirmation email and notifies the shop. " <>
                     "Refused, and nothing confirmed, unless the voucher covers it. Run by the system once " <>
                     "prepare_checkout_payment has checked the course has room."
 
@@ -102,6 +105,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Payment do
       change PaymentChanges.PayFromVoucher
       change PaymentChanges.RequireSettled
       change {PaymentChanges.QueueEmail, trigger: :send_confirmation_email}
+      change NotifyShop
       require_atomic? false
     end
 

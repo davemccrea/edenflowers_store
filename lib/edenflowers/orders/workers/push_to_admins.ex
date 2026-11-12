@@ -1,8 +1,8 @@
 defmodule Edenflowers.Orders.Workers.PushToAdmins do
   @moduledoc """
   Tells every admin device that turned notifications on what
-  `Edenflowers.Orders.ShopNotice` says. Tapping it opens the order or
-  subscription in the admin.
+  `Edenflowers.Orders.ShopNotice` says. Tapping it opens the order,
+  subscription or course booking in the admin.
   """
   use Oban.Worker, queue: :default, max_attempts: 5
 
