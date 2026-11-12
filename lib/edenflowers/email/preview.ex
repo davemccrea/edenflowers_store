@@ -16,6 +16,7 @@ defmodule Edenflowers.Email.Preview do
   alias Edenflowers.Email
   alias Edenflowers.Email.Edits
   alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders.Order.Changes.SendFulfillmentEmail
   alias Edenflowers.Orders.Order.Changes.SendOrderDetailsEmail
   alias Edenflowers.Orders.Order.Changes.SendReceiptEmail
   alias Edenflowers.Orders.Receipt
@@ -126,7 +127,7 @@ defmodule Edenflowers.Email.Preview do
   defp entered_link?(entered, nil), do: entered.payment_terms == :payment_link
   defp entered_link?(_entered, order), do: order.payment_link_open?
 
-  defp order_load(:fulfillment), do: [:customer_first_name]
+  defp order_load(:fulfillment), do: SendFulfillmentEmail.load()
 
   defp order_load(:gift_voucher), do: SendReceiptEmail.load()
   defp order_load(:cancelled), do: [:customer_first_name, :payments | Cancel.load()]
@@ -147,9 +148,8 @@ defmodule Edenflowers.Email.Preview do
   defp order_email(:gift_voucher, order, _inputs), do: SendReceiptEmail.email(order, "", "")
 
   defp order_email(:fulfillment, order, inputs) do
-    if Map.get(inputs, :photo?, order.email_delivery_photo),
-      do: Email.order_left_at_door(order, ""),
-      else: Email.order_delivered(order)
+    {_name, email} = SendFulfillmentEmail.email(order, Map.get(inputs, :photo?, order.email_delivery_photo), "")
+    email
   end
 
   defp order_email(:cancelled, order, inputs) do
