@@ -28,12 +28,7 @@ defmodule Edenflowers.Payments.Changes.SendPaymentReceivedEmail do
       edits = Edits.from_changeset(changeset)
 
       with {:ok, pdf} <- Receipt.generate(record),
-           {:ok, _result} <-
-             record
-             |> email(amount, opts)
-             |> Edits.apply_to(edits)
-             |> Swoosh.Email.attachment(Receipt.attachment(pdf, reference(record)))
-             |> Mailer.deliver() do
+           {:ok, _result} <- record |> email(amount, opts[:email], pdf) |> Edits.apply_to(edits) |> Mailer.deliver() do
         Logger.info("Sent payment received email for #{inspect(record.__struct__)} #{record.id}")
 
         changeset
@@ -46,25 +41,30 @@ defmodule Edenflowers.Payments.Changes.SendPaymentReceivedEmail do
     end)
   end
 
-  @doc "Builds the payment-received email for `amount`; the caller must load `record` as this change does."
-  def email(record, amount), do: Email.payment_received(record, amount)
-
-  defp email(order, _amount, email: :receipt), do: Email.purchase_receipt(order)
-  defp email(record, amount, _opts), do: email(record, amount)
-
-  defp load_for_send(%Order{} = order) do
-    Ash.load!(
-      order,
-      [:customer_first_name, :vat, :grand_total, :amount_paid, :balance, :payments, line_items: [:subtotal]] ++
-        Receipt.order_load(),
-      authorize?: false
-    )
+  @doc """
+  The email for a record loaded with `load/1`, a booking's course in its own
+  language, with the receipt `pdf` attached: a neutral copy of an order's
+  receipt when `kind` is `:receipt`, else Payment received for `amount`.
+  """
+  def email(record, amount, kind, pdf) do
+    email = if kind == :receipt, do: Email.purchase_receipt(record), else: Email.payment_received(record, amount)
+    Swoosh.Email.attachment(email, Receipt.attachment(pdf, reference(record)))
   end
+
+  @doc "What an order or a booking is loaded with to build its email and receipt."
+  def load(Order) do
+    [:customer_first_name, :vat, :grand_total, :amount_paid, :balance, :payments, line_items: [:subtotal]] ++
+      Receipt.order_load()
+  end
+
+  def load(CourseRegistration), do: [:first_name, :amount_paid, :balance] ++ Receipt.registration_load()
+
+  defp load_for_send(%Order{} = order), do: Ash.load!(order, load(Order), authorize?: false)
 
   # Course names are stored per locale, like the receipt reads them.
   defp load_for_send(%CourseRegistration{} = registration) do
     registration
-    |> Ash.load!([:first_name, :amount_paid, :balance] ++ Receipt.registration_load(), actor: system_actor())
+    |> Ash.load!(load(CourseRegistration), actor: system_actor())
     |> Translations.in_own_locale()
   end
 

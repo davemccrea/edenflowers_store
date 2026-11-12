@@ -131,19 +131,8 @@ defmodule Edenflowers.Email.Preview do
   defp order_load(:gift_voucher), do: SendReceiptEmail.load()
   defp order_load(:cancelled), do: [:customer_first_name, :payments | Cancel.load()]
   defp order_load(:refunded), do: [:customer_first_name, :payments, :paid_through_stripe]
-  defp order_load(:receipt), do: [:gift_voucher_sale? | order_load(:gift_voucher)] ++ totals_load()
+  defp order_load(:receipt), do: SendReceiptEmail.load() ++ SendPaymentReceivedEmail.load(Order)
   defp order_load(_kind), do: SendOrderDetailsEmail.load()
-
-  defp totals_load,
-    do: [
-      :customer_first_name,
-      :grand_total,
-      :amount_paid,
-      :balance,
-      :payment_link_open?,
-      :payments,
-      line_items: [:subtotal]
-    ]
 
   defp order_email(kind, order, _inputs) when kind in [:order_details, :payment_reminder] do
     url = SendOrderDetailsEmail.payment_link_url(order, kind, link_token(order))
@@ -153,7 +142,7 @@ defmodule Edenflowers.Email.Preview do
   # A Gift voucher sale's payment is answered with the voucher itself.
   defp order_email(:receipt, %{gift_voucher_sale?: true} = order, inputs), do: order_email(:gift_voucher, order, inputs)
 
-  defp order_email(:receipt, order, inputs), do: payment_receipt(order, inputs, order.order_reference)
+  defp order_email(:receipt, order, inputs), do: payment_receipt(order, inputs)
 
   defp order_email(:gift_voucher, order, _inputs), do: SendReceiptEmail.email(order, "", "")
 
@@ -171,6 +160,8 @@ defmodule Edenflowers.Email.Preview do
 
   defp booking_load(:cancelled), do: [:course, :first_name, :payments | Cancel.load()]
   defp booking_load(:refunded), do: [:course, :first_name, :payments, :paid_through_stripe]
+
+  defp booking_load(:receipt), do: SendPaymentReceivedEmail.load(CourseRegistration)
 
   defp booking_load(_kind),
     do: [
@@ -200,7 +191,7 @@ defmodule Edenflowers.Email.Preview do
   defp booking_email(:payment_reminder, registration, _inputs),
     do: Email.payment_reminder(registration, link_url(registration))
 
-  defp booking_email(:receipt, registration, inputs), do: payment_receipt(registration, inputs, registration.reference)
+  defp booking_email(:receipt, registration, inputs), do: payment_receipt(registration, inputs)
 
   defp booking_email(:cancelled, registration, inputs) do
     money = Cancel.money(registration, charge(registration, inputs))
@@ -209,15 +200,11 @@ defmodule Edenflowers.Email.Preview do
 
   defp booking_email(:refunded, registration, inputs), do: Email.refunded(registration, refund_details(inputs))
 
-  defp payment_receipt(record, inputs, reference) do
+  defp payment_receipt(record, inputs) do
     amount = decimal(inputs[:amount]) || SendPaymentReceivedEmail.latest_payment(record)
-
-    email =
-      if match?(%Order{}, record) and is_nil(inputs[:amount]),
-        do: Email.purchase_receipt(record),
-        else: SendPaymentReceivedEmail.email(record, amount)
-
-    Swoosh.Email.attachment(email, Receipt.attachment("", reference))
+    # With no amount entered, Jennie is sending an order's receipt again, not recording a payment.
+    kind = if match?(%Order{}, record) and is_nil(inputs[:amount]), do: :receipt
+    SendPaymentReceivedEmail.email(record, amount, kind, "")
   end
 
   defp link_url(payable), do: EdenflowersWeb.PaymentLink.url_for(%{payable | payment_link_token: link_token(payable)})
