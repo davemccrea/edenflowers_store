@@ -55,6 +55,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
         <.admin_page_header title={greeting(@current_user, Edenflowers.ShopTime.now().hour)}>
+          <:subtitle :if={@weather}><.weather weather={@weather} /></:subtitle>
           <:actions>
             <.button navigate={~p"/admin/orders/new"} variant="primary" size="sm" class="sm:order-last">
               <.icon name="hero-plus" class="h-4 w-4" /> {~t"New order"}
@@ -78,7 +79,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               orders_by_date={@orders_by_date}
               calendar={@calendar}
               today={@today}
-              weather={@weather}
               locale={@locale}
             />
             <div class="grid min-w-0 gap-6 max-xl:order-last sm:grid-cols-2 sm:items-start">
@@ -877,7 +877,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   attr :orders_by_date, :map, required: true
   attr :calendar, :map, required: true
   attr :today, Date, required: true
-  attr :weather, :map, required: true, doc: "today's, or nil while unknown"
   attr :locale, :any, required: true
 
   # Nine days because Jennie buys from the wholesaler anywhere from a day to a week ahead.
@@ -886,7 +885,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     <section id="overview-orders" aria-labelledby="overview-orders-title" class="admin-card p-4 sm:p-5">
       <div class="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
         <h2 id="overview-orders-title" class="text-base-content text-base font-semibold">{~t"Orders"}</h2>
-        <.weather :if={@weather && @day == @today} weather={@weather} />
         <.link
           navigate={~p"/admin/orders"}
           class="text-primary touch-target inline-flex items-center py-1 text-sm hover:underline"
@@ -946,27 +944,33 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   attr :weather, :map, required: true
 
   defp weather(assigns) do
-    {emoji, label} = weather_condition(assigns.weather.condition)
-    assigns = assign(assigns, emoji: emoji, label: label)
+    assigns = assign(assigns, :label, weather_condition(assigns.weather.condition))
 
     ~H"""
-    <p id="today-weather" class="text-base-content/75 mr-auto flex items-center gap-1.5 text-sm tabular-nums">
-      <span aria-hidden="true" title={@label}>{@emoji}</span>
-      <span class="sr-only">{@label}</span>
-      {~t"High #{high = @weather.high}°, low #{low = @weather.low}°"}
-    </p>
+    <span id="today-weather" class="flex items-center gap-1.5 tabular-nums">
+      <img
+        src={~p"/images/weather/#{@weather.symbol <> ".svg"}"}
+        alt={@label}
+        title={@label}
+        width="28"
+        height="28"
+        class="size-7 -translate-y-0.5"
+      />
+      <span class="sr-only">{~t"High #{high = @weather.high}°, low #{low = @weather.low}°"}</span>
+      <span aria-hidden="true" class="text-base-content text-base font-semibold">{@weather.high}°</span>
+      <span aria-hidden="true" class="text-base-content/60 text-sm">{@weather.low}°</span>
+    </span>
     """
   end
 
-  # Emoji because Heroicons has no rain or snow.
-  defp weather_condition(:thunder), do: {"⛈️", ~t"Thunder"}
-  defp weather_condition(:sleet), do: {"🌨️", ~t"Sleet"}
-  defp weather_condition(:snow), do: {"❄️", ~t"Snow"}
-  defp weather_condition(:rain), do: {"🌧️", ~t"Rain"}
-  defp weather_condition(:fog), do: {"🌫️", ~t"Fog"}
-  defp weather_condition(:partly_cloudy), do: {"⛅", ~t"Partly cloudy"}
-  defp weather_condition(:cloudy), do: {"☁️", ~t"Cloudy"}
-  defp weather_condition(:clear), do: {"☀️", ~t"Clear"}
+  defp weather_condition(:thunder), do: ~t"Thunder"
+  defp weather_condition(:sleet), do: ~t"Sleet"
+  defp weather_condition(:snow), do: ~t"Snow"
+  defp weather_condition(:rain), do: ~t"Rain"
+  defp weather_condition(:fog), do: ~t"Fog"
+  defp weather_condition(:partly_cloudy), do: ~t"Partly cloudy"
+  defp weather_condition(:cloudy), do: ~t"Cloudy"
+  defp weather_condition(:clear), do: ~t"Clear"
 
   attr :date, Date, required: true
   attr :count, :integer, required: true

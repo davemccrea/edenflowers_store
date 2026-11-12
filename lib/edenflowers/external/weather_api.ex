@@ -57,7 +57,14 @@ defmodule Edenflowers.External.WeatherAPI do
       symbol =
         get_in(next, ["next_6_hours", "summary", "symbol_code"]) || next["next_1_hours"]["summary"]["symbol_code"]
 
-      weather = %{high: round(Enum.max(temperatures)), low: round(Enum.min(temperatures)), condition: condition(symbol)}
+      weather = %{
+        high: round(Enum.max(temperatures)),
+        low: round(Enum.min(temperatures)),
+        condition: condition(symbol),
+        # Names MET Norway's icon in priv/static/images/weather.
+        symbol: symbol
+      }
+
       :persistent_term.put(__MODULE__, {weather, now})
       {:ok, weather}
     else

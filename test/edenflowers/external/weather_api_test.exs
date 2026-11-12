@@ -30,7 +30,7 @@ defmodule Edenflowers.External.WeatherAPITest do
       })
     end)
 
-    weather = %{high: 3, low: -4, condition: :snow}
+    weather = %{high: 3, low: -4, condition: :snow, symbol: "lightsnowshowers_day"}
     assert {:ok, ^weather} = WeatherAPI.today(~U[2026-11-12 10:20:00Z])
 
     # Kept for half an hour, so the Overview shows it without asking again.

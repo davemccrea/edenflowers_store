@@ -50,7 +50,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       end)
     end
 
-    test "shows today's weather, but not with another day's orders", %{conn: conn} do
+    test "shows today's weather under the greeting", %{conn: conn} do
       now = DateTime.to_iso8601(DateTime.utc_now())
       on_exit(fn -> :persistent_term.erase(Edenflowers.External.WeatherAPI) end)
 
@@ -73,11 +73,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin")
 
       assert render_async(view) =~ "High -2°, low -2°"
-      assert has_element?(view, "#today-weather", "Rain")
-
-      tomorrow = Date.add(Edenflowers.ShopTime.today(), 1)
-      view |> element("#day-#{tomorrow} a") |> render_click()
-      refute has_element?(view, "#today-weather")
+      assert has_element?(view, ~s(header #today-weather img[alt="Rain"][src*="/images/weather/heavyrain"]))
     end
 
     test "refreshes a note from another page", %{conn: conn, admin: admin} do
