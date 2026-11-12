@@ -128,6 +128,20 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       refute has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
     end
 
+    test "doesn't offer to pay a cancelled order's unpaid cancellation charge", %{conn: conn, user: user} do
+      admin = generate(admin_user())
+      order = placed_order(user_id: user.id, origin: :custom, payment_intent_id: nil)
+      {:ok, order} = Edenflowers.Orders.open_payment_link(order, actor: admin)
+
+      {:ok, order} =
+        Edenflowers.Orders.cancel_order(order, %{cancellation_charge: "30.00", email_customer?: false}, actor: admin)
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, "[data-testid=past]", order.order_reference)
+      refute has_element?(view, ~s|a[href="/pay/orders/#{order.payment_link_token}"]|)
+    end
+
     # Tagged :typst because without the binary every receipt 404s, so the test would pass for the wrong reason.
     @tag :typst
     test "no receipt for an unpaid custom order", %{conn: conn, user: user} do

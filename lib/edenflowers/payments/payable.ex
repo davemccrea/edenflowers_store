@@ -20,6 +20,7 @@ defmodule Edenflowers.Payments.Payable do
     * `calculate :committed?`: whether money is owed on it at all, so not an
       unplaced cart or a website course checkout still waiting for its payment.
     * `calculate :cancelled?`
+    * a `payment_link_token` attribute, nil until a Payment Link is opened
     * `calculate :saves_card?`: whether paying it saves the card for later
       charges, so a Gift voucher must leave Stripe something to charge
     * `calculate :refunded_only_by_cancelling?`: whether it must be cancelled
@@ -285,6 +286,11 @@ defmodule Edenflowers.Payments.Payable do
 
     calculate :payable?, :boolean, expr(balance > 0 and not refunded?) do
       description "Whether there is something a PaymentIntent can charge: a Balance to collect, and not refunded."
+    end
+
+    calculate :payment_link_open?, :boolean, expr(not is_nil(payment_link_token) and payable? and not cancelled?) do
+      description "Whether its Payment Link would take a payment now: it has one, something is payable, and it " <>
+                    "isn't cancelled."
     end
 
     calculate :settled?, :boolean, expr(balance == 0 or refunded?) do

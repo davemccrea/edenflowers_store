@@ -1027,10 +1027,6 @@ defmodule Edenflowers.Orders.Order do
                     "its fulfillment date. Shown in the order confirmation and their account."
     end
 
-    calculate :payment_link_open?, :boolean, expr(not is_nil(payment_link_token) and payable?) do
-      description "The order has a Payment Link and something left to pay through it."
-    end
-
     calculate :vat, :decimal, Vat do
       description "The VAT included in the grand total, in euros. A placed order reads its snapshotted " <>
                     "vat_breakdown, so later price or tax rate changes don't rewrite it."
