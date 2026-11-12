@@ -1,5 +1,7 @@
 defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
-  use EdenflowersWeb.ConnCase, async: true
+  # Issuing an invoice holds the number series lock until the test ends, so the
+  # modules that issue one take turns; sharing any unique value could deadlock them.
+  use EdenflowersWeb.ConnCase, async: true, group: :invoice_numbers
 
   import Generator
   import Mox
@@ -776,9 +778,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
   describe "editing an invoiced order" do
     setup ctx do
-      # An email no other async test uses: issuing holds the invoice number lock until the test
-      # ends, so two tests that issue and share a customer's email can deadlock on it.
-      order = place_custom_order(ctx, %{payment_terms: :invoice, customer_email: "invoiced-edit@kukka.fi"})
+      order = place_custom_order(ctx, %{payment_terms: :invoice, customer_email: "office@kukka.fi"})
       {:ok, draft} = Edenflowers.Payments.create_invoice_for_order(order.id, actor: ctx.admin)
       {:ok, _invoice} = Edenflowers.Payments.issue_invoice(draft, actor: ctx.admin)
       %{order: order}

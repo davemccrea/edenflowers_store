@@ -1,5 +1,7 @@
 defmodule Edenflowers.Accounting.MonthlyReportTest do
-  use Edenflowers.DataCase, async: true
+  # Issuing an invoice holds the number series lock until the test ends, so the
+  # modules that issue one take turns; sharing any unique value could deadlock them.
+  use Edenflowers.DataCase, async: true, group: :invoice_numbers
 
   import Generator
   import ExUnit.CaptureLog
