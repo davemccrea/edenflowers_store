@@ -230,6 +230,24 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     refute has_element?(view, ~s|a[href="/admin/orders/#{phoned.id}"]|, "Missing recipient phone")
   end
 
+  test "says what an order still owes, and nothing once it's refunded in full", %{conn: conn} do
+    conn = log_in(conn, generate(admin_user()) |> with_token())
+    attrs = [fulfillment_date: Edenflowers.ShopTime.today(), fulfillment_status: :pending]
+
+    unpaid = placed_order([paid: false] ++ attrs)
+    part_paid = placed_order([paid: "50.00"] ++ attrs)
+    # Its Balance reads the total again, but it is Settled.
+    refunded = placed_order([refunded: true] ++ attrs)
+
+    {:ok, view, _html} = live(conn, ~p"/admin")
+
+    assert has_element?(view, ~s|a[href="/admin/orders/#{unpaid.id}"]|, "Unpaid")
+    assert has_element?(view, ~s|a[href="/admin/orders/#{part_paid.id}"]|, "To collect 38,50")
+    assert has_element?(view, ~s|a[href="/admin/orders/#{refunded.id}"]|)
+    refute has_element?(view, ~s|a[href="/admin/orders/#{refunded.id}"]|, "Unpaid")
+    refute has_element?(view, ~s|a[href="/admin/orders/#{refunded.id}"]|, "To collect")
+  end
+
   test "shows an order placed elsewhere without a refresh", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
     conn = log_in(conn, admin)

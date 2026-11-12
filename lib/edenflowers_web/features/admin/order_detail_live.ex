@@ -399,7 +399,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 class="mt-4"
               >
                 <.payment_link_buttons
-                  :if={Decimal.positive?(@order.balance) && !@order.gift_voucher_sale?}
+                  :if={@order.to_collect? && !@order.gift_voucher_sale?}
                   order={@order}
                   locale={@locale}
                 />
