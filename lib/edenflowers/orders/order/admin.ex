@@ -144,6 +144,7 @@ defmodule Edenflowers.Orders.Order.Admin do
                   :fulfillment_method,
                   :amount_paid,
                   :balance,
+                  :to_collect?,
                   :distance_km,
                   :gift,
                   :recipient_name,

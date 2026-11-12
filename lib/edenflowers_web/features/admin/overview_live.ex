@@ -1018,7 +1018,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         <div
           :if={
             @order.gift or present?(@order.card_message) or @order.missing_delivery_phone? or
-              Decimal.positive?(@order.balance)
+              @order.to_collect?
           }
           class="text-base-content/75 mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs"
         >
@@ -1036,7 +1036,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           <.badge :if={@order.missing_delivery_phone?} tone={:warning} icon="hero-phone-x-mark">
             {~t"Missing recipient phone"}
           </.badge>
-          <.badge :if={Decimal.positive?(@order.balance)} tone={:warning}>
+          <.badge :if={@order.to_collect?} tone={:warning}>
             <%= if Decimal.positive?(@order.amount_paid) do %>
               {~t"To collect #{amount = Format.currency(@order.balance, Format.locale())}"}
             <% else %>
