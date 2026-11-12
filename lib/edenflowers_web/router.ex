@@ -205,6 +205,7 @@ defmodule EdenflowersWeb.Router do
       live "/courses/:id/edit", CourseFormLive
       live "/courses/:id/bookings/new", CourseBookingFormLive
       live "/products", ProductsLive
+      live "/products/categories", CategoriesLive
       live "/products/new", ProductFormLive
       live "/products/:id", ProductFormLive
       live "/promotions", PromotionsLive

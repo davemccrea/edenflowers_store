@@ -16,7 +16,10 @@ defmodule Edenflowers.Catalog.ProductCategory do
     domain: Edenflowers.Catalog,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshTranslation.Resource]
+    extensions: [AshTranslation.Resource],
+    notifiers: [Ash.Notifier.PubSub]
+
+  alias Edenflowers.Events
 
   postgres do
     table "product_categories"
@@ -50,11 +53,31 @@ defmodule Edenflowers.Catalog.ProductCategory do
       prepare build(sort: [position: :asc_nils_last, name: :asc])
     end
 
+    read :in_store_order do
+      description "Every category, whatever its visibility, in store order, for the admin's category page."
+      prepare build(sort: [position: :asc_nils_last, name: :asc], load: [:published_product_count])
+    end
+
     read :public_by_slug do
       description "A public category by its URL slug. Draft and hidden categories are not found."
       get? true
       argument :slug, :string, allow_nil?: false
       filter expr(visibility == :public and slug == ^arg(:slug))
+    end
+
+    update :set_visibility do
+      description "Publishes it, hides it from the store, or makes it a draft, which takes its products off sale."
+      accept [:visibility]
+    end
+
+    update :move do
+      description "Moves it one place up or down the store order and renumbers every category from 0, so no " <>
+                    "two share a position. A category already at that end stays where it is."
+
+      accept []
+      require_atomic? false
+      argument :direction, :atom, allow_nil?: false, constraints: [one_of: [:up, :down]]
+      change Edenflowers.Catalog.Changes.MoveCategory
     end
   end
 
@@ -71,6 +94,14 @@ defmodule Edenflowers.Catalog.ProductCategory do
       description "All mutations require admin actor (covered by bypass above)."
       forbid_if always()
     end
+  end
+
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish_all :create, Events.admin_product_categories()
+    publish_all :update, Events.admin_product_categories()
+    publish_all :destroy, Events.admin_product_categories()
   end
 
   attributes do
@@ -113,6 +144,15 @@ defmodule Edenflowers.Catalog.ProductCategory do
   calculations do
     calculate :offers_bows, :boolean, expr(product_type == :wreath) do
       description "Its products can offer customers a choice of bow colour. Only wreaths do."
+    end
+  end
+
+  aggregates do
+    count :published_product_count, :products do
+      description "How many of its products are published: the ones that leave the store and checkout if it " <>
+                    "becomes a draft."
+
+      filter expr(draft == false)
     end
   end
 

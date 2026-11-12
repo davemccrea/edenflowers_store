@@ -133,9 +133,8 @@ defmodule EdenflowersWeb.Store.StoreLive do
                   <span class="category-index__name font-serif text-lg md:text-xl">{category.name}</span>
                 </.link>
               </li>
-              <.gift_voucher_link :if={@bouquets && category.id == @bouquets.id} />
             <% end %>
-            <.gift_voucher_link :if={!@bouquets} />
+            <.gift_voucher_link />
           </ol>
         </nav>
 
