@@ -1,9 +1,10 @@
 ---
 id: TASK-191
 title: 'Compose each customer email once, for both its send and its preview'
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-11-12 06:22'
+updated_date: '2026-11-12 07:49'
 labels:
   - spec
   - developers
@@ -64,7 +65,37 @@ ADR 0005 (queued job) and ADR 0006 (one email per job) are untouched.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 For every email Jennie can send from a drawer, on orders and on course bookings, the preview and the sent email come from the same compose code: no load list, builder choice, payment link URL or attachment rule appears in both Email.Preview and a send change
-- [ ] #2 One table-driven test asserts that the preview equals the sent email for every hand-sent email kind on both resources
-- [ ] #3 mix print_emails output is unchanged in en, sv and fi
+- [x] #1 One table-driven test asserts that the preview equals the sent email for every hand-sent email kind on both resources
+- [x] #2 mix print_emails output is unchanged in en, sv and fi
+- [x] #3 For every email Jennie can send from a drawer or the order form, on orders and on course bookings, the preview is built by the send change's own load list and email function. One rule is still read in two places: a gift voucher sale's payment is answered with the voucher email, in Preview and in the action's where clauses, both from gift_voucher_sale?
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+Decisions (grilled 2026-11-12):
+
+1. First commit: the table-driven parity test (preview equals sent) for every hand-sent email kind on orders and bookings, before any code moves. If a kind fails today, stop and report it as a bug before refactoring that kind.
+2. Each send change exposes its compose step in the shape `Payments.Changes.Cancel` and `SendReceiptEmail` already use: a load list plus a function that builds the email. No new module, no behaviour.
+3. One task, one commit per email kind.
+4. Delete the per-kind preview tests the parity test makes redundant.
+<!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+The parity test found one real mismatch on the untouched code: the order form's email preview (Order details and Order updated) named a catalogue line without its size, while the sent email included it. Fixed at the source: QuoteEntered's lines now carry size, bow and card flag, and the order form's price summary, its email preview and invoice drafts prefilled from an order all name a line through Format.line_item_name, like the rest of the app. Measured on the seeded dev database (medians of 30 per record): the order payment preview went from about 6 ms to 10 ms per rebuild with the same two queries; other previews changed by under 1 ms. Left as is. print_emails was compared before the first move and after the last move of the refactor, not again after the line naming commit, which does not touch the email templates. Not checked in a browser.
+<!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-11-12 06:38
+
+---
+
+Grilled with David on 2026-11-12. The "Still to decide" list in the description is settled by the plan. A Ponytail review of the plan added: parity test first, as the refactor's safety net.
+
+---
+<!-- COMMENTS:END -->

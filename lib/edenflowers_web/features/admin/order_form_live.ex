@@ -1068,7 +1068,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     <dl :if={@price.lines != []} id="order-price" class="text-sm">
       <.money_row
         :for={line <- @price.lines}
-        label={"#{line.quantity} × #{line.name}"}
+        label={"#{line.quantity} × #{Format.line_item_name(line)}"}
         amount={line.total}
         locale={@locale}
       />

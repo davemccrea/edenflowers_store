@@ -13,15 +13,12 @@ defmodule Edenflowers.Email.PreviewTest do
 
   # Every email Jennie sends by hand, as `{scenario, options}`. Each scenario
   # builds the preview she reads first, then sends as her drawer or form does.
-  # `typst: true` makes a receipt PDF. `known_mismatch:` skips a scenario whose
-  # preview differs from the sent email today, with what differs.
-  @entered_lines_lack_size "KNOWN MISMATCH: Preview.build_entered names a catalogue line without its size " <>
-                             "(\"Spring Bouquet\"), the sent email with it (\"Spring Bouquet (Medium)\")"
+  # `typst: true` makes a receipt PDF.
   @hand_sent [
     {:order_details, []},
     {:order_details_with_open_link, []},
-    {:entered_order_details, [known_mismatch: @entered_lines_lack_size]},
-    {:entered_order_updated, [known_mismatch: @entered_lines_lack_size]},
+    {:entered_order_details, []},
+    {:entered_order_updated, []},
     {:order_payment_reminder_opening_link, []},
     {:order_payment_reminder_with_open_link, []},
     {:order_receipt, [typst: true]},
@@ -46,7 +43,6 @@ defmodule Edenflowers.Email.PreviewTest do
   describe "the preview is the email sent" do
     for {scenario, options} <- @hand_sent, locale <- ["en-GB", "sv-FI", "fi"] do
       @tag typst: Keyword.get(options, :typst, false)
-      @tag skip: options[:known_mismatch]
       test "#{scenario} in #{locale}" do
         admin = generate(admin_user())
         %{preview: preview, send: send} = hand_sent(unquote(scenario), unquote(locale), admin)

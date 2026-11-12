@@ -83,6 +83,17 @@ defmodule Edenflowers.Payments.OrderInvoiceTest do
            ] = lines(draft)
   end
 
+  test "a draft names a catalogue line with its size, as the order's receipt and emails do", ctx do
+    product = generate(product(tax_rate_id: ctx.standard.id, name: "Posy"))
+    variant = generate(product_variant(product_id: product.id, price: "49.00", size: :medium))
+    catalogue = %{"kind" => "catalogue", "product_variant_id" => variant.id, "quantity" => "1"}
+
+    order = place(ctx, %{line_items: [catalogue], fulfillment_fee_override: "0.00"})
+    {:ok, draft} = Payments.create_invoice_for_order(order.id, actor: ctx.admin)
+
+    assert [{"Posy (Keskikokoinen)", "1", "49.00", "25.5"}] = lines(draft)
+  end
+
   test "a draft for an order takes the company details from the email's latest invoice, keeping the order's buyer",
        ctx do
     {:ok, earlier} =

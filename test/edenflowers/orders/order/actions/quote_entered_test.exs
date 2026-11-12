@@ -95,9 +95,9 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEnteredTest do
     {:ok, order} = Orders.place_custom_order(params, actor: ctx.admin)
 
     assert [
-             %{name: "Spring Bouquet", quantity: 2, total: bouquets},
-             %{name: "Funeral spray", total: spray},
-             %{name: "Thank you", total: card}
+             %{product_name: "Spring Bouquet", quantity: 2, total: bouquets},
+             %{product_name: "Funeral spray", total: spray},
+             %{product_name: "Thank you", total: card}
            ] = price.lines
 
     assert Decimal.equal?(bouquets, "98.00")
@@ -189,7 +189,7 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEnteredTest do
     price = Orders.quote_entered_order!(order, edit, nil, actor: ctx.admin)
     {:ok, edited} = Orders.edit_order(order, edit, actor: ctx.admin)
 
-    assert [%{name: "Spring Bouquet", quantity: 3, total: total}] = price.lines
+    assert [%{product_name: "Spring Bouquet", quantity: 3, total: total}] = price.lines
     assert Decimal.equal?(total, "147.00")
     assert_priced_as_saved(price, edited)
   end
@@ -229,7 +229,7 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEnteredTest do
 
     price = Orders.quote_entered_order!(nil, params, nil, actor: ctx.admin)
 
-    assert [%{name: "Spring Bouquet"}] = price.lines
+    assert [%{product_name: "Spring Bouquet"}] = price.lines
     assert price.fulfillment_fee == nil
     assert Decimal.equal?(price.total, "49.00")
   end

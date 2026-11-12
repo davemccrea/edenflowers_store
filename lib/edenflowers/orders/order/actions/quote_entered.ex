@@ -53,7 +53,7 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEntered do
 
     {:ok,
      %{
-       lines: Enum.map(lines, &%{name: &1.product_name, quantity: &1.quantity, total: &1.total}),
+       lines: Enum.map(lines, &Map.take(&1, [:product_name, :variant_size, :bow_colour, :is_card, :quantity, :total])),
        fulfillment_fee: fee,
        free_delivery?: free_delivery?,
        vat: sum(vat_rows, :vat),

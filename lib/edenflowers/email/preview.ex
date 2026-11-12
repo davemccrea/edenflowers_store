@@ -74,7 +74,7 @@ defmodule Edenflowers.Email.Preview do
     entered = %{
       entered
       | customer_first_name: NamePart.first(entered.customer_name),
-        line_items: Enum.map(price.lines, &%{quantity: &1.quantity, product_name: &1.name, subtotal: &1.total}),
+        line_items: Enum.map(price.lines, &Map.put(&1, :subtotal, &1.total)),
         fulfillment_fee: price.fulfillment_fee,
         grand_total: price.total,
         amount_paid: price.paid,
