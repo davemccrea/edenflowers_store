@@ -10,6 +10,8 @@ defmodule Edenflowers.Orders.ActionAvailabilityTest do
 
     for {attributes, actions} <- [
           {[fulfillment_method: :delivery], [:order_details, :payment_reminder, :cancel]},
+          {[fulfillment_method: :delivery, fulfillment_status: :ready],
+           [:undo_ready, :order_details, :payment_reminder, :cancel]},
           {[fulfillment_method: :delivery, fulfillment_status: :fulfilled],
            [:order_details, :payment_reminder, :fulfillment]},
           {[paid: true, fulfillment_method: :delivery], [:receipt, :view_receipt, :refund, :cancel]},

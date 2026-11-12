@@ -649,6 +649,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   def order_menu(assigns) do
     ~H"""
     <.actions_menu :if={@order.admin_menu_actions != []} id="order-actions" class="w-56">
+      <.actions_menu_button :if={:undo_ready in @order.admin_menu_actions} menu="order-actions" phx-click="undo_ready">
+        {~t"Undo ready"}
+      </.actions_menu_button>
       <.actions_menu_button
         :if={:gift_voucher in @order.admin_menu_actions}
         menu="order-actions"
