@@ -25,7 +25,6 @@ defmodule Edenflowers.Email.Preview do
   alias Edenflowers.Payments.Changes.SendInvoice
   alias Edenflowers.Payments.Changes.SendPaymentReceivedEmail
   alias Edenflowers.Payments.CreditNote
-  alias Edenflowers.Payments.GiftVoucherPdf
   alias Edenflowers.Payments.Invoice
   alias Edenflowers.Payments.InvoicePdf
   alias Edenflowers.Translations
@@ -129,9 +128,7 @@ defmodule Edenflowers.Email.Preview do
 
   defp order_load(:fulfillment), do: [:customer_first_name]
 
-  defp order_load(:gift_voucher),
-    do: [:customer_first_name, :voucher_card_ready_on, :voucher_card_to_hand_over?, gift_voucher_line: [:gift_voucher]]
-
+  defp order_load(:gift_voucher), do: SendReceiptEmail.load()
   defp order_load(:cancelled), do: [:customer_first_name, :payments | Cancel.load()]
   defp order_load(:refunded), do: [:customer_first_name, :payments, :paid_through_stripe]
   defp order_load(:receipt), do: [:gift_voucher_sale? | order_load(:gift_voucher)] ++ totals_load()
@@ -158,12 +155,7 @@ defmodule Edenflowers.Email.Preview do
 
   defp order_email(:receipt, order, inputs), do: payment_receipt(order, inputs, order.order_reference)
 
-  defp order_email(:gift_voucher, order, _inputs) do
-    order
-    |> SendReceiptEmail.gift_voucher_email()
-    |> Swoosh.Email.attachment(GiftVoucherPdf.attachment("", order.order_reference))
-    |> Swoosh.Email.attachment(Receipt.attachment("", order.order_reference))
-  end
+  defp order_email(:gift_voucher, order, _inputs), do: SendReceiptEmail.email(order, "", "")
 
   defp order_email(:fulfillment, order, inputs) do
     if Map.get(inputs, :photo?, order.email_delivery_photo),
