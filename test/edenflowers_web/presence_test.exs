@@ -1,6 +1,8 @@
 defmodule EdenflowersWeb.PresenceTest do
   use ExUnit.Case, async: false
 
+  import EdenflowersWeb.ConnCase, only: [eventually: 1]
+
   alias EdenflowersWeb.Presence
 
   test "groups tabs and removes a visitor only after their last connection leaves" do
@@ -60,17 +62,5 @@ defmodule EdenflowersWeb.PresenceTest do
     ref = Process.monitor(pid)
     send(pid, :stop)
     assert_receive {:DOWN, ^ref, :process, ^pid, :normal}
-  end
-
-  defp eventually(assertion, attempts \\ 100) do
-    assertion.()
-  rescue
-    error in ExUnit.AssertionError ->
-      if attempts > 1 do
-        Process.sleep(10)
-        eventually(assertion, attempts - 1)
-      else
-        reraise error, __STACKTRACE__
-      end
   end
 end

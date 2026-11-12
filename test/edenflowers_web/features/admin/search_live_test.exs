@@ -149,10 +149,11 @@ defmodule EdenflowersWeb.Admin.SearchLiveTest do
       )
 
     Orders.update_florist_note!(order, %{florist_note: "White only"}, actor: admin)
-    Process.sleep(200)
-    render_async(view)
 
-    assert has_element?(view, ~s|#search-orders a[href="/admin/orders/#{order.id}"]|, "Ada Lovelace")
+    eventually(fn ->
+      render_async(view)
+      assert has_element?(view, ~s|#search-orders a[href="/admin/orders/#{order.id}"]|, "Ada Lovelace")
+    end)
   end
 
   test "the admin header searches without leaving the live session", %{conn: conn} do

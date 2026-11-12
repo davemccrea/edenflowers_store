@@ -31,6 +31,23 @@ defmodule EdenflowersWeb.ConnCase do
   end
 
   @doc """
+  Retries `assertion` every 10 ms until it passes, and after a second lets its
+  failure through. Use it to wait for something another process does, such as
+  a LiveView refreshing after a PubSub notification, in place of sleeping.
+  """
+  def eventually(assertion, attempts \\ 100) do
+    assertion.()
+  rescue
+    error in ExUnit.AssertionError ->
+      if attempts > 1 do
+        Process.sleep(10)
+        eventually(assertion, attempts - 1)
+      else
+        reraise error, __STACKTRACE__
+      end
+  end
+
+  @doc """
   Associates `order` with this browser's session, as adding its first cart item
   would. Reuses the order's visitor ID if present, or generates one, and stores
   the same ID on the order and in the session.

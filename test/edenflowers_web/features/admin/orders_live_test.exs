@@ -100,10 +100,11 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
     placed_order(customer_name: "Grace Hopper")
 
     EdenflowersWeb.Endpoint.broadcast("admin:orders", "finalize_checkout", %{})
-    Process.sleep(200)
-    render_async(view, 500)
 
-    assert has_element?(view, "[data-item-id]", "Grace Hopper")
+    eventually(fn ->
+      render_async(view, 500)
+      assert has_element?(view, "[data-item-id]", "Grace Hopper")
+    end)
   end
 
   test "lists every placed order once the default filter is cleared", %{conn: conn} do

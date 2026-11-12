@@ -56,16 +56,4 @@ defmodule EdenflowersWeb.Admin.ConnectedCustomersTest do
       refute has_element?(view, "#connected-customers", "No customers online")
     end)
   end
-
-  defp eventually(assertion, attempts \\ 100) do
-    assertion.()
-  rescue
-    error in ExUnit.AssertionError ->
-      if attempts > 1 do
-        Process.sleep(10)
-        eventually(assertion, attempts - 1)
-      else
-        reraise error, __STACKTRACE__
-      end
-  end
 end
