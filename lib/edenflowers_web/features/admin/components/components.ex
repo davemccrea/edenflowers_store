@@ -697,7 +697,6 @@ defmodule EdenflowersWeb.Admin.Components do
   end
 
   attr :id, :string, required: true
-  attr :active?, :boolean, default: false
   attr :connect?, :boolean, default: true
   attr :branched?, :boolean, default: false
   attr :compact?, :boolean, default: false
@@ -706,8 +705,7 @@ defmodule EdenflowersWeb.Admin.Components do
   slot :children
 
   @doc """
-  The shared timeline geometry. Callers supply a stable record id and choose
-  the highlighted item. `markers?` hides the markers and gutter for a standalone
+  The shared timeline geometry. Callers supply a stable record id. `markers?` hides the markers and gutter for a standalone
   entry. `children` holds a nested timeline; `connect?` can stop
   a chain at a leaf, while flat histories hide the final connector themselves.
   """
@@ -727,7 +725,7 @@ defmodule EdenflowersWeb.Admin.Components do
         />
         <span
           :if={@markers?}
-          class={["left-[1.5px] size-2 absolute top-2 rounded-full", if(@active?, do: "bg-primary/70", else: "bg-base-content/30")]}
+          class="bg-base-content/30 left-[1.5px] size-2 absolute top-2 rounded-full"
           aria-hidden="true"
         />
         {render_slot(@inner_block)}
@@ -751,16 +749,10 @@ defmodule EdenflowersWeb.Admin.Components do
       |> Enum.chunk_by(&Edenflowers.ShopTime.today(&1.at))
       |> Enum.map(fn entries ->
         date = Edenflowers.ShopTime.today(hd(entries).at)
-        label = if date == today, do: ~t"Today", else: Edenflowers.Format.date(date, assigns.locale)
-        %{date: Date.to_iso8601(date), label: label, entries: entries}
+        %{date: Date.to_iso8601(date), label: history_day_label(date, today, assigns.locale), entries: entries}
       end)
 
-    assigns =
-      assign(assigns,
-        groups: groups,
-        latest_id: List.first(assigns.entries) && hd(assigns.entries).id,
-        markers?: length(assigns.entries) > 1
-      )
+    assigns = assign(assigns, groups: groups, markers?: length(assigns.entries) > 1)
 
     ~H"""
     <.timeline id={@id}>
@@ -770,7 +762,6 @@ defmodule EdenflowersWeb.Admin.Components do
         id={@id}
         group={group}
         locale={@locale}
-        latest_id={@latest_id}
         markers?={@markers?}
         connect?={group.date != hd(@groups).date}
       >
@@ -785,17 +776,16 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :id, :string, required: true
   attr :group, :map, required: true
   attr :locale, :string, required: true
-  attr :latest_id, :string, default: nil
   attr :connect?, :boolean, default: false
   attr :markers?, :boolean, default: true
   slot :details
 
   defp history_day(assigns) do
     ~H"""
-    <li id={"#{@id}-day-#{@group.date}"} role="presentation" class={["relative pb-2", @markers? && "pl-7"]}>
+    <li id={"#{@id}-day-#{@group.date}"} role="presentation" class={["relative pb-2 not-first:pt-2", @markers? && "pl-7"]}>
       <span
         :if={@markers? && @connect?}
-        class="bg-base-content/20 left-[5px] absolute top-0 -bottom-1 w-px"
+        class="bg-base-content/20 left-[5px] absolute top-1 -bottom-1 w-px"
         aria-hidden="true"
       />
       <h3 id={"#{@id}-date-#{@group.date}"} class="text-base-content/65 text-sm font-semibold">
@@ -806,7 +796,6 @@ defmodule EdenflowersWeb.Admin.Components do
       :for={entry <- @group.entries}
       :key={entry.id}
       id={"#{@id}-entry-#{entry.id}"}
-      active?={entry.id == @latest_id}
       markers?={@markers?}
       warning?={Map.get(entry, :warning?, false)}
       title={entry.title}
@@ -824,14 +813,13 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :title, :string, required: true
   attr :at, DateTime, required: true
   attr :locale, :string, required: true
-  attr :active?, :boolean, default: false
   attr :markers?, :boolean, default: true
   attr :warning?, :boolean, default: false
   slot :details
 
   def history_entry(assigns) do
     ~H"""
-    <.timeline_item id={@id} active?={@active?} markers?={@markers?} compact?={true}>
+    <.timeline_item id={@id} markers?={@markers?} compact?={true}>
       <.history_heading :if={@details == []} title={@title} at={@at} locale={@locale} warning?={@warning?} />
       <details
         :if={@details != []}
@@ -839,7 +827,8 @@ defmodule EdenflowersWeb.Admin.Components do
         phx-mounted={JS.ignore_attributes(["open"])}
         class="group"
       >
-        <summary class="-mx-1 cursor-pointer list-none px-1 pointer-coarse:min-h-11 hover:bg-base-content/5 focus-visible:bg-base-content/5">
+        <%!-- The 44px touch target overhangs the row, so expandable rows keep the same pitch as plain ones. --%>
+        <summary class="-mx-1 cursor-pointer list-none px-1 pointer-coarse:-my-3 pointer-coarse:py-3 hover:bg-base-content/5 focus-visible:bg-base-content/5 group-open:pointer-coarse:mb-0">
           <.history_heading title={@title} at={@at} locale={@locale} warning?={@warning?} expandable />
         </summary>
         {render_slot(@details)}
@@ -986,6 +975,16 @@ defmodule EdenflowersWeb.Admin.Components do
   def present?(value), do: is_binary(value) and String.trim(value) != ""
 
   def presence(value), do: if(present?(value), do: value)
+
+  # The year only shows once it differs from this one.
+  defp history_day_label(date, today, locale) do
+    cond do
+      date == today -> ~t"Today"
+      date == Date.add(today, -1) -> ~t"Yesterday"
+      date.year == today.year -> Localize.Date.to_string!(date, locale: locale, format: "ccc d.M.")
+      true -> Localize.Date.to_string!(date, locale: locale, format: "ccc d.M.yyyy")
+    end
+  end
 
   defp history_time(at, locale) do
     local = DateTime.shift_zone!(at, Edenflowers.ShopTime.timezone())
