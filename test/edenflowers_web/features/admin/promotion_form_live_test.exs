@@ -4,6 +4,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLiveTest do
   import Phoenix.LiveViewTest
   import Generator
 
+  alias Edenflowers.Pricing
   alias Edenflowers.Pricing.Promotion
   alias EdenflowersWeb.Admin.PromotionsLive
 
@@ -59,6 +60,27 @@ defmodule EdenflowersWeb.Admin.PromotionFormLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/promotions/#{expired.id}")
     assert has_element?(view, "#promotion-status", "Expired")
+  end
+
+  test "shows whether a pass-it-on card was opened, and marks it as not opened again", %{conn: conn} do
+    [code] = Pricing.create_pass_it_on_batch!("Skicka vidare", 1, actor: Edenflowers.Actors.system_actor())
+    card = Pricing.get_promotion_by_code!(code)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/promotions/#{card.id}")
+    assert has_element?(view, "#promotion-status", "Not opened yet")
+    refute has_element?(view, "#promotion-actions button[phx-click=mark_not_opened]")
+
+    Pricing.start_promotion_validity!(card, actor: nil)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/promotions/#{card.id}")
+    assert has_element?(view, "#promotion-status", "Opened")
+
+    assert {:error, {:live_redirect, %{to: to}}} =
+             view |> element("#promotion-actions button[phx-click=mark_not_opened]") |> render_click()
+
+    {:ok, view, _html} = live(conn, to)
+    assert has_element?(view, "#promotion-status", "Not opened yet")
+    assert is_nil(Ash.reload!(card, authorize?: false).expiration_date)
   end
 
   test "generates a code without losing other input", %{conn: conn} do

@@ -119,6 +119,20 @@ defmodule Edenflowers.Pricing.Promotion do
       require_atomic? false
     end
 
+    update :mark_not_opened do
+      description "Jennie puts back a pass-it-on card that was opened by mistake, such as her own test scan while " <>
+                    "logged out. Its expiration date is cleared, so its 30 days start again at the next customer " <>
+                    "scan and it can be linked to a gift again. Only for an opened or expired card that hasn't " <>
+                    "been used (`card_resettable?`)."
+
+      validate {Holds, calculation: :card_resettable?, message: "hasn't been opened, or has already been used"}
+
+      change set_attribute(:expiration_date, nil)
+
+      # full_diff can't run atomically.
+      require_atomic? false
+    end
+
     read :pass_it_on_card_by_code do
       description "A pass-it-on card by the code printed on it, whether or not its code is still usable."
 
@@ -369,6 +383,11 @@ defmodule Edenflowers.Pricing.Promotion do
 
       argument :today, :date, allow_nil?: false, default: &Edenflowers.ShopTime.today/0
       constraints one_of: [:not_opened, :opened, :used, :expired]
+    end
+
+    calculate :card_resettable?, :boolean, expr(kind == :pass_it_on and not is_nil(expiration_date) and usage == 0) do
+      description "A pass-it-on card Jennie can mark as not opened again: its 30 days have started (it is " <>
+                    "`opened` or `expired`) and no order placed with it counts."
     end
 
     calculate :recipient_first_name, :string, {NamePart, source: :gift_recipient_name, part: :first} do

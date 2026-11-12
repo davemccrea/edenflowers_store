@@ -26,6 +26,7 @@ defmodule Edenflowers.Pricing do
       define :get_promotion_by_code, action: :by_code, args: [:code, {:optional, :today}], get?: true
       define :create_newsletter_promotion, action: :create_for_newsletter
       define :start_promotion_validity, action: :start_validity
+      define :mark_card_not_opened, action: :mark_not_opened
       define :link_card_to_gift_order, action: :link_gift_order, args: [:gift_order_id]
       define :search_promotions_by_code, action: :search_by_code, args: [:term]
       define :get_pass_it_on_card, action: :pass_it_on_card_by_code, args: [:code], not_found_error?: false

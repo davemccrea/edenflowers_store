@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
   alias Edenflowers.Events
   alias Edenflowers.Format
+  alias Edenflowers.Pricing
   alias Edenflowers.Pricing.Promotion
   alias EdenflowersWeb.Admin.OrderLog
   alias EdenflowersWeb.Admin.PromotionsLive
@@ -43,7 +44,9 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
   @impl true
   def render(assigns) do
     promotion_status = if assigns.form.source.type == :update, do: status(assigns.form.source.data.status)
-    assigns = assign(assigns, :promotion_status, promotion_status)
+    promotion = assigns.form.source.data
+    card = if assigns.form.source.type == :update and promotion.kind == :pass_it_on, do: promotion
+    assigns = assign(assigns, promotion_status: promotion_status, card: card)
 
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
@@ -57,6 +60,14 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
           </:actions>
           <:menu>
             <.actions_menu :if={@form.source.type == :update} id="promotion-actions">
+              <.actions_menu_button
+                :if={@card && @card.card_resettable?}
+                menu="promotion-actions"
+                phx-click="mark_not_opened"
+                data-confirm={~t"Mark this card as not opened? Its 30 days start again the next time a customer scans it."}
+              >
+                {~t"Mark as not opened"}
+              </.actions_menu_button>
               <.actions_menu_button
                 menu="promotion-actions"
                 phx-click="delete"
@@ -77,7 +88,13 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
           >
             <div class="min-w-0">
               <h2 class="eyebrow text-base-content/75 mb-2">{~t"Status"}</h2>
-              <.badge tone={elem(@promotion_status, 1)} icon={elem(@promotion_status, 2)}>
+              <%!-- A card says more than "Active": whether its recipient has opened it. --%>
+              <.card_status_badge :if={@card && @card.card_status != :used} card={@card} locale={@locale} />
+              <.badge
+                :if={!@card || @card.card_status == :used}
+                tone={elem(@promotion_status, 1)}
+                icon={elem(@promotion_status, 2)}
+              >
                 {elem(@promotion_status, 0)}
               </.badge>
               <p :if={@form.source.data.status == :scheduled} class="text-base-content/75 mt-2 text-sm tabular-nums">
@@ -227,6 +244,20 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
     end
   end
 
+  def handle_event("mark_not_opened", _params, socket) do
+    case Pricing.mark_card_not_opened(socket.assigns.form.source.data, actor: socket.assigns.current_user) do
+      {:ok, promotion} ->
+        {:noreply,
+         socket
+         |> put_flash(:success, ~t"Card marked as not opened.")
+         |> push_navigate(to: ~p"/admin/promotions/#{promotion.id}")}
+
+      # Used or reset in another window since this page loaded.
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, ~t"This card can't be marked as not opened any more. Reload the page.")}
+    end
+  end
+
   def handle_event("delete", _params, socket) do
     case Ash.destroy(socket.assigns.form.source.data, actor: socket.assigns.current_user) do
       :ok ->
@@ -253,7 +284,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
   def handle_info(_message, socket), do: {:noreply, socket}
 
   defp load_form(%{"id" => id}, actor) do
-    case Ash.get(Promotion, id, actor: actor, load: [:usage, :status]) do
+    case Ash.get(Promotion, id, actor: actor, load: [:usage, :status, :card_status, :card_resettable?]) do
       {:ok, promotion} ->
         form = AshPhoenix.Form.for_update(promotion, :update, actor: actor, transform_params: &percent_to_rate/3)
         {:ok, promotion.name, to_form(form)}

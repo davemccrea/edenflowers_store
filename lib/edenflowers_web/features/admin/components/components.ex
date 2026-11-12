@@ -169,6 +169,38 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
+  attr :card, :any, required: true
+  attr :locale, :string, required: true
+
+  @doc """
+  Where a pass-it-on card is (`Promotion.card_status`). A used card gets no badge: the page shows the orders it
+  brought in, or its usage, instead.
+  """
+  def card_status_badge(%{card: %{card_status: :used}} = assigns) do
+    ~H"""
+    """
+  end
+
+  def card_status_badge(%{card: %{card_status: :opened}} = assigns) do
+    ~H"""
+    <.badge tone={:attention}>
+      {~t"Opened · valid until #{date = Edenflowers.Format.date(@card.expiration_date, @locale)}"}
+    </.badge>
+    """
+  end
+
+  def card_status_badge(%{card: %{card_status: :expired}} = assigns) do
+    ~H"""
+    <.badge tone={:warning}>{~t"Expired"}</.badge>
+    """
+  end
+
+  def card_status_badge(assigns) do
+    ~H"""
+    <.badge tone={:neutral}>{~t"Not opened yet"}</.badge>
+    """
+  end
+
   defp badge_class(tone, class),
     do: ["badge badge-sm inline-flex items-center gap-1 whitespace-nowrap", badge_tone_class(tone), class]
 

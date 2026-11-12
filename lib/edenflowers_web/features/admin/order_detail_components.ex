@@ -955,35 +955,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
     """
   end
 
-  attr :card, :any, required: true
-  attr :locale, :string, required: true
-
-  # A used card needs no badge: the orders it brought in are listed below it.
-  defp card_status_badge(%{card: %{card_status: :used}} = assigns) do
-    ~H"""
-    """
-  end
-
-  defp card_status_badge(%{card: %{card_status: :opened}} = assigns) do
-    ~H"""
-    <.badge tone={:attention}>
-      {~t"Opened · valid until #{date = Format.date(@card.expiration_date, @locale)}"}
-    </.badge>
-    """
-  end
-
-  defp card_status_badge(%{card: %{card_status: :expired}} = assigns) do
-    ~H"""
-    <.badge tone={:warning}>{~t"Expired"}</.badge>
-    """
-  end
-
-  defp card_status_badge(assigns) do
-    ~H"""
-    <.badge tone={:neutral}>{~t"Not opened yet"}</.badge>
-    """
-  end
-
   attr :order, Order, required: true
   attr :locale, :string, required: true
 

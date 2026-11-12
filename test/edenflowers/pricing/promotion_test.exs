@@ -292,6 +292,23 @@ defmodule Edenflowers.Pricing.PromotionTest do
                Date.add(Edenflowers.ShopTime.today(), 30)
     end
 
+    test "start again after Jennie marks an opened card as not opened, unless it was used", %{promotion: card} do
+      admin = generate(admin_user())
+      assert {:error, _not_opened} = Pricing.mark_card_not_opened(card, actor: admin)
+
+      card = Pricing.start_promotion_validity!(card, %{today: ~D[2026-11-01]}, actor: nil)
+      assert {:error, _forbidden} = Pricing.mark_card_not_opened(card, actor: nil)
+
+      card = Pricing.mark_card_not_opened!(card, actor: admin)
+      assert is_nil(card.expiration_date)
+
+      card = Pricing.start_promotion_validity!(card, %{today: ~D[2026-11-20]}, actor: nil)
+      assert card.expiration_date == ~D[2026-12-20]
+
+      Generator.placed_order(promotion_id: card.id)
+      assert {:error, _used} = Pricing.mark_card_not_opened(card, actor: admin)
+    end
+
     test "leave other codes' dates alone" do
       manual = generate(promotion(code: "MANUAL1"))
       assert Pricing.start_promotion_validity!(manual, actor: nil).expiration_date == manual.expiration_date
