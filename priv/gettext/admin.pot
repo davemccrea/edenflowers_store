@@ -795,7 +795,7 @@ msgstr ""
 msgid "Delivery or pickup"
 msgstr ""
 
-#: lib/edenflowers/orders/order/changes/send_fulfillment_email.ex:64
+#: lib/edenflowers/orders/order/changes/send_fulfillment_email.ex:73
 #, elixir-autogen, elixir-format
 msgid "Delivery photo is missing."
 msgstr ""
@@ -1053,7 +1053,7 @@ msgstr ""
 msgid "Expires"
 msgstr ""
 
-#: lib/edenflowers/orders/order/changes/send_fulfillment_email.ex:56
+#: lib/edenflowers/orders/order/changes/send_fulfillment_email.ex:58
 #, elixir-autogen, elixir-format
 msgid "Failed to send fulfillment email: %{error}"
 msgstr ""
