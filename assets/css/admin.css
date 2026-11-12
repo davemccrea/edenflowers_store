@@ -643,9 +643,11 @@ body:has(.admin-theme) {
 
 /* A side-panel glyph after the label marks every button and menu item that
    opens a drawer to fill in or confirm before anything happens. Tag the
-   control with aria-haspopup="dialog". */
-.admin-theme :is(.btn, .menu button)[aria-haspopup="dialog"]::after {
+   control with aria-haspopup="dialog". It is a ::before ordered last because
+   ::after is taken by the loading spinner and the touch tap area. */
+.admin-theme :is(.btn, .menu button)[aria-haspopup="dialog"]::before {
   content: "";
+  order: 1;
   flex-shrink: 0;
   width: 1rem;
   height: 1rem;
