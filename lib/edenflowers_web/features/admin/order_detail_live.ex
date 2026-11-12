@@ -637,12 +637,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("open_cancel", _params, socket) do
-    order = PaymentActions.load_for_cancel(socket.assigns.order)
-    form = PaymentActions.cancel_form(order, socket.assigns.current_user)
+    form = PaymentActions.cancel_form(socket.assigns.order, socket.assigns.current_user)
 
     {:noreply,
      socket
-     |> assign(cancelling: order, cancel_form: form)
+     |> assign(cancelling: form.source.data, cancel_form: form)
      |> assign_preview(:cancelled, form)
      |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-show"})}
   end
@@ -680,12 +679,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
      |> assign(PaymentActions.change_payment(form, params, event["_target"], actor))}
   end
 
-  # Money owed back, or the menu's Refund, opens the refund form.
   def handle_event("open_settlement", params, socket) do
-    mode =
-      if params["mode"] == "refund" or socket.assigns.order.to_refund?,
-        do: :refund,
-        else: :settle
+    mode = PaymentActions.settlement_mode(socket.assigns.order, params)
 
     {:noreply,
      socket

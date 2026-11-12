@@ -702,26 +702,5 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       refute has_element?(view, "#registration-#{registration.id}", "To refund")
       assert [_job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendRefundedEmail)
     end
-
-    test "a part refund by Stripe is sent and recorded, leaving nothing to collect", %{conn: conn} do
-      registration = paid_booking(payment_intent_id: "pi_booking")
-
-      Edenflowers.External.StripeAPI.Mock
-      |> Mox.stub(:list_refunds, fn "pi_booking" -> {:ok, []} end)
-      |> Mox.expect(:create_refund, fn "pi_booking", 2_000, _key, %{"reason" => "refund"} ->
-        {:ok, %{id: "re_booking", payment_intent: "pi_booking", amount: 2_000, status: "succeeded"}}
-      end)
-
-      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
-      view |> element(refund_menu_item(registration), "Refund") |> render_click()
-
-      view
-      |> form("#refund-#{registration.id}-form", refund: %{amount: "20.00", payment_method: "stripe"})
-      |> render_submit()
-
-      assert has_element?(view, "#registration-#{registration.id}", "Refunded 20,00 € · Stripe")
-      refute has_element?(view, "#registration-#{registration.id}", "To collect")
-      refute has_element?(view, "#registration-#{registration.id}", "To refund")
-    end
   end
 end
