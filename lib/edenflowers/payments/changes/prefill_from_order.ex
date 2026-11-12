@@ -82,7 +82,9 @@ defmodule Edenflowers.Payments.Changes.PrefillFromOrder do
   end
 
   defp lines(order) do
-    items = Enum.map(order.line_items, &line(&1.product_name, &1.quantity, &1.unit_price, &1.tax_rate))
+    items =
+      Enum.map(order.line_items, &line(Edenflowers.Format.line_item_name(&1), &1.quantity, &1.unit_price, &1.tax_rate))
+
     items ++ fee_line(order)
   end
 
