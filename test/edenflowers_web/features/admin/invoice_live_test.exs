@@ -77,10 +77,11 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert has_element?(view, ~s|a[href="/admin/invoices/#{invoice.id}"]|, "Draft")
 
     {:ok, issued} = Payments.issue_invoice(invoice, actor: admin)
-    Process.sleep(200)
 
-    refute has_element?(view, ~s|a[href="/admin/invoices/#{invoice.id}"]|, "Draft")
-    assert has_element?(view, ~s|a[href="/admin/invoices/#{invoice.id}"]|, to_string(issued.number))
+    eventually(fn ->
+      refute has_element?(view, ~s|a[href="/admin/invoices/#{invoice.id}"]|, "Draft")
+      assert has_element?(view, ~s|a[href="/admin/invoices/#{invoice.id}"]|, to_string(issued.number))
+    end)
   end
 
   test "saved drafts and issued invoices show lifecycle history", %{conn: conn, admin: admin} do

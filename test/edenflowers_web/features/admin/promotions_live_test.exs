@@ -56,9 +56,8 @@ defmodule EdenflowersWeb.Admin.PromotionsLiveTest do
     assert has_element?(view, "[data-item-id]", "Spring sale")
 
     {:ok, _promotion} = Ash.update(promotion, %{name: "Spring sale extended"}, actor: admin)
-    Process.sleep(200)
 
-    assert has_element?(view, "[data-item-id]", "Spring sale extended")
+    eventually(fn -> assert has_element?(view, "[data-item-id]", "Spring sale extended") end)
   end
 
   test "sets the welcome offer new subscribers' codes are generated with", %{conn: conn} do

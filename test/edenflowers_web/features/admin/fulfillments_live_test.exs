@@ -87,10 +87,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       {:ok, option} = Fulfillment.update_pricing(delivery, %{base_price: "5.00"}, actor: admin)
       assert Decimal.equal?(option.base_price, "5.00")
 
-      Process.sleep(200)
-      render_async(view, 500)
-
-      assert render(view) =~ "5,00"
+      eventually(fn -> assert render_async(view, 500) =~ "5,00" end)
     end
   end
 

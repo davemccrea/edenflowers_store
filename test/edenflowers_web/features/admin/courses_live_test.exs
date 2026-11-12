@@ -38,9 +38,8 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert has_element?(view, "tbody a", "Autumn wreaths")
 
     {:ok, _course} = Ash.update(course, %{name: "Winter wreaths"}, actor: admin)
-    Process.sleep(200)
 
-    assert has_element?(view, "tbody a", "Winter wreaths")
+    eventually(fn -> assert has_element?(view, "tbody a", "Winter wreaths") end)
   end
 
   test "filters draft and published courses while keeping the period filter", %{conn: conn} do

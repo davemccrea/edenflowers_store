@@ -67,10 +67,12 @@ defmodule EdenflowersWeb.Admin.ProductsLiveTest do
     reads = QueryCounter.track(view.pid)
 
     {:ok, _cancelled} = Edenflowers.Orders.cancel_order(order, %{email_customer?: false}, actor: admin)
-    Process.sleep(200)
-    render_async(view)
 
-    assert has_element?(view, row, "5 left")
+    eventually(fn ->
+      render_async(view)
+      assert has_element?(view, row, "5 left")
+    end)
+
     assert has_element?(view, ~s([data-key="pagination_info_class"]), "showing 11-11 of 11")
     refute has_element?(view, ~s([data-item-id="#{hd(variants).product_id}"]))
     refute has_element?(view, ~s([data-item-id="#{hidden.id}"]))

@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
   import Phoenix.LiveViewTest
 
   alias Edenflowers.Orders
+  alias EdenflowersWeb.QueryCounter
 
   setup :log_in_admin
 
@@ -40,8 +41,10 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/customers?search=Ada")
       render_async(view)
 
+      reads = QueryCounter.track(view.pid)
+
       Orders.update_florist_note!(order, %{florist_note: "White flowers"}, actor: admin)
-      Process.sleep(100)
+      eventually(fn -> assert QueryCounter.count(reads) > 0 end)
       render_async(view)
 
       assert has_element?(view, "[data-item-id]", "Ada Lovelace")
@@ -67,9 +70,8 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
       assert has_element?(view, ~s([data-key="pagination_info_class"]), "showing 1-10 of 11")
 
       {:ok, paid} = Orders.record_payment(order, order.grand_total, :cash, actor: admin)
-      Process.sleep(200)
 
-      assert render_async(view) =~ ~r/Sorted Target.*Sorted 10/s
+      eventually(fn -> assert render_async(view) =~ ~r/Sorted Target.*Sorted 10/s end)
       refute has_element?(view, "[data-item-id]", "Excluded")
 
       paid
@@ -80,9 +82,11 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
       )
       |> Ash.update!()
 
-      Process.sleep(200)
-      render_async(view)
-      refute has_element?(view, ~s([data-item-id="#{target.id}"]))
+      eventually(fn ->
+        render_async(view)
+        refute has_element?(view, ~s([data-item-id="#{target.id}"]))
+      end)
+
       view |> element(~s(button[title="Next page"])) |> render_click()
       render_async(view)
 
