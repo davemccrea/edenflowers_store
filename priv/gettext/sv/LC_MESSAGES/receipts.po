@@ -64,7 +64,7 @@ msgid "Delivery date"
 msgstr "Leveransdatum"
 
 #: lib/edenflowers/orders/receipt_labels.ex:33
-#: lib/edenflowers/payments/changes/prefill_from_order.ex:93
+#: lib/edenflowers/payments/changes/prefill_from_order.ex:95
 #, elixir-autogen, elixir-format
 msgid "Delivery fee"
 msgstr "Hemleveransavgift"
@@ -125,7 +125,7 @@ msgid "Pickup date"
 msgstr "Avhämtningsdatum"
 
 #: lib/edenflowers/orders/receipt_labels.ex:34
-#: lib/edenflowers/payments/changes/prefill_from_order.ex:94
+#: lib/edenflowers/payments/changes/prefill_from_order.ex:96
 #, elixir-autogen, elixir-format
 msgid "Pickup fee"
 msgstr "Avhämtningsavgift"

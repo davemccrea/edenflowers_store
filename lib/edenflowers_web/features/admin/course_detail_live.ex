@@ -82,28 +82,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
             </span>
           </:subtitle>
           <:actions>
-            <.button
-              :if={!@course.ended? && @registrations != []}
-              type="button"
-              phx-click="open_course_reminders"
-              aria-haspopup="dialog"
-              variant="secondary"
-              size="sm"
-            >
-              {~t"Send course reminder"}
-            </.button>
-            <.button
-              :if={@registrations != []}
-              href={fastmail_compose(bcc: @bcc)}
-              data-app-href={fastmail_app_compose(bcc: @bcc)}
-              target="_blank"
-              rel="noopener"
-              variant="secondary"
-              size="sm"
-            >
-              <.icon name="hero-envelope" class="h-4 w-4" />
-              {~t"Email everyone"}
-            </.button>
             <ShareLinkDrawer.open_button :if={!@course.ended? && !@course.draft} id="share-course-link" />
             <.button navigate={~p"/admin/courses/#{@course.id}/edit"} variant="secondary" size="sm">
               <.icon name="hero-pencil-square" class="h-4 w-4" />
@@ -114,6 +92,29 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
               {~t"Add booking"}
             </.button>
           </:actions>
+          <:menu :if={@registrations != []}>
+            <.actions_menu id="course-actions">
+              <.actions_menu_button
+                :if={!@course.ended?}
+                menu="course-actions"
+                phx-click="open_course_reminders"
+                aria-haspopup="dialog"
+              >
+                {~t"Send course reminder"}
+              </.actions_menu_button>
+              <li>
+                <.link
+                  href={fastmail_compose(bcc: @bcc)}
+                  data-app-href={fastmail_app_compose(bcc: @bcc)}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  {~t"Email everyone"}
+                  <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+                </.link>
+              </li>
+            </.actions_menu>
+          </:menu>
         </.admin_page_header>
 
         <section id="bookings" class="admin-card p-4 sm:p-5">
