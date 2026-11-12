@@ -861,7 +861,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          socket
          |> assign_order(reload(order, socket))
          |> assign(:fulfillment_form, nil)
-         |> put_flash(:success, message)}
+         |> put_flash(:success, message)
+         |> push_event("order-fulfilled", %{})}
 
       {:error, form} ->
         {:noreply, assign(socket, :fulfillment_form, form)}

@@ -604,6 +604,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     refute has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|)
     assert has_element?(view, "#order-status", "Fulfilled")
     assert render(view) =~ "Order marked as collected."
+    assert_push_event(view, "order-fulfilled", %{})
     refute render(view) =~ "Confirmation queued."
     refute_enqueued(worker: Edenflowers.Orders.Workers.SendFulfillmentEmail)
 
