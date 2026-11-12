@@ -24,7 +24,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
-      order = load_for_send(changeset.data)
+      order = Ash.load!(changeset.data, load(), authorize?: false)
 
       # A queued confirmation must not promise flowers or a usable voucher after cancellation.
       if order.fulfillment_status == :cancelled do
@@ -39,13 +39,9 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
   defp deliver(changeset, order) do
     edits = Edits.from_changeset(changeset)
 
-    with {:ok, pdf} <- Receipt.generate(order),
-         {:ok, email} <- with_voucher(email(order), order),
-         {:ok, _result} <-
-           email
-           |> Edits.apply_to(edits)
-           |> Swoosh.Email.attachment(Receipt.attachment(pdf, order.order_reference))
-           |> Mailer.deliver() do
+    with {:ok, receipt_pdf} <- Receipt.generate(order),
+         {:ok, voucher_pdf} <- voucher_pdf(order),
+         {:ok, _result} <- order |> email(receipt_pdf, voucher_pdf) |> Edits.apply_to(edits) |> Mailer.deliver() do
       Logger.info("Sent confirmation email for order #{order.id}")
 
       changeset
@@ -57,53 +53,54 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
     end
   end
 
+  @doc """
+  The email for an order loaded with `load/0`, with `receipt_pdf` attached
+  and, for a Gift voucher sale, `voucher_pdf` before it.
+  """
+  def email(order, receipt_pdf, voucher_pdf) do
+    order
+    |> email()
+    |> with_voucher(order, voucher_pdf)
+    |> Swoosh.Email.attachment(Receipt.attachment(receipt_pdf, order.order_reference))
+  end
+
   # An Occurrence's charge is routine; the receipt with thanks is for an order the customer placed.
   defp email(%{origin: :subscription} = order), do: Email.subscription_charged(order)
   defp email(%{gift_voucher_sale?: true} = order), do: gift_voucher_email(order)
   defp email(order), do: Email.order_confirmation(order)
 
-  @doc """
-  A Gift voucher sale's email, without its attachments. It names the day the
-  gift card is ready only while the card is still to collect, so a resend
-  after the buyer collected it doesn't promise it again.
-  """
-  def gift_voucher_email(order) do
+  # It names the day the gift card is ready only while the card is still to
+  # collect, so a resend after the buyer collected it doesn't promise it again.
+  defp gift_voucher_email(order) do
     Email.gift_voucher_sold(order, if(order.voucher_card_to_hand_over?, do: order.voucher_card_ready_on))
   end
 
-  @doc "Attaches a Gift voucher sale's one voucher as a PDF, beside the receipt when there is one."
-  def with_voucher(email, order) do
-    case order.gift_voucher_line do
-      nil ->
-        {:ok, email}
+  defp with_voucher(email, %{gift_voucher_line: nil}, _voucher_pdf), do: email
 
-      %{gift_voucher: voucher} ->
-        with {:ok, pdf} <- GiftVoucherPdf.generate(%{voucher | line_item: %{order: order}}) do
-          {:ok, Swoosh.Email.attachment(email, GiftVoucherPdf.attachment(pdf, order.order_reference))}
-        end
-    end
-  end
+  defp with_voucher(email, order, voucher_pdf),
+    do: Swoosh.Email.attachment(email, GiftVoucherPdf.attachment(voucher_pdf, order.order_reference))
 
-  @doc "Loads the order's relationships and calculations needed to build its email and PDF attachments."
-  def load_for_send(order) do
-    Ash.load!(
-      order,
-      [
-        :customer_first_name,
-        :recipient_first_name,
-        :vat,
-        :grand_total,
-        :discount,
-        :amount_paid,
-        :balance,
-        :cancellable_by_customer?,
-        :cancellable_until,
-        :voucher_card_ready_on,
-        :voucher_card_to_hand_over?,
-        line_items: [:subtotal]
-      ] ++ Receipt.order_load(),
-      authorize?: false
-    )
+  defp voucher_pdf(%{gift_voucher_line: nil}), do: {:ok, nil}
+
+  defp voucher_pdf(%{gift_voucher_line: %{gift_voucher: voucher}} = order),
+    do: GiftVoucherPdf.generate(%{voucher | line_item: %{order: order}})
+
+  @doc "What the order is loaded with to build its email and PDF attachments."
+  def load do
+    [
+      :customer_first_name,
+      :recipient_first_name,
+      :vat,
+      :grand_total,
+      :discount,
+      :amount_paid,
+      :balance,
+      :cancellable_by_customer?,
+      :cancellable_until,
+      :voucher_card_ready_on,
+      :voucher_card_to_hand_over?,
+      line_items: [:subtotal]
+    ] ++ Receipt.order_load()
   end
 
   # Clear the failure in the database even if the caller's stale record already has a nil timestamp.
