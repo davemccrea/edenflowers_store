@@ -503,12 +503,11 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       assert registration.status == :confirmed
       assert registration.confirmed_at
 
-      assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
+      # The customer's receipt and the shop's notice, one of each.
+      assert %{success: 2, failure: 0} = Oban.drain_queue(queue: :default)
 
-      assert_email_sent(fn email ->
-        assert email.subject =~ "Autumn Wreaths"
-        assert [%{content_type: "application/pdf"}] = email.attachments
-      end)
+      assert_received {:email, %{attachments: [%{content_type: "application/pdf"}]} = receipt}
+      assert receipt.subject =~ "Autumn Wreaths"
     end
 
     test "records a partial refund from the Stripe dashboard once", %{registration: registration} do

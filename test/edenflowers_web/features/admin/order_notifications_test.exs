@@ -31,7 +31,7 @@ defmodule EdenflowersWeb.Admin.OrderNotificationsTest do
 
   test "the account page's switch saves and forgets this device", %{conn: conn, admin: admin} do
     {:ok, view, html} = live(conn, ~p"/admin/account")
-    assert html =~ "New order notifications"
+    assert html =~ "New order and booking notifications"
 
     render_hook(view, "push_subscribed", @subscription)
     assert_reply view, %{ok: true}
@@ -63,7 +63,7 @@ defmodule EdenflowersWeb.Admin.OrderNotificationsTest do
     Application.delete_env(:web_push_ex, :vapid)
 
     {:ok, _view, html} = live(conn, ~p"/admin/account")
-    refute html =~ "New order notifications"
+    refute html =~ "New order and booking notifications"
 
     {:ok, _view, html} = live(conn, ~p"/admin")
     refute html =~ "Get new orders on this phone"

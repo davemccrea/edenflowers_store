@@ -776,7 +776,9 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
   describe "editing an invoiced order" do
     setup ctx do
-      order = place_custom_order(ctx, %{payment_terms: :invoice, customer_email: "office@kukka.fi"})
+      # An email no other async test uses: issuing holds the invoice number lock until the test
+      # ends, so two tests that issue and share a customer's email can deadlock on it.
+      order = place_custom_order(ctx, %{payment_terms: :invoice, customer_email: "invoiced-edit@kukka.fi"})
       {:ok, draft} = Edenflowers.Payments.create_invoice_for_order(order.id, actor: ctx.admin)
       {:ok, _invoice} = Edenflowers.Payments.issue_invoice(draft, actor: ctx.admin)
       %{order: order}

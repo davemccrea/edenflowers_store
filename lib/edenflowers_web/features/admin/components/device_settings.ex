@@ -75,7 +75,7 @@ defmodule EdenflowersWeb.Admin.DeviceSettings do
       } from "@/js/push";
 
       /**
-       * The account page's "New order notifications" switch for this device. Its
+       * The account page's "New order and booking notifications" switch for this device. Its
        * state lives in the browser, so the hook reads it and sets `data-state`
        * (checking, on, off, denied, unsupported, error), which picks the help text.
        * The element is phx-update="ignore", so patches leave the switch alone.
