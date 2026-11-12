@@ -154,6 +154,8 @@ defmodule EdenflowersWeb.Admin.Components do
     <.link class={[badge_class(@tone, @class), "hover:brightness-95"]} {@rest}>
       <.icon :if={@icon} name={@icon} class="h-3.5 w-3.5 shrink-0" />
       {render_slot(@inner_block)}
+      <%!-- Tells a pill that opens another page from a plain label, where there's no hover. --%>
+      <.icon name="hero-chevron-right-mini" class="-mr-0.5 h-3.5 w-3.5 shrink-0 opacity-60" />
     </.link>
     """
   end
