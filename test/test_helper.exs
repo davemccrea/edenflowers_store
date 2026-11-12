@@ -7,7 +7,8 @@ Mox.defmock(Edenflowers.External.ClaudeAPI.Mock, for: Edenflowers.External.Claud
 # without it locally). CI installs Typst, so the tag stays included there.
 typst_opts = if System.find_executable("typst"), do: [], else: [exclude: [:typst]]
 
-ExUnit.start(typst_opts)
+# render_async waits this long too, and the admin search overruns the default 100ms on CI.
+ExUnit.start([assert_receive_timeout: 1000] ++ typst_opts)
 # Committed before the sandbox starts, so concurrent tests read each singleton row
 # rather than each inserting it and waiting on (or deadlocking with) the others' transactions.
 Edenflowers.Fulfillment.get_shop_calendar!(authorize?: false)
