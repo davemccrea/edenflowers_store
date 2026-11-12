@@ -73,6 +73,17 @@ window.addEventListener("phx:order-ready", () => {
     );
 });
 
+window.addEventListener("phx:order-fulfilled", () => {
+  if (!document.querySelector(".admin-theme")) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  import("./fulfilledCelebration.js")
+    .then(({ celebrateFulfilled }) => celebrateFulfilled())
+    .catch((error) =>
+      console.error("Could not launch order-fulfilled celebration", error),
+    );
+});
+
 // Custom Umami events from EdenflowersWeb.Analytics. A `once` key is only
 // remembered once Umami has it, so a blocked tracker doesn't eat the event.
 window.addEventListener("phx:umami", ({ detail: { name, data, once } }) => {
