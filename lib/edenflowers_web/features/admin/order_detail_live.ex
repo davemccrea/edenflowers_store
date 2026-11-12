@@ -133,15 +133,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               {~t"Mark as ready"}
             </.button>
             <.button
-              :if={@order.can_undo_ready?}
-              type="button"
-              phx-click="undo_ready"
-              variant="ghost"
-              size="sm"
-            >
-              {~t"Undo ready"}
-            </.button>
-            <.button
               :if={@order.can_mark_fulfilled?}
               type="button"
               phx-click="confirm_fulfillment"

@@ -6,6 +6,7 @@ defmodule Edenflowers.Orders.Order.Calculations.AdminMenuActions do
   @impl true
   def load(_query, _opts, _context) do
     [
+      :can_undo_ready?,
       :receipt_available?,
       :customer_email,
       :gift_voucher_sale?,
@@ -26,6 +27,7 @@ defmodule Edenflowers.Orders.Order.Calculations.AdminMenuActions do
       receipt_emailable? = order.receipt_available? && !is_nil(order.customer_email)
 
       for {action, available?} <- [
+            {:undo_ready, order.can_undo_ready?},
             {:gift_voucher, receipt_emailable? && order.gift_voucher_sale? && !order.cancelled?},
             {:receipt, receipt_emailable? && !order.gift_voucher_sale?},
             {:order_details, !order.receipt_available? && order.details_emailable?},
