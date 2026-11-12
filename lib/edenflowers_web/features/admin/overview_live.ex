@@ -1046,9 +1046,14 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         </div>
       </.link>
       <div class="flex flex-wrap items-center justify-between gap-2 px-4 pt-1 pb-4 sm:px-5">
-        <.fulfillment_status_badge status={@order.fulfillment_status} method={@order.fulfillment_method} />
+        <.fulfillment_status_badge
+          :if={!@order.can_mark_ready?}
+          status={@order.fulfillment_status}
+          method={@order.fulfillment_method}
+        />
         <.button
           :if={@order.can_mark_ready?}
+          class="ml-auto"
           type="button"
           variant="secondary"
           size="sm"
