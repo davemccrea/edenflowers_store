@@ -1,12 +1,14 @@
 ---
 id: TASK-193
-title: Give the admin money and email drawers one home for their state
-status: needs-triage
+title: Preview the customer email when recording a course booking's payment
+status: done
 assignee: []
 created_date: '2026-11-12 06:22'
+updated_date: '2026-11-12 07:10'
 labels:
   - spec
-  - developers
+  - admin
+  - quick
 dependencies: []
 references:
   - docs/agents/ash-liveview-review.md
@@ -18,46 +20,40 @@ references:
   - lib/edenflowers_web/features/admin/drawer_preview.ex
   - lib/edenflowers_web/features/admin/drawers.ex
   - test/edenflowers_web/features/admin/balance_panel_test.exs
-priority: medium
-type: refactor
+priority: low
+type: feature
 ordinal: 358000
 ---
 
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-The settlement, cancel and email drawers hold their own forms, preview and event handling, so the order page and the course page open them and are told when something changed.
+When Jennie records a payment on a course booking, the drawer shows the email the customer will get, as it already does on an order.
 
-**Why:** These are the most-changed files in the admin (`order_detail_live.ex` 33 commits in the last 300, `drawers.ex` 23, `course_detail_live.ex` 15). Every change to a drawer has to be made on each page that hosts it, and the two pages have already drifted apart.
+**Why:** The order page previews the customer email both when recording a payment and when refunding. The course page previews only refunds, so Jennie records a booking payment without seeing what is sent.
 
 ## Problem
 
-`PaymentActions`, `EmailDrawer` and `Drawers` share the forms and markup, but the state around them is written out in each page.
+`course_detail_live.ex:274-293` builds the drawer preview only when `mode == :refund`. The order page builds one for both modes (`order_detail_live.ex:687-700`).
 
-- **About thirteen handlers repeated on two pages**: `open_cancel`, `close_cancel`, `validate_cancel`, `submit_cancel`, `open_settlement`, `change_payment`, `record_payment`, `change_refund`, `refund`, `undo_payment`, `open_payment_link` and the four email events. Order page: `order_detail_live.ex:643-786`. Course page: `course_detail_live.ex:274-440`. The email four appear a third time at `invoice_live.ex:717-800`.
-- **The shared modules' interface includes the page's assign names.** `PaymentActions.change_payment/4` returns `[payment_form:, preview:]` (`payment_actions.ex:63`), `change_refund/3` returns `[refund_form:, preview:]` (`:119`), and `EmailDrawer.open/close` write `email_form`, `email_kind` and `preview` into the caller's socket.
-- **One `:preview` assign serves four drawers** (cancel, settlement, email, fulfillment), written from thirteen places across the two pages.
-- **Each page initialises the same loose set of assigns**: `cancelling`, `cancel_form`, `payment_form`, `refund_form`, `settlement_mode`, `email_form`, `email_kind`, `preview` (`order_detail_live.ex:51-54`).
-- **The pages already differ.** The order page builds a preview for both settle and refund (`order_detail_live.ex:687-700`); the course page only in refund mode (`course_detail_live.ex:274-293`).
+## Decisions (grilled 2026-11-12)
+
+- The gap is an oversight: preview both on both pages.
+- This task was first a plan to move the settlement, cancel and email drawers into one LiveComponent. A Ponytail review of the plan dropped that: the two pages' handlers are not copies (the course page hosts drawers for many bookings picked by id, the order page has one order), the files are the most-edited in the admin, and there is no bug behind it. Only the one real difference between the pages is fixed here.
 
 ## What to build
 
-One stateful LiveComponent for the settlement, cancel and email drawers. It takes a payable and an actor, owns its forms, preview and handlers, and tells the page one thing: changed, reload. `PaymentActions`, `EmailDrawer` and `DrawerPreview` merge into it. The stale-editor notice from `docs/agents/ash-liveview-review.md` (it shows inside drawers too) carries over.
-
-The actions underneath do not change. No ADR is affected.
-
-## Still to decide (grill before implementing)
-
-- One component for all three drawers, or one each.
-- Whether the course page's missing settle preview is deliberate. If not, the component fixes it; if so, it needs a switch.
-- Whether the invoice page's email drawer joins now or later, and whether the fulfillment drawer (order page only) is in scope.
-- How flashes and the confetti on the order page are raised once the handler lives in the component.
+Build the settle-mode preview on the course page the way the order page does, when the settlement drawer opens and as the payment form changes. If recording a booking payment sends the customer no email, there is nothing to preview: stop and say so.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The order page and the course page hold no event handlers or assigns for the settlement, cancel and email drawers beyond opening them and reloading when told something changed
-- [ ] #2 The drawers' forms and preview are assigned in one module, and no shared helper returns or writes assigns by the page's names
-- [ ] #3 balance_panel_test.exs still covers recording, refunding, undoing and cancelling for both orders and bookings, and passes
-- [ ] #4 The stale-editor notice still shows inside each drawer
+- [x] #1 Opening a booking's settlement drawer to record a payment shows the preview of the email that recording it sends, and it updates as the form changes
+- [x] #2 The refund preview on the course page still works
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+The gap was smaller than described: the course page already previewed the receipt email as the payment form changed (PaymentActions.change_payment/4). Only opening the drawer dropped it, which showed when Jennie ticked the receipt box, closed the drawer and reopened it. open_settlement now builds the preview in both modes. Not checked in a browser.
+<!-- SECTION:NOTES:END -->
