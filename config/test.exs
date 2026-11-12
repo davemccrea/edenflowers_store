@@ -64,7 +64,7 @@ config :edenflowers, :papra_organization_id, "org_test"
 config :edenflowers, :papra_req_options, plug: {Req.Test, Edenflowers.External.PapraAPI}, retry: false
 config :edenflowers, :fastmail_api_token, "test-fastmail-token"
 config :edenflowers, :fastmail_req_options, plug: {Req.Test, Edenflowers.External.FastmailAPI}, retry: false
-config :edenflowers, :weather_req_options, plug: {Req.Test, Edenflowers.External.WeatherAPI}, retry: false
+config :edenflowers, :weather_req_options, plug: Edenflowers.WeatherStub, retry: false
 
 # A throwaway key generated for tests; production's lives in the Ansible vault.
 config :edenflowers, :enable_banking,
