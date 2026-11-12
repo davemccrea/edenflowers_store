@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.Admin.AccountLive do
   @moduledoc """
-  Admin account settings: profile picture and back office colour, then this
-  device's language and push notifications.
+  Admin account settings: profile picture and back office colour, this
+  device's language and push notifications, then the shop's bank connection.
   """
 
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
@@ -13,7 +13,11 @@ defmodule EdenflowersWeb.Admin.AccountLive do
   import EdenflowersWeb.Admin.DeviceSettings
 
   alias Edenflowers.Accounts
+  alias Edenflowers.Bank
   alias Edenflowers.Events
+  alias Edenflowers.External.EnableBankingAPI
+  alias Edenflowers.Format
+  alias EdenflowersWeb.Admin.BankController
   alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Admin.PushSubscriptions
 
@@ -26,6 +30,8 @@ defmodule EdenflowersWeb.Admin.AccountLive do
      |> assign(:stale, false)
      |> assign(:page_title, ~t"Account")
      |> assign(:vapid_public_key, Edenflowers.WebPush.public_key())
+     |> assign(:locale, Localize.get_locale())
+     |> assign(:bank_connection, bank_connection(socket.assigns.current_user))
      |> allow_upload(:avatar,
        accept: ~w(.jpg .jpeg .png .webp),
        max_file_size: 2_000_000,
@@ -121,6 +127,21 @@ defmodule EdenflowersWeb.Admin.AccountLive do
 
         <.device_settings current_path={@current_path} vapid_public_key={@vapid_public_key} />
 
+        <section
+          :if={@bank_connection != :not_configured}
+          id="bank-connection"
+          class="admin-card mt-6 flex flex-wrap items-start justify-between gap-x-4 gap-y-3 p-4 sm:p-5"
+        >
+          <div class="min-w-0 max-w-prose">
+            <h2 class="text-base-content mb-1 text-base font-semibold">{~t"Bank"}</h2>
+            <p class="text-base-content/75 text-sm">{bank_connection_text(elem(@bank_connection, 1), @locale)}</p>
+          </div>
+          <.button phx-click="connect_bank" variant="secondary" size="sm">
+            <.icon name="hero-building-library" class="h-4 w-4" />
+            {if elem(@bank_connection, 1), do: ~t"Reconnect", else: ~t"Connect bank"}
+          </.button>
+        </section>
+
         <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
           <.button href={~p"/sign-out"} method="delete" variant="secondary" size="sm">
             <.icon name="hero-arrow-right-start-on-rectangle" class="h-4 w-4" />
@@ -140,6 +161,20 @@ defmodule EdenflowersWeb.Admin.AccountLive do
     do: {:noreply, push_navigate(socket, to: ~p"/admin/account")}
 
   def handle_event("validate_avatar", _params, socket), do: {:noreply, socket}
+
+  def handle_event("connect_bank", _params, socket) do
+    user = socket.assigns.current_user
+    state = BankController.sign_state(user)
+
+    case Bank.bank_authorization_url(state, url(~p"/admin/bank/callback"), actor: user) do
+      {:ok, url} ->
+        {:noreply, redirect(socket, external: url)}
+
+      {:error, error} ->
+        Logger.error("Starting a bank connection failed: #{inspect(error)}")
+        {:noreply, put_flash(socket, :error, ~t"The bank couldn't be reached. Please try again.")}
+    end
+  end
 
   def handle_event("push_subscribed", params, socket),
     do: {:reply, PushSubscriptions.subscribe(params, socket.assigns.current_user), socket}
@@ -179,6 +214,27 @@ defmodule EdenflowersWeb.Admin.AccountLive do
     do: {:noreply, PubSub.mark_stale(socket, notification)}
 
   def handle_info(_message, socket), do: {:noreply, socket}
+
+  # Only production can reach the bank, so elsewhere there's nothing to connect.
+  defp bank_connection(actor) do
+    if EnableBankingAPI.configured?() do
+      {:ok, connection} = Bank.current_bank_connection(actor: actor, load: [:expired])
+      {:configured, connection}
+    else
+      :not_configured
+    end
+  end
+
+  defp bank_connection_text(nil, _locale),
+    do: ~t"Connect it to mark expenses and invoices paid as payments leave or arrive."
+
+  defp bank_connection_text(%{expired: true} = connection, locale),
+    do:
+      ~t"The connection ended on #{date = Format.date(connection.valid_until, locale)}. Connect again to keep payments up to date."
+
+  defp bank_connection_text(connection, locale),
+    do:
+      ~t"Connected until #{date = Format.date(connection.valid_until, locale)}. Reconnect to renew it early or to choose another account."
 
   defp handle_avatar_progress(:avatar, %{done?: false}, socket), do: {:noreply, socket}
 

@@ -11,6 +11,10 @@ defmodule Edenflowers.External.EnableBankingAPI do
   @base_url "https://api.enablebanking.com"
   @aspsp %{name: "S-Pankki", country: "FI"}
 
+  # ISO 20022 balance types: interim (today so far), closing, expected.
+  @available_balance_types ~w(ITAV CLAV XPCD)
+  @booked_balance_types ~w(ITBD CLBD)
+
   @doc "Whether the application ID and private key are configured. Only production has them."
   def configured?, do: config() != nil
 
@@ -71,6 +75,34 @@ defmodule Edenflowers.External.EnableBankingAPI do
         end
 
     fetch_transactions(account_id, params, Keyword.get(options, :psu_headers, []), [])
+  end
+
+  @doc """
+  The account's euro balances as `%{available: amount or nil, booked: amount or nil}`.
+  Booked is what the statement says; available also takes off what's reserved
+  but not booked yet, such as card payments.
+  """
+  def balances(account_id) do
+    with {:ok, %{"balances" => balances}} <- request(:get, "/accounts/#{account_id}/balances", []) do
+      {:ok,
+       %{
+         available: balance_of(balances, @available_balance_types),
+         booked: balance_of(balances, @booked_balance_types)
+       }}
+    end
+  end
+
+  # The first type the bank sent, in the order listed: the interim balance is today's.
+  defp balance_of(balances, types) do
+    Enum.find_value(types, fn type ->
+      Enum.find_value(balances, fn
+        %{"balance_type" => ^type, "balance_amount" => %{"currency" => "EUR", "amount" => amount}} ->
+          Decimal.new(amount)
+
+        _other ->
+          nil
+      end)
+    end)
   end
 
   defp fetch_transactions(account_id, params, headers, acc) do

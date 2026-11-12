@@ -116,6 +116,58 @@ defmodule Edenflowers.Bank.SyncPaymentsTest do
     end
   end
 
+  describe "the balance" do
+    test "is stored as what can be spent and what is booked, in euros" do
+      connection = connect()
+
+      stub_bank([], [
+        balance("CLBD", "1500.00"),
+        balance("ITAV", "1420.50"),
+        balance("ITBD", "1480.00"),
+        %{balance("ITAV", "9.00") | "balance_amount" => %{"currency" => "USD", "amount" => "9.00"}}
+      ])
+
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      connection = Ash.reload!(connection, load: [:balance, :reserved], authorize?: false)
+      assert Decimal.equal?(connection.available_balance, "1420.50")
+      assert Decimal.equal?(connection.booked_balance, "1480.00")
+      assert Decimal.equal?(connection.balance, "1420.50")
+      assert connection.reserved
+      assert connection.balance_read_at
+    end
+
+    test "falls back to the booked figure when the bank gives no available one" do
+      connection = connect()
+      stub_bank([], [balance("CLBD", "1500.00")])
+
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      connection = Ash.reload!(connection, load: [:balance, :reserved], authorize?: false)
+      assert Decimal.equal?(connection.balance, "1500.00")
+      refute connection.reserved
+    end
+
+    @tag :capture_log
+    test "a bank that refuses it still has its payments settled" do
+      connection = connect()
+      expense = seed_expense(reference_number: "123453")
+
+      Req.Test.stub(EnableBankingAPI, fn
+        %{request_path: "/accounts/account-1/transactions"} = conn ->
+          Req.Test.json(conn, %{"transactions" => [payment("100.00", "123453", "2026-11-03")]})
+
+        %{request_path: "/accounts/account-1/balances"} = conn ->
+          conn |> Plug.Conn.put_status(429) |> Req.Test.json(%{"error" => "ASPSP_RATE_LIMIT_EXCEEDED"})
+      end)
+
+      assert :ok = Bank.sync_bank_payments(actor: system_actor())
+
+      assert reload(expense).paid_on == ~D[2026-11-03]
+      assert Ash.reload!(connection, authorize?: false).balance_read_at == nil
+    end
+  end
+
   test "an invoice's reference is stored the way the bank sends it" do
     stub(Edenflowers.External.PapraAPI.Mock, :update_document, fn _, _ -> :ok end)
 
@@ -179,9 +231,19 @@ defmodule Edenflowers.Bank.SyncPaymentsTest do
     Payments.issue_invoice!(draft, actor: admin)
   end
 
-  defp stub_transactions(transactions) do
-    Req.Test.stub(EnableBankingAPI, fn %{request_path: "/accounts/account-1/transactions"} = conn ->
-      Req.Test.json(conn, %{"transactions" => transactions, "continuation_key" => nil})
+  defp balance(type, amount) do
+    %{"name" => type, "balance_type" => type, "balance_amount" => %{"currency" => "EUR", "amount" => amount}}
+  end
+
+  defp stub_transactions(transactions), do: stub_bank(transactions, [])
+
+  defp stub_bank(transactions, balances) do
+    Req.Test.stub(EnableBankingAPI, fn
+      %{request_path: "/accounts/account-1/transactions"} = conn ->
+        Req.Test.json(conn, %{"transactions" => transactions, "continuation_key" => nil})
+
+      %{request_path: "/accounts/account-1/balances"} = conn ->
+        Req.Test.json(conn, %{"balances" => balances})
     end)
   end
 end

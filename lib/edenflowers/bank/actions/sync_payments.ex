@@ -3,7 +3,7 @@ defmodule Edenflowers.Bank.Actions.SyncPayments do
   Reads the booked transactions of every account on the current bank
   connection and settles what they pay: a payment out marks its expense paid,
   a transfer in is recorded on its invoice. Payments the matching can't place
-  are left for Jennie.
+  are left for Jennie. Then stores the accounts' balance for the Overview.
 
   Does nothing without Enable Banking configured (only production is), before
   the bank is first connected, or once the consent has ended.
@@ -28,7 +28,9 @@ defmodule Edenflowers.Bank.Actions.SyncPayments do
     with true <- EnableBankingAPI.configured?(),
          {:ok, %{expired: false} = connection} <-
            Bank.current_bank_connection(actor: system_actor(), load: [:expired]) do
-      sync(connection)
+      result = sync(connection)
+      store_balance(connection)
+      result
     else
       _nothing_to_read -> :ok
     end
@@ -45,6 +47,38 @@ defmodule Edenflowers.Bank.Actions.SyncPayments do
         error -> {:halt, error}
       end
     end)
+  end
+
+  # A balance the bank won't give is logged and skipped: the Overview shows
+  # how old its figure is, and settling payments matters more.
+  # shortcut: several accounts are added up into one balance, show one each once the shop has two.
+  defp store_balance(connection) do
+    read_all =
+      Enum.reduce_while(connection.account_ids, {:ok, []}, fn account_id, {:ok, acc} ->
+        case EnableBankingAPI.balances(account_id) do
+          {:ok, balances} -> {:cont, {:ok, [balances | acc]}}
+          error -> {:halt, error}
+        end
+      end)
+
+    with {:ok, balances} <- read_all,
+         {:ok, _connection} <-
+           Bank.record_bank_balance(
+             connection,
+             %{available_balance: sum(balances, :available), booked_balance: sum(balances, :booked)},
+             actor: system_actor()
+           ) do
+      :ok
+    else
+      error -> Logger.warning("Reading the bank balance failed: #{inspect(error)}")
+    end
+  end
+
+  defp sum(balances, kind) do
+    case Enum.reject(Enum.map(balances, & &1[kind]), &is_nil/1) do
+      [] -> nil
+      amounts -> Enum.reduce(amounts, &Decimal.add/2)
+    end
   end
 
   defp settle_all(transactions) do

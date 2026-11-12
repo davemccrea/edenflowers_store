@@ -50,7 +50,24 @@ defmodule EdenflowersWeb.Admin.BankConnectionTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin")
     assert has_element?(view, "#bank-status", "Connected")
-    assert has_element?(view, "#bank-status", "Reconnect")
+    refute has_element?(view, "#bank-status button")
+  end
+
+  test "the Account page lets Jennie reconnect while nothing is wrong", %{conn: conn} do
+    seed_connection(DateTime.add(DateTime.utc_now(), 90, :day))
+
+    Req.Test.stub(EnableBankingAPI, fn
+      %{request_path: "/aspsps"} = conn ->
+        Req.Test.json(conn, %{"aspsps" => [%{"name" => "S-Pankki", "maximum_consent_validity" => 15_552_000}]})
+
+      %{request_path: "/auth"} = conn ->
+        Req.Test.json(conn, %{"url" => @login_url})
+    end)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/account")
+
+    assert {:error, {:redirect, %{to: @login_url}}} =
+             view |> element("#bank-connection button", "Reconnect") |> render_click()
   end
 
   test "warns from two weeks before the consent ends", %{conn: conn} do
@@ -59,6 +76,7 @@ defmodule EdenflowersWeb.Admin.BankConnectionTest do
     {:ok, view, _html} = live(conn, ~p"/admin")
 
     assert has_element?(view, "#bank-status", "Ending soon")
+    assert has_element?(view, "#bank-status button", "Reconnect")
   end
 
   test "an ended consent shows the bank as disconnected", %{conn: conn} do
@@ -67,6 +85,32 @@ defmodule EdenflowersWeb.Admin.BankConnectionTest do
     {:ok, view, _html} = live(conn, ~p"/admin")
 
     assert has_element?(view, "#bank-status", "Disconnected")
+  end
+
+  test "shows what the account holds, and the booked figure only when money is reserved", %{conn: conn} do
+    connection = seed_connection(DateTime.add(DateTime.utc_now(), 90, :day))
+
+    {:ok, view, _html} = live(conn, ~p"/admin")
+    refute has_element?(view, "#bank-balance")
+
+    record_balance(connection, "420.50", "480.00")
+    {:ok, view, _html} = live(conn, ~p"/admin")
+    assert has_element?(view, "#bank-balance", "Available")
+    assert has_element?(view, "#bank-balance", "420,50")
+    assert has_element?(view, "#bank-balance-booked", "480,00")
+
+    record_balance(connection, "480.00", "480.00")
+    {:ok, view, _html} = live(conn, ~p"/admin")
+    assert has_element?(view, "#bank-balance", "480,00")
+    refute has_element?(view, "#bank-balance-booked")
+  end
+
+  defp record_balance(connection, available, booked) do
+    Edenflowers.Bank.record_bank_balance!(
+      connection,
+      %{available_balance: available, booked_balance: booked},
+      actor: Edenflowers.Actors.system_actor()
+    )
   end
 
   test "a callback with someone else's state stores nothing", %{conn: conn} do

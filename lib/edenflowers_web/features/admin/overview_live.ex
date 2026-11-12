@@ -106,7 +106,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   # Only production can reach the bank, so elsewhere there's nothing to connect.
   defp bank_connection(actor) do
     if EnableBankingAPI.configured?() do
-      {:ok, connection} = Bank.current_bank_connection(actor: actor, load: [:expired, :renewal_due])
+      {:ok, connection} =
+        Bank.current_bank_connection(actor: actor, load: [:expired, :renewal_due, :balance, :reserved])
+
       {:configured, connection}
     else
       :not_configured
@@ -655,7 +657,21 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             <.badge tone={:success}>{~t"Connected"}</.badge>
         <% end %>
       </h3>
-      <p class="text-base-content/75 mb-3">
+      <dl :if={@connection && @connection.balance} id="bank-balance" class="mb-3">
+        <dt class="text-base-content/75">
+          {if @connection.available_balance, do: ~t"Available", else: ~t"Balance"}
+        </dt>
+        <dd class="text-base-content text-2xl font-semibold tabular-nums tracking-tight">
+          {Format.currency(@connection.balance, @locale)}
+        </dd>
+        <dd class="text-base-content/75 text-xs">
+          <span :if={@connection.reserved} id="bank-balance-booked" class="tabular-nums">
+            {~t"Booked #{amount = Format.currency(@connection.booked_balance, @locale)}"} ·
+          </span>
+          {balance_read(@connection.balance_read_at, @locale)}
+        </dd>
+      </dl>
+      <p class="text-base-content/75 [&:not(:last-child)]:mb-3">
         <%= cond do %>
           <% is_nil(@connection) -> %>
             {~t"Connect it to mark expenses and invoices paid as payments leave or arrive."}
@@ -664,15 +680,31 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           <% @connection.renewal_due -> %>
             {~t"It ends on #{date = Format.date(@connection.valid_until, @locale)}. Connect again to keep payments up to date."}
           <% true -> %>
-            {~t"Until #{date = Format.date(@connection.valid_until, @locale)}"}
+            {~t"Connected until #{date = Format.date(@connection.valid_until, @locale)}"}
         <% end %>
       </p>
-      <.button phx-click="connect_bank" variant="secondary" size="sm">
+      <.button
+        :if={is_nil(@connection) or @connection.renewal_due}
+        phx-click="connect_bank"
+        variant="secondary"
+        size="sm"
+      >
         <.icon name="hero-building-library" class="h-4 w-4" />
         {if @connection, do: ~t"Reconnect", else: ~t"Connect bank"}
       </.button>
     </div>
     """
+  end
+
+  # Read four times a day, so a date instead of "today" tells Jennie the figure is old.
+  defp balance_read(read_at, locale) do
+    read_at = DateTime.shift_zone!(read_at, Edenflowers.ShopTime.timezone())
+
+    if DateTime.to_date(read_at) == Edenflowers.ShopTime.today() do
+      ~t"Updated today at #{time = Format.time(DateTime.to_time(read_at), locale)}"
+    else
+      ~t"Updated #{time = Format.datetime(read_at, locale)}"
+    end
   end
 
   defp previous_month do
