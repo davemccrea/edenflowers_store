@@ -14,6 +14,8 @@ defmodule Edenflowers.Email.Preview do
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Courses.CourseRegistration.Changes.PriceBooking
   alias Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail
+  alias Edenflowers.Courses.CourseRegistration.Changes.SendPaymentLinkEmail
+  alias Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmail
   alias Edenflowers.Email
   alias Edenflowers.Email.Edits
   alias Edenflowers.Orders.Order
@@ -128,7 +130,6 @@ defmodule Edenflowers.Email.Preview do
   defp entered_link?(_entered, order), do: order.payment_link_open?
 
   defp order_load(:fulfillment), do: SendFulfillmentEmail.load()
-
   defp order_load(:gift_voucher), do: SendReceiptEmail.load()
   defp order_load(:cancelled), do: [:customer_first_name, :payments | Cancel.load()]
   defp order_load(:refunded), do: [:customer_first_name, :payments, :paid_through_stripe]
@@ -160,31 +161,20 @@ defmodule Edenflowers.Email.Preview do
 
   defp booking_load(:cancelled), do: [:course, :first_name, :payments | Cancel.load()]
   defp booking_load(:refunded), do: [:course, :first_name, :payments, :paid_through_stripe]
-
   defp booking_load(:confirmation), do: SendConfirmationEmail.load()
   defp booking_load(:receipt), do: SendPaymentReceivedEmail.load(CourseRegistration)
-
-  defp booking_load(_kind),
-    do: [
-      :course,
-      :first_name,
-      :amount_paid,
-      :balance,
-      :payments,
-      :payment_link_open?
-    ]
+  defp booking_load(:course_reminder), do: SendReminderEmail.load()
+  defp booking_load(_kind), do: SendPaymentLinkEmail.load()
 
   defp booking_email(:confirmation, registration, _inputs), do: SendConfirmationEmail.email(registration, "")
 
   defp booking_email(:course_reminder, registration, _inputs),
     do: Email.course_reminder(registration)
 
-  defp booking_email(:payment_link, registration, _inputs) do
-    Email.payment_reminder(registration, link_url(registration))
+  defp booking_email(kind, registration, _inputs) when kind in [:payment_link, :payment_reminder] do
+    url = SendPaymentLinkEmail.payment_link_url(registration, link_token(registration))
+    SendPaymentLinkEmail.email(registration, url)
   end
-
-  defp booking_email(:payment_reminder, registration, _inputs),
-    do: Email.payment_reminder(registration, link_url(registration))
 
   defp booking_email(:receipt, registration, inputs), do: payment_receipt(registration, inputs)
 
