@@ -792,7 +792,7 @@ msgstr "Karta över leveransplatsen"
 msgid "Delivery or pickup"
 msgstr "Leverans eller avhämtning"
 
-#: lib/edenflowers/orders/order/changes/send_fulfillment_email.ex:64
+#: lib/edenflowers/orders/order/changes/send_fulfillment_email.ex:73
 #, elixir-autogen, elixir-format
 msgid "Delivery photo is missing."
 msgstr "Leveransbilden saknas."
@@ -1050,7 +1050,7 @@ msgstr "Utgången"
 msgid "Expires"
 msgstr "Upphör"
 
-#: lib/edenflowers/orders/order/changes/send_fulfillment_email.ex:56
+#: lib/edenflowers/orders/order/changes/send_fulfillment_email.ex:58
 #, elixir-autogen, elixir-format
 msgid "Failed to send fulfillment email: %{error}"
 msgstr "Kunde inte skicka bekräftelse på leverans eller hämtning: %{error}"
@@ -5481,7 +5481,6 @@ msgstr "Synlig"
 #, elixir-autogen, elixir-format
 msgid "Shown in the store."
 msgstr "Visas i butiken."
-
 
 #: lib/edenflowers_web/features/admin/categories_live.ex:63
 #, elixir-autogen, elixir-format
