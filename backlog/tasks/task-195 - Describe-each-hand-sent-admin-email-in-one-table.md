@@ -4,12 +4,12 @@ title: Describe each hand-sent admin email in one table
 status: needs-triage
 assignee: []
 created_date: '2026-11-12 06:22'
+updated_date: '2026-11-12 06:38'
 labels:
   - spec
   - developers
 dependencies:
   - TASK-191
-  - TASK-193
 references:
   - docs/adr/0006-one-customer-email-per-job.md
   - lib/edenflowers_web/features/admin/email_drawer.ex
@@ -60,3 +60,16 @@ It supports ADR 0006's "a new kind of news is a new email with its own builder, 
 - [ ] #1 A hand-sent email kind's action, drawer labels and sent/failed flash are defined in one place, and neither the order page nor the course page has its own per-kind clauses
 - [ ] #2 A test fails when an email kind lacks an action, labels, flash wording, a preview or a menu availability
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-11-12 06:38
+
+---
+
+Parked (2026-11-12). TASK-193 was cut down to a small preview fix and no longer builds a drawers component, so this now depends on TASK-191 only. Revisit once TASK-191 lands; it may no longer be worth a task.
+
+---
+<!-- COMMENTS:END -->
