@@ -1053,7 +1053,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         />
         <.button
           :if={@order.can_mark_ready?}
-          class="ml-auto"
           type="button"
           variant="secondary"
           size="sm"
