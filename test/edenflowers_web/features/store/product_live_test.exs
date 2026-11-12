@@ -342,6 +342,19 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       assert has_element?(view, ~s|[data-testid=already-subscribed] a[href="/account"]|)
     end
 
+    test "doesn't count a cancelled subscription", %{conn: conn, product: product, variant: variant} do
+      user = generate(admin_user(admin: false)) |> with_token()
+
+      generate(subscription(user_id: user.id, product_variant_id: variant.id))
+      |> Orders.cancel_subscription!(actor: user)
+
+      conn = log_in(conn, user)
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}")
+      view |> form("[data-testid=product-form]", %{subscribe: "true"}) |> render_change()
+
+      refute has_element?(view, "[data-testid=already-subscribed]")
+    end
+
     test "says before the click that a subscription can't join other products", %{
       conn: conn,
       product: product,

@@ -394,7 +394,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   id="voucher-pays"
                   class="text-base-content/75 mt-1.5 text-sm"
                 >
-                  {if voucher_covers?(@price),
+                  {if @price.voucher_covers?,
                     do: ~t"The voucher pays it all when you place the order.",
                     else:
                       ~t"The voucher pays #{amount = Format.currency(@price.voucher_pays, @locale)} when you place the order. Choose how the customer pays the rest."}
@@ -402,7 +402,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
               </div>
               <.input
                 :let={option}
-                :if={not voucher_covers?(@price)}
+                :if={not @price.voucher_covers?}
                 field={@form[:payment_terms]}
                 type="radio-card"
                 options={payment_options()}
@@ -898,9 +898,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp fulfillment_time_options do
     [%{name: ~t"Any time", value: "any"}, %{name: ~t"At", value: "at"}, %{name: ~t"Between", value: "between"}]
   end
-
-  defp voucher_covers?(price),
-    do: Decimal.positive?(price.voucher_pays) and Decimal.eq?(price.voucher_pays, price.total)
 
   defp payment_options do
     [

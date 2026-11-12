@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
-  @course_load [:seats_left, :booking_open?]
+  @course_load [:seats_left, :booking_open?, :ended?]
 
   @impl true
   def mount(%{"slug" => slug} = params, _session, socket) do
@@ -357,7 +357,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
   end
 
   defp json_ld(course) do
-    if Date.before?(course.date, ShopTime.today()) do
+    if course.ended? do
       nil
     else
       %{

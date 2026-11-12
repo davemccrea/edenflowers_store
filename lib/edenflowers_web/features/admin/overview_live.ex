@@ -221,9 +221,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     actor = socket.assigns.current_user
     today = Edenflowers.ShopTime.today()
 
-    {overdue, due} =
-      Orders.list_orders_due_soon!(actor: actor)
-      |> Enum.split_with(&Date.before?(&1.fulfillment_date, today))
+    {overdue, due} = Enum.split_with(Orders.list_orders_due_soon!(actor: actor), & &1.overdue?)
 
     {owed, to_refund} = actor |> balance_rows() |> Enum.split_with(&Decimal.positive?(&1.amount))
     payment_overdue = Enum.filter(owed, & &1.overdue?)

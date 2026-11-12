@@ -104,10 +104,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 <.badge
                   :if={!@order.settled?}
                   href="#order-payment-summary"
-                  tone={if Decimal.positive?(@order.balance), do: :warning, else: :error}
+                  tone={if @order.to_collect?, do: :warning, else: :error}
                   class="tabular-nums xl:hidden"
                 >
-                  {if Decimal.positive?(@order.balance),
+                  {if @order.to_collect?,
                     do: ~t"To collect #{amount = Format.currency(@order.balance, @locale)}",
                     else: ~t"To refund #{amount = Format.currency(Decimal.abs(@order.balance), @locale)}"}
                   <.icon name="hero-arrow-down" class="h-3 w-3" />
@@ -405,7 +405,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 />
               </.balance_panel>
               <.payment_link
-                :if={@order.payment_link_open? && Decimal.positive?(@order.balance) && !@order.gift_voucher_sale?}
+                :if={@order.payment_link_open? && !@order.gift_voucher_sale?}
                 order={@order}
                 payment_message_urls={@payment_message_urls}
               />

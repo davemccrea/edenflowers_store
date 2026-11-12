@@ -54,7 +54,7 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
           />
 
           <%= cond do %>
-            <% @payable.status == :cancelled -> %>
+            <% @payable.cancelled? -> %>
               <h1 class="page-title mb-6">{~t"Booking cancelled"}</h1>
               <p class="leading-relaxed" data-testid="pay-cancelled">
                 {~t"This booking has been cancelled, so there is nothing to pay. If you have any questions, just get in touch."}
@@ -166,7 +166,7 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
 
     title =
       cond do
-        registration.status == :cancelled ->
+        registration.cancelled? ->
           ~t"Booking cancelled"
 
         registration.refunded? ->

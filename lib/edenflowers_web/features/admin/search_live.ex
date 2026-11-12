@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
 
     {:ok,
      socket
-     |> assign(locale: Localize.get_locale(), limit: @limit, today: Edenflowers.ShopTime.today())}
+     |> assign(locale: Localize.get_locale(), limit: @limit)}
   end
 
   @impl true
@@ -82,7 +82,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
               <p class="text-base-content/75 text-sm">{~t"Search again in a moment."}</p>
             </.widget>
           </:failed>
-          <.results results={results} term={@term} limit={@limit} locale={@locale} today={@today} />
+          <.results results={results} term={@term} limit={@limit} locale={@locale} />
         </.async_result>
       </.admin_page>
     </Layouts.admin>
@@ -93,7 +93,6 @@ defmodule EdenflowersWeb.Admin.SearchLive do
   attr :term, :string, required: true
   attr :limit, :integer, required: true
   attr :locale, :string, required: true
-  attr :today, Date, required: true
 
   defp results(assigns) do
     # The kind holding the closest match comes first; equally close kinds keep their usual order.
@@ -133,7 +132,6 @@ defmodule EdenflowersWeb.Admin.SearchLive do
         term={@term}
         limit={@limit}
         locale={@locale}
-        today={@today}
       />
     </div>
     """
@@ -144,7 +142,6 @@ defmodule EdenflowersWeb.Admin.SearchLive do
   attr :term, :string, required: true
   attr :limit, :integer, required: true
   attr :locale, :string, required: true
-  attr :today, Date, required: true
 
   defp section(%{section: :orders} = assigns) do
     ~H"""
@@ -273,7 +270,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
       </:facts>
       <:status :let={course}>
         <.badge :if={course.draft} tone={:neutral}>{~t"Draft"}</.badge>
-        <.badge :if={Date.before?(course.date, @today)} tone={:tag}>{dpgettext("admin", "course", "Past")}</.badge>
+        <.badge :if={course.ended?} tone={:tag}>{dpgettext("admin", "course", "Past")}</.badge>
       </:status>
     </.result_box>
     """

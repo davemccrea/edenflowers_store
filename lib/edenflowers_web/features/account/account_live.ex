@@ -36,7 +36,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
      |> assign(code_form: to_form(%{"code" => ""}, as: :confirm))
      |> assign(locale: Format.locale())
      |> assign(orders: orders(user))
-     |> assign(subscriptions: subscriptions(user))
+     |> assign(subscriptions: Orders.list_my_subscriptions!(actor: user))
      |> assign_subscription_path()
      |> assign(registrations: registrations(user))
      |> assign(past_visible: @past_visible)
@@ -291,7 +291,11 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   def handle_info(:subscriptions_changed, socket) do
     user = socket.assigns.current_user
-    {:noreply, socket |> assign(subscriptions: subscriptions(user), orders: orders(user)) |> assign_timeline()}
+
+    {:noreply,
+     socket
+     |> assign(subscriptions: Orders.list_my_subscriptions!(actor: user), orders: orders(user))
+     |> assign_timeline()}
   end
 
   attr :id, :string, required: true
@@ -507,11 +511,6 @@ defmodule EdenflowersWeb.Account.AccountLive do
   end
 
   defp assign_subscription_path(socket), do: assign(socket, subscription_path: nil)
-
-  defp subscriptions(user) do
-    Orders.list_my_subscriptions!(actor: user)
-    |> Enum.sort_by(&(&1.state == :cancelled))
-  end
 
   defp order_cancel_error_message(%Ash.Error.Invalid{errors: [%{message: message} | _]}) when is_binary(message),
     do: message
