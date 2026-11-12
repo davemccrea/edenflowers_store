@@ -22,11 +22,13 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmail do
   end
 
   defp send_email(changeset) do
-    order = Ash.load!(changeset.data, :customer_first_name, authorize?: false)
+    order = Ash.load!(changeset.data, load(), authorize?: false)
     edits = Edits.from_changeset(changeset)
 
-    case email(order) do
-      {:ok, kind, email} ->
+    case photo(order) do
+      {:ok, photo} ->
+        {kind, email} = email(order, order.email_delivery_photo, photo)
+
         changeset
         |> Ash.Changeset.set_context(%{paper_trail_metadata: Map.put(Edits.for_log(edits), :fulfillment_email, kind)})
         |> deliver(order, Edits.apply_to(email, edits))
@@ -55,15 +57,21 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmail do
 
   defp email_error(error), do: ~t"Failed to send fulfillment email: #{error = inspect(error)}"
 
-  defp email(%{email_delivery_photo: true, delivery_photo_slug: slug} = order)
-       when is_binary(slug) and byte_size(slug) > 0 do
-    with {:ok, jpeg} <- fetch_small_photo(slug), do: {:ok, "left_at_door", Email.order_left_at_door(order, jpeg)}
-  end
+  @doc "What the order is loaded with to build its email."
+  def load, do: [:customer_first_name]
 
-  defp email(%{email_delivery_photo: true}),
-    do: {:error, ~t"Delivery photo is missing."}
+  @doc """
+  The email for an order loaded with `load/0`, and its name for the log:
+  Left at the door with `photo` attached when `photo?`, else Delivered.
+  """
+  def email(order, true, photo), do: {"left_at_door", Email.order_left_at_door(order, photo)}
+  def email(order, _photo?, _photo), do: {"delivered", Email.order_delivered(order)}
 
-  defp email(order), do: {:ok, "delivered", Email.order_delivered(order)}
+  defp photo(%{email_delivery_photo: true, delivery_photo_slug: slug}) when is_binary(slug) and byte_size(slug) > 0,
+    do: fetch_small_photo(slug)
+
+  defp photo(%{email_delivery_photo: true}), do: {:error, ~t"Delivery photo is missing."}
+  defp photo(_order), do: {:ok, nil}
 
   # A phone photo can be 10 MB or more. 1600 px at quality 80 comes to a few
   # hundred KB: small enough for any inbox, sharp enough to spot a doorstep.
