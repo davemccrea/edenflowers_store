@@ -21,7 +21,9 @@ defmodule EdenflowersWeb.Admin.PubSubTest do
 
   test "a burst shares its first refresh deadline and later changes schedule another" do
     socket = %Phoenix.LiveView.Socket{assigns: %{__changed__: %{}}}
-    socket = PubSub.schedule_refresh(socket, :table, 10)
+    # Long enough that the first timer is still pending at the second call, even
+    # when the first call has to load modules.
+    socket = PubSub.schedule_refresh(socket, :table, 200)
 
     socket = PubSub.schedule_refresh(socket, :table, 60_000)
     assert_receive {:admin_refresh, :table}, 500
