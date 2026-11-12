@@ -1,11 +1,10 @@
 ---
 id: TASK-192
-title: >-
-  Close a cancelled order's Payment Link, with one link rule for orders and
-  bookings
-status: needs-triage
+title: Close a cancelled order's Payment Link
+status: done
 assignee: []
 created_date: '2026-11-12 06:22'
+updated_date: '2026-11-12 07:10'
 labels:
   - spec
   - customers
@@ -29,37 +28,53 @@ ordinal: 357000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-A Payment Link takes no money once its order or booking is cancelled, because orders and bookings read one rule for when a link is open.
+A Payment Link takes no money once its order is cancelled.
 
-**Why:** The glossary says a link asks for nothing once the purchase is cancelled. A booking's link follows that; an order's does not, so a customer may be able to pay through the link of a cancelled order while the page tells them there is nothing to pay. The rule is written once per resource and again in each pay page, and the copies already disagree.
+**Why:** Confirmed by a failing test on 2026-11-12: a custom order that had a Payment Link and was then cancelled keeping an unpaid cancellation charge shows "Order cancelled, nothing to pay" with a working Stripe form for the charge beneath it, and preparing a link payment returns a client secret. The glossary says a link asks for nothing once the purchase is cancelled, and a cancelled booking's link already behaves that way.
 
 ## Problem
 
-- **`payment_link_open?` differs.** Order: `not is_nil(payment_link_token) and payable?` (`order.ex:1030`). Booking: the same plus `and status in [:pending, :confirmed]` (`course_registration.ex:324-326`). `payable?` is `balance > 0 and not refunded?` (`payable.ex:286`). The order only knows about cancellation in its page template (`pay_live.ex:55`).
-- **Suspected bug, read from the code and not reproduced.** A cancelled order with an unpaid cancellation charge and a link token has `balance > 0`, so `payment_link_open?` is true. `PrepareLinkPayment.open/1` (`prepare_link_payment.ex:29`) would then accept a charge, and `PaymentLink.payment_form` (`orders/order/payment_link.ex:113`) may render the Stripe form under "nothing to pay". The existing "cancelling with money retained" test (`payment_link_states_test.exs`, around 277-296) seeds the charge as already paid, so it does not cover this.
-- **`paid?` differs.** Order: `committed? and payment_status == :paid and not cancelled?` (`order.ex:936-943`). Booking: `status == :confirmed and not refunded? and balance <= 0` (`course_registration.ex:296`).
-- **Page state is decided four times.** A `cond` over cancelled / refunded / paid / confirming / pay in each template (`pay_live.ex:54-91`, `course_pay_live.ex:56-87`) and again for each title (`pay_live.ex:207-213`, `course_pay_live.ex:167-180`). They differ: only the course page has a "link closed" branch; "confirming" checks `payment_link_open?` on the course page only; "Left to pay" shows on `amount_paid > 0 && open` for orders (`pay_live.ex:137`) and on `amount_held > 0 and not paid? and open` for bookings (`course_pay_live.ex:118-122`).
+`Order.payment_link_open?` is `not is_nil(payment_link_token) and payable?` (`order.ex:1030`), with no cancelled check. `payable?` is `balance > 0 and not refunded?` (`payable.ex:286`), and an unpaid cancellation charge leaves a balance. Cancelling does not clear the token. Everything that reads the calculation is wrong for such an order: the pay page's form (`lib/edenflowers_web/payment_link.ex`), `PrepareLinkPayment.open/1`, the customer account's "pay now" (`order/customer.ex:68`) and the order details email.
+
+Jennie cannot open a link on an already cancelled order (`order/admin.ex:669`), so only orders that had a link before cancelling are affected.
+
+## Decisions (grilled 2026-11-12)
+
+- Cancelling closes the link. Jennie collects an unpaid charge herself and records it by hand.
+- A link payment that still succeeds on a cancelled order (the form was already open) is recorded as it is today, leaving Jennie a Balance to refund. `record_link_payment` gets no cancelled guard.
+- `paid?` and the pay pages' "Left to pay" line stay as each resource has them.
+- No link-state calculation and no rewrite of the pay pages: there is no known wrong case once the rule is fixed.
+- `record_link_payment` and the `reconcile_payment` trigger stay where they are.
 
 ## What to build
 
-Start with a failing test for the cancelled order with an unpaid charge and a link token. If it passes, the bug is not real: record that here and drop the priority to medium.
+Add the cancelled check to the order's `payment_link_open?`, with the failing test from the `repro-task-192` worktree. It stays an expression (ADR 0007: `subscription.ex:578` filters on it).
 
-Then move `payment_link_open?` and `paid?` into the `Payable` fragment, built on `committed?` and `cancelled?`, which each resource already supplies. Add one calculation there for where a link stands (cancelled, refunded, paid, payable, closed). Both pay pages and `PrepareLinkPayment` read it. "Confirming" (the Stripe-return overlay) stays in the page: it is UI state.
-
-ADR 0002 intends this. ADR 0007 applies: `payment_link_open?` is filtered on (`subscription.ex:578`), so it stays an expression; the new link-state calculation starts as an expression and is measured.
-
-## Still to decide (grill before implementing)
-
-- Should a cancelled order's unpaid cancellation charge be payable through its link at all? The glossary says cancelling leaves a Balance to collect "to settle with the customer". If Jennie should be able to send a link for it, the rule is not simply "cancelled closes the link", and the booking's rule is the one that changes.
-- Which `paid?` definition is right for both, and which "Left to pay" condition.
-- Whether `record_link_payment` and the `reconcile_payment` trigger's `where` (near-identical in both resources) move into `Payable` in the same task.
-- Whether the fix for the bug ships first on its own and the unification follows as a second spec.
+Only if `not cancelled?` gives the same answer as the booking's `status in [:pending, :confirmed]` for every booking status: define `payment_link_open?` once in the `Payable` fragment and delete both resources' copies. If they are not equivalent, leave the booking's as it is and say why in the notes.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A test covers a cancelled order with an unpaid cancellation charge and a Payment Link: the link page shows no payment form and preparing a link payment is refused
-- [ ] #2 payment_link_open? and paid? are defined once, in the Payable fragment, and Order and CourseRegistration no longer define their own
-- [ ] #3 Both pay pages choose their heading, body and title from one link-state calculation instead of their own cond over raw fields
-- [ ] #4 The link states (cancelled, refunded, paid, payable, closed) are tested at the resource for both orders and bookings; each pay page keeps only wiring tests
+- [x] #1 A test covers a custom order with a Payment Link, cancelled keeping an unpaid cancellation charge: the link page shows no payment form and preparing a link payment is refused with :link_closed
+- [x] #2 The customer's account no longer offers pay now for that order
+- [x] #3 payment_link_open? is defined once in Payable if the order and booking rules are equivalent; otherwise the notes say why the booking keeps its own
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+payment_link_open? now lives once in Payable (not is_nil(payment_link_token) and payable? and not cancelled?); a booking's only statuses are pending, confirmed and cancelled, so the booking's rule is unchanged. The admin order page also hides Get payment link on a cancelled order. Not checked: Stripe test mode in a browser, and whether production holds a cancelled order with an open link and an unpaid charge.
+<!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-11-12 06:38
+
+---
+
+Grilled with David on 2026-11-12, then cut down after a Ponytail review of the plan: the one-line fix ships on its own; the link-state calculation and pay page rewrite were dropped for lack of a wrong case. Not checked: whether production already holds a cancelled order with an open link and an unpaid charge.
+
+---
+<!-- COMMENTS:END -->

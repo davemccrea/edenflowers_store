@@ -411,6 +411,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|button[phx-click="open_cancel"]|, "Cancel order")
   end
 
+  test "a cancelled order with an unpaid cancellation charge offers no payment link", %{conn: conn, admin: admin} do
+    order = placed_order(origin: :custom, payment_intent_id: nil)
+    Orders.cancel_order!(order, %{cancellation_charge: "30.00", email_customer?: false}, actor: admin)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    refute has_element?(view, ~s|button[phx-click="open_payment_link"]|)
+  end
+
   # A voucher sale has no fulfillment date for its emails' previews to name.
   test "a gift voucher sold in the shop is paid in person, or cancelled", %{conn: conn, admin: admin} do
     {:ok, sale} =

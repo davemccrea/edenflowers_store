@@ -320,13 +320,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
               expr(status == :confirmed or course.date < helsinki_today()) do
       description "Whether the Payment reminder is available for the accepted booking's Balance."
     end
-
-    calculate :payment_link_open?,
-              :boolean,
-              expr(not is_nil(payment_link_token) and payable? and status in [:pending, :confirmed]) do
-      description "Whether its Payment Link would take a payment now: it has one, something is payable, and it " <>
-                    "isn't cancelled."
-    end
   end
 
   identities do

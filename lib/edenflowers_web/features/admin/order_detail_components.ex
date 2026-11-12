@@ -601,7 +601,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       <.icon name="hero-envelope" class="h-4 w-4" />
       {~t"Send payment reminder"}
     </.button>
-    <.button :if={!@order.payment_link_open?} type="button" phx-click="open_payment_link" variant="secondary" size="sm">
+    <.button
+      :if={!@order.payment_link_open? and !@order.cancelled?}
+      type="button"
+      phx-click="open_payment_link"
+      variant="secondary"
+      size="sm"
+    >
       {~t"Get payment link"}
     </.button>
     """

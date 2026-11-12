@@ -296,6 +296,27 @@ defmodule EdenflowersWeb.PaymentLinkStatesTest do
     end
   end
 
+  test "a cancelled order's unpaid cancellation charge is not taken through its link", %{conn: conn} do
+    admin = generate(admin_user())
+    order = placed_order(origin: :custom, payment_intent_id: nil)
+    {:ok, order} = Edenflowers.Orders.open_payment_link(order, actor: admin)
+
+    {:ok, order} =
+      Edenflowers.Orders.cancel_order(order, %{cancellation_charge: "30.00", email_customer?: false}, actor: admin)
+
+    Mox.stub(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata, _customer ->
+      {:ok, %{id: "pi_cancelled", client_secret: "pi_cancelled_secret"}}
+    end)
+
+    {:ok, view, _html} = live(conn, PaymentLink.path_for(order))
+
+    assert has_element?(view, "[data-testid=pay-cancelled]")
+    refute has_element?(view, "#pay-form")
+
+    assert {:error, error} = Edenflowers.Orders.prepare_order_link_payment(order.payment_link_token, "30.00")
+    assert Edenflowers.Payments.Errors.NotPayable.find(error).reason == :link_closed
+  end
+
   for {locale, thanks} <- [{"sv-FI", "Tack"}, {"fi", "Kiitos"}, {"en-GB", "Thank you"}] do
     @tag locale: locale, thanks: thanks
     test "past course payment confirmation uses #{locale} without a future booking promise", ctx do
