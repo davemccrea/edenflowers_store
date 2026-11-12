@@ -47,6 +47,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
               type="text"
               inputmode="decimal"
               label={~t"Cancellation charge (€)"}
+              phx-debounce="400"
               class="input w-full tabular-nums"
             />
             <p class="text-base-content/75 text-sm">
@@ -406,6 +407,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           type="text"
           inputmode="decimal"
           label={~t"Amount received (€)"}
+          phx-debounce="400"
           required
           class="input w-full tabular-nums"
         />
@@ -505,6 +507,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           type="text"
           inputmode="decimal"
           label={~t"Amount (€)"}
+          phx-debounce="400"
           required
           class="input w-full tabular-nums"
         />
