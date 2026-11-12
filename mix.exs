@@ -109,7 +109,7 @@ defmodule Edenflowers.MixProject do
       {:gettext, "~> 1.0"},
       {:gettext_sigils, "~> 0.5"},
       # 1.5.0 makes `:und` a supported locale, so "en" resolves to :und and English ~q routes crash
-      {:localize, "~> 1.4.3 and < 1.5.0"},
+      {:localize, "~> 1.6.1"},
       {:localize_web, "~> 1.1.0"},
       # Telemetry
       {:telemetry_metrics, "~> 1.0"},
