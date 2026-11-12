@@ -39,7 +39,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail d
         do: Ash.Changeset.force_change_attribute(changeset, :payment_link_emailed_at, now),
         else: changeset
 
-    if Decimal.positive?(registration.amount_paid),
+    if receipt?(registration),
       do: Ash.Changeset.force_change_attribute(changeset, :receipt_emailed_at, now),
       else: changeset
   end
@@ -47,20 +47,29 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail d
   defp deliver(registration, edits) do
     # A booking Jennie enters opens its link as it is saved, after the preview she edited.
     url = if registration.payment_link_token, do: EdenflowersWeb.PaymentLink.url_for(registration)
-    email = registration |> Email.course_confirmation() |> Edits.apply_to(edits, url)
 
-    if Decimal.positive?(registration.amount_paid),
-      do: deliver_with_receipt(email, registration),
-      else: deliver_email(email)
-  end
-
-  defp deliver_with_receipt(email, registration) do
-    with {:ok, pdf} <- Receipt.generate(registration) do
-      email
-      |> Swoosh.Email.attachment(Receipt.attachment(pdf, registration.reference))
-      |> deliver_email()
+    with {:ok, pdf} <- receipt_pdf(registration) do
+      registration |> email(pdf) |> Edits.apply_to(edits, url) |> deliver_email()
     end
   end
+
+  @doc """
+  The confirmation for a booking loaded with `load/0`, its course in the
+  booking's language, with the receipt `pdf` attached only when money was
+  received.
+  """
+  def email(registration, pdf) do
+    email = Email.course_confirmation(registration)
+
+    if receipt?(registration),
+      do: Swoosh.Email.attachment(email, Receipt.attachment(pdf, registration.reference)),
+      else: email
+  end
+
+  defp receipt_pdf(registration),
+    do: if(receipt?(registration), do: Receipt.generate(registration), else: {:ok, nil})
+
+  defp receipt?(registration), do: Decimal.positive?(registration.amount_paid)
 
   defp deliver_email(email) do
     case Mailer.deliver(email) do
@@ -69,17 +78,12 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail d
     end
   end
 
+  @doc "What the booking is loaded with to build its email and receipt."
+  def load, do: [:first_name, :amount_paid, :balance, :payment_link_open?] ++ Receipt.registration_load()
+
   defp load_for_send(registration) do
     registration
-    |> Ash.load!(
-      [
-        :first_name,
-        :amount_paid,
-        :balance,
-        :payment_link_open?
-      ] ++ Receipt.registration_load(),
-      actor: system_actor()
-    )
+    |> Ash.load!(load(), actor: system_actor())
     |> translate_course()
   end
 
