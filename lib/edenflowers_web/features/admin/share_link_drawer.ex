@@ -24,6 +24,7 @@ defmodule EdenflowersWeb.Admin.ShareLinkDrawer do
   alias Edenflowers.Marketing
 
   attr :id, :string, required: true, doc: "the drawer's id"
+  attr :compact, :boolean, default: false, doc: "icon only on phones, for a crowded sticky header"
 
   @doc "Opens the share link drawer `id`."
   def open_button(assigns) do
@@ -34,10 +35,10 @@ defmodule EdenflowersWeb.Admin.ShareLinkDrawer do
       phx-click={JS.exec("phx-show", to: "##{@id}")}
       variant="secondary"
       size="sm"
-      class="max-md:btn-square"
+      class={@compact && "max-md:btn-square"}
     >
       <.icon name="hero-link" class="h-4 w-4" />
-      <span class="max-md:sr-only">{~t"Share link"}</span>
+      <span class={@compact && "max-md:sr-only"}>{~t"Share link"}</span>
     </.button>
     """
   end
@@ -104,7 +105,7 @@ defmodule EdenflowersWeb.Admin.ShareLinkDrawer do
                     phx-value-tag={value}
                     phx-target={@myself}
                     aria-pressed={to_string(chosen?(@form, parameter, value))}
-                    class="btn btn-xs btn-ghost rounded-full font-normal shadow-none aria-pressed:btn-primary pointer-coarse:btn-sm"
+                    class="btn btn-xs rounded-full font-normal shadow-none aria-pressed:btn-primary not-aria-pressed:btn-ghost pointer-coarse:btn-sm"
                   >
                     {value}
                   </button>
