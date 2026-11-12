@@ -38,7 +38,7 @@ defmodule EdenflowersWeb.Admin.DeviceSettings do
       >
         <div class="min-w-0">
           <label for="push-toggle" class="text-base-content text-sm font-semibold">
-            {~t"New order notifications"}
+            {~t"New order and booking notifications"}
           </label>
           <p id="push-toggle-help" class="mt-0.5 text-sm" aria-live="polite">
             <span class="text-base-content/75 hidden group-data-[state=checking]:inline group-data-[state=off]:inline group-data-[state=on]:inline">

@@ -1,6 +1,6 @@
 defmodule Edenflowers.Orders.Changes.NotifyShop do
   @moduledoc """
-  Tells Jennie about a new order or subscription, with `notice: :reminder`
+  Tells Jennie about a new order, subscription or course booking, with `notice: :reminder`
   that an order starts within the hour, or with `notice: :cancelled` that its
   customer cancelled it: an email to the shop's inbox, and a
   push to every admin device that turned notifications on. Both are queued in
