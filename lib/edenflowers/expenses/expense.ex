@@ -249,7 +249,8 @@ defmodule Edenflowers.Expenses.Expense do
 
     action :paid_totals, {:array, :map} do
       description "The totals of expenses paid between two dates, inclusive, one per currency, euros first: " <>
-                    "what the monthly report's expense sheet sums for a month."
+                    "what the monthly report's expense sheet sums for a month. One with no currency is left out until " <>
+                    "Jennie fills it in, since its review asks her to."
 
       argument :from, :date, allow_nil?: false
       argument :to, :date, allow_nil?: false
@@ -259,7 +260,9 @@ defmodule Edenflowers.Expenses.Expense do
 
         with {:ok, expenses} <-
                __MODULE__
-               |> Ash.Query.filter(paid_on >= ^from and paid_on <= ^to and not is_nil(total_amount))
+               |> Ash.Query.filter(
+                 paid_on >= ^from and paid_on <= ^to and not is_nil(total_amount) and not is_nil(currency)
+               )
                |> Ash.read(Ash.Context.to_opts(context)) do
           {:ok,
            expenses

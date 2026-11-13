@@ -553,7 +553,8 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     paid_expense(today, "40.00", :eur)
     paid_expense(Date.beginning_of_month(today), "2.50", :eur)
     paid_expense(today, "100.00", :sek)
-    # Paid last month, scheduled later or unpaid: none counts yet.
+    # Paid last month, scheduled later, unpaid or in no currency yet: none counts.
+    paid_expense(today, "500.00", nil)
     paid_expense(Date.add(Date.beginning_of_month(today), -1), "500.00", :eur)
     paid_expense(Date.add(today, 1), "500.00", :eur)
     paid_expense(nil, "500.00", :eur)
@@ -563,6 +564,8 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     assert has_element?(view, "#expenses-paid", "42,50\u00A0€")
     assert has_element?(view, "#expenses-paid", "SEK")
     refute has_element?(view, "#expenses-paid", "542,50\u00A0€")
+    # One line per currency: euros and kronor, no blank one for the expense in no currency.
+    assert view |> element("#expenses-paid") |> render() |> then(&Regex.scan(~r/class="block"/, &1)) |> length() == 2
   end
 
   defp paid_expense(paid_on, amount, currency) do
