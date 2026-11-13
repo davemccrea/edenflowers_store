@@ -17,10 +17,11 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
 
   oban do
     triggers do
+      # Email jobs get 16 attempts, backing off over about 18 hours, to outlast an email provider outage (ADR 0005).
       trigger :send_payment_link_email do
         action :email_payment_link
         queue :default
-        max_attempts 3
+        max_attempts 16
         lock_for_update? false
         scheduler_cron false
         worker_module_name Edenflowers.Courses.Workers.SendPaymentLinkEmail

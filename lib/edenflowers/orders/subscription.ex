@@ -734,12 +734,13 @@ defmodule Edenflowers.Orders.Subscription do
               )
       end
 
+      # The emails below get 16 attempts, backing off over about 18 hours, to outlast an email provider outage (ADR 0005).
       # Queued only by :activate, so subscriptions started before this email
       # existed are never sent one.
       trigger :send_setup_email do
         action :send_setup_email
         queue :default
-        max_attempts 3
+        max_attempts 16
         lock_for_update? false
         scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendSubscriptionSetupEmail
@@ -752,7 +753,7 @@ defmodule Edenflowers.Orders.Subscription do
       trigger :send_cancellation_confirmed_email do
         action :send_cancellation_confirmed_email
         queue :default
-        max_attempts 3
+        max_attempts 16
         lock_for_update? false
         scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendSubscriptionCancellationConfirmedEmail
@@ -764,7 +765,7 @@ defmodule Edenflowers.Orders.Subscription do
       trigger :send_cancelled_email do
         action :send_cancelled_email
         queue :default
-        max_attempts 3
+        max_attempts 16
         lock_for_update? false
         scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendSubscriptionCancelledEmail

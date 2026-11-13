@@ -15,12 +15,13 @@ defmodule Edenflowers.Orders.Order.Emails do
 
   oban do
     triggers do
+      # Email jobs get 16 attempts, backing off over about 18 hours, to outlast an email provider outage (ADR 0005).
       # Queued by QueueEmail when Stripe takes a payment. A payment
       # Jennie records gets its receipt only when she sends one.
       trigger :send_receipt_email do
         action :send_receipt_email
         queue :default
-        max_attempts 3
+        max_attempts 16
         lock_for_update? false
         scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendReceiptEmail
@@ -33,7 +34,7 @@ defmodule Edenflowers.Orders.Order.Emails do
       trigger :send_order_details_email do
         action :send_order_details_email
         queue :default
-        max_attempts 3
+        max_attempts 16
         lock_for_update? false
         scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendOrderDetailsEmail
@@ -46,7 +47,7 @@ defmodule Edenflowers.Orders.Order.Emails do
       trigger :send_order_updated_email do
         action :send_order_updated_email
         queue :default
-        max_attempts 3
+        max_attempts 16
         lock_for_update? false
         scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendOrderUpdatedEmail
@@ -59,7 +60,7 @@ defmodule Edenflowers.Orders.Order.Emails do
       trigger :send_payment_failed_email do
         action :send_payment_failed_email
         queue :default
-        max_attempts 3
+        max_attempts 16
         lock_for_update? false
         scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendPaymentFailedEmail
@@ -74,7 +75,7 @@ defmodule Edenflowers.Orders.Order.Emails do
       trigger :send_payment_received_email do
         action :send_payment_received_email
         queue :default
-        max_attempts 3
+        max_attempts 16
         lock_for_update? false
         scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendPaymentReceivedEmail
@@ -89,7 +90,7 @@ defmodule Edenflowers.Orders.Order.Emails do
       trigger :send_fulfillment_email do
         action :send_fulfillment_email
         queue :default
-        max_attempts 3
+        max_attempts 16
         lock_for_update? false
         scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendFulfillmentEmail

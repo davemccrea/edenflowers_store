@@ -1,6 +1,6 @@
 # Emails are sent once by a queued job
 
-Every email the shop sends in the background is one Oban job with a few attempts: an AshOban trigger when it's about a record, a plain `Oban.Worker` when it isn't. Queuing it means "send this once". No scheduler looks for unsent emails, so nothing has to stop a scheduler sending an email Jennie chose not to send, and nothing retries an email for days.
+Every email the shop sends in the background is one Oban job: an AshOban trigger when it's about a record, a plain `Oban.Worker` when it isn't. Queuing it means "send this once". No scheduler looks for unsent emails, so nothing has to stop a scheduler sending an email Jennie chose not to send, and nothing retries an email for days. An email about a record retries for about 18 hours (16 attempts), long enough to outlast an outage at the email provider; the rest get a few attempts.
 
 A job that fails reaches ErrorTracker, which emails the error alert address the first time an error appears, and a developer retries the job from `/oban`. That's the only failure path most emails need.
 
