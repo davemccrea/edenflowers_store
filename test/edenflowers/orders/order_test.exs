@@ -287,14 +287,16 @@ defmodule Edenflowers.Orders.OrderTest do
       assert Orders.get_storefront_cart!(visitor_id, actor: nil).promotion_code == "LINK15"
     end
 
-    test "keeps a code already on the cart" do
+    test "replaces a code already on the cart, with the new code's terms" do
       visitor_id = Ecto.UUID.generate()
-      generate(promotion(code: "FIRST"))
-      generate(promotion(code: "SECOND"))
+      generate(promotion(code: "FIRST", discount_rate: "0.10"))
+      generate(promotion(code: "SECOND", discount_rate: "0.15"))
       Orders.open_cart_with_code!(visitor_id, "FIRST", actor: nil)
 
-      refute Orders.open_cart_with_code!(visitor_id, "SECOND", actor: nil)
-      assert Orders.get_storefront_cart!(visitor_id, actor: nil).promotion_code == "FIRST"
+      assert Orders.open_cart_with_code!(visitor_id, "SECOND", actor: nil)
+      cart = Orders.get_storefront_cart!(visitor_id, actor: nil)
+      assert cart.promotion_code == "SECOND"
+      assert Decimal.equal?(cart.discount_rate, "0.15")
     end
 
     test "an unknown or used-up code opens no cart" do
@@ -305,6 +307,15 @@ defmodule Edenflowers.Orders.OrderTest do
       refute Orders.open_cart_with_code!(visitor_id, "NOPE", actor: nil)
       refute Orders.open_cart_with_code!(visitor_id, "USED", actor: nil)
       assert Orders.get_storefront_cart!(visitor_id, actor: nil) == nil
+    end
+
+    test "an unusable code leaves the cart's code alone" do
+      visitor_id = Ecto.UUID.generate()
+      generate(promotion(code: "FIRST"))
+      Orders.open_cart_with_code!(visitor_id, "FIRST", actor: nil)
+
+      refute Orders.open_cart_with_code!(visitor_id, "NOPE", actor: nil)
+      assert Orders.get_storefront_cart!(visitor_id, actor: nil).promotion_code == "FIRST"
     end
   end
 

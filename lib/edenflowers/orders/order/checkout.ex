@@ -527,8 +527,8 @@ defmodule Edenflowers.Orders.Order.Checkout do
 
     action :open_cart_with_code, :boolean do
       description "Puts a code from a link (`?code=` on any storefront page) on the browser's cart, opening the " <>
-                    "cart if it has none yet. A code already on the cart is kept, and an unknown or used-up code " <>
-                    "changes nothing, not even opening a cart. Does nothing for an admin, so Jennie scanning a card " <>
+                    "cart if it has none yet. It replaces a code already on the cart: the link is the customer's " <>
+                    "latest choice. An unknown or used-up code changes nothing, not even opening a cart. Does nothing for an admin, so Jennie scanning a card " <>
                     "to check it doesn't put it on her own cart. Returns whether the cart now carries this code."
 
       argument :visitor_id, :uuid do
@@ -553,13 +553,9 @@ defmodule Edenflowers.Orders.Order.Checkout do
             cart = Edenflowers.Orders.create_for_checkout!(%{visitor_id: visitor_id}, opts)
 
             cart =
-              if is_nil(cart.promotion_id) do
-                case Edenflowers.Orders.add_promotion_from_link(cart, code, opts) do
-                  {:ok, cart} -> cart
-                  {:error, _invalid_code} -> cart
-                end
-              else
-                cart
+              case Edenflowers.Orders.add_promotion_from_link(cart, code, opts) do
+                {:ok, cart} -> cart
+                {:error, _invalid_code} -> cart
               end
 
             {:ok, String.downcase(cart.promotion_code || "") == String.downcase(code)}

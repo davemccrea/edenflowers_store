@@ -23,7 +23,7 @@ Opening a site link with ?code=… puts that promo code on the visitor's cart, s
 Decisions (grilled 2026-11-01 with TASK-162.3):
 - Any storefront URL accepts ?code=. The root redirect already keeps the query string, so edenflowers.fi/?code=AB12CD reaches the localised page with it.
 - The code is held for the visitor and applied to the cart as soon as there is one, through the existing apply-promotion action and its rules (dates, usage limit).
-- If the cart already has a code, it is kept and the link's code is not applied (the same rule as the newsletter code at checkout, TASK-158).
+- If the cart already has a code, the link's code replaces it: opening the link is the customer's latest choice (changed 2026-11-13; before, the cart's code was kept, as for the newsletter code at checkout, TASK-158). An unusable link code leaves the cart's code alone.
 - An unknown or used-up code does nothing beyond the usual promo feedback at checkout. No error page.
 - Umami's 'Promo code applied' event fires as usual, and the link's UTM tags still count.
 
@@ -33,7 +33,7 @@ Open for implementation: where the code is held before a cart exists (session), 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 Opening a storefront link with ?code= applies a usable code to the visitor's cart
-- [x] #2 A code already on the cart is kept
+- [x] #2 A usable code replaces a code already on the cart
 - [x] #3 An unusable code fails quietly, with no error page
 <!-- AC:END -->
 
