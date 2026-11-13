@@ -47,6 +47,17 @@ defmodule Edenflowers.Bank.MissingReceiptsTest do
     assert Enum.map([long_before, other_amount], &reload(&1).bank_transaction_id) == [nil, nil]
   end
 
+  test "a scheduled expense isn't a paid receipt, so a payment quoting no reference doesn't link to one of two" do
+    connect()
+    first = seed_expense(total_amount: Decimal.new("50.00"), paid_on: days_ago(-1))
+    second = seed_expense(total_amount: Decimal.new("50.00"), paid_on: days_ago(-3))
+    stub_transactions([payment("tx-1", "50.00", days_ago(1))])
+
+    Bank.sync_bank_payments!(actor: system_actor())
+
+    assert Enum.map([first, second], &reload(&1).bank_transaction_id) == [nil, nil]
+  end
+
   describe "the payments missing a receipt" do
     test "are those booked over a week ago, or in a month that has ended, paying no expense and not dismissed" do
       today = Edenflowers.ShopTime.today()
@@ -74,6 +85,20 @@ defmodule Edenflowers.Bank.MissingReceiptsTest do
 
       assert [%{id: id}] = Bank.bank_payments_missing_receipt!(actor: @admin)
       assert id == transaction.id
+    end
+
+    test "lose the real payment once it pays the expense a wrong match left, and keep the wrong one" do
+      wrong = seed_transaction("wrong", days_ago(10))
+      seed_transaction("real", days_ago(9))
+      expense = seed_expense(paid_on: days_ago(10), bank_transaction_id: "wrong")
+      Expenses.mark_expense_unpaid!(expense, actor: @admin)
+
+      Expenses.mark_expense_paid_from_bank!(reload(expense), days_ago(9), %{bank_transaction_id: "real"},
+        actor: system_actor()
+      )
+
+      assert [%{id: id}] = Bank.bank_payments_missing_receipt!(actor: @admin)
+      assert id == wrong.id
     end
 
     test "lose one Jennie dismisses and get it back when she restores it" do
@@ -110,6 +135,14 @@ defmodule Edenflowers.Bank.MissingReceiptsTest do
 
       assert %{paid_on: paid_on} = Expenses.link_expense_bank_payment!(paid, days_ago(10), "tx-2", actor: @admin)
       assert paid_on == days_ago(20)
+    end
+
+    test "won't take an expense another payment linked since the picker loaded" do
+      expense = seed_expense(paid_on: days_ago(20))
+      Expenses.link_expense_bank_payment!(expense, days_ago(10), "tx-1", actor: system_actor())
+
+      assert {:error, _} = Expenses.link_expense_bank_payment(expense, days_ago(10), "tx-2", actor: @admin)
+      assert reload(expense).bank_transaction_id == "tx-1"
     end
   end
 

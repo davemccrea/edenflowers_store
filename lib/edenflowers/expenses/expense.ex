@@ -109,7 +109,8 @@ defmodule Edenflowers.Expenses.Expense do
     attribute :bank_transaction_id, :string do
       description "The bank's id for the payment that paid it: the one the bank sync settled it with, a card " <>
                     "payment linked by amount and date, or one Jennie linked by hand. So a payment quoting no " <>
-                    "reference settles one expense only. Kept when Jennie marks it unpaid, so a wrong match isn't repeated."
+                    "reference settles one expense only. Moved to unlinked_bank_transaction_ids when Jennie marks it " <>
+                    "unpaid or unlinks it, so a wrong match isn't repeated."
     end
 
     attribute :unlinked_bank_transaction_ids, {:array, :string} do
@@ -328,9 +329,12 @@ defmodule Edenflowers.Expenses.Expense do
     end
 
     update :mark_unpaid do
-      description "Clears the paid date, for an expense marked paid by mistake. A phone's date picker can't empty the field itself."
+      description "Clears the paid date, for an expense marked paid by mistake. A phone's date picker can't empty the " <>
+                    "field itself. A bank payment that marked it paid wasn't its payment, so it's unlinked."
+
+      require_atomic? false
       change set_attribute(:paid_on, nil)
-      change set_attribute(:matched_by_amount, false)
+      change Changes.ForgetBankPayment
     end
 
     read :awaiting_bank_payment do
@@ -381,8 +385,9 @@ defmodule Edenflowers.Expenses.Expense do
 
     read :paid_near_bank_payment do
       description "Expenses a payment out could be the receipt for, though it settles none: paid by other " <>
-                    "means within a week of the booking, as a card receipt is, with the same amount and " <>
-                    "currency, not linked to any payment, and not unlinked from this one. Earliest paid first."
+                    "means within a week of the booking, as a card receipt is (a scheduled one isn't paid yet), " <>
+                    "with the same amount and currency, not linked to any payment, and not unlinked from this " <>
+                    "one. Earliest paid first."
 
       argument :bank_transaction_id, :string, allow_nil?: false
       argument :amount, :decimal, allow_nil?: false, description: "The payment's amount, which must equal total_amount."
@@ -392,6 +397,7 @@ defmodule Edenflowers.Expenses.Expense do
       filter expr(
                total_amount == ^arg(:amount) and currency == ^arg(:currency) and is_nil(bank_transaction_id) and
                  paid_on >= date_add(^arg(:booked_on), -7, :day) and paid_on <= date_add(^arg(:booked_on), 7, :day) and
+                 paid_on <= helsinki_today() and
                  not fragment("? = ANY(?)", ^arg(:bank_transaction_id), unlinked_bank_transaction_ids)
              )
 
@@ -425,6 +431,8 @@ defmodule Edenflowers.Expenses.Expense do
       argument :booked_on, :date, allow_nil?: false, description: "The day the bank booked the payment."
       argument :bank_transaction_id, :string, allow_nil?: false
 
+      # Another payment may have linked it since Jennie's picker loaded.
+      change filter(expr(is_nil(bank_transaction_id)))
       change set_attribute(:bank_transaction_id, arg(:bank_transaction_id))
       change set_attribute(:matched_by_amount, false)
 
@@ -440,15 +448,7 @@ defmodule Edenflowers.Expenses.Expense do
 
       accept []
       require_atomic? false
-      change set_attribute(:matched_by_amount, false)
-
-      change fn changeset, _context ->
-        unlinked = changeset.data.unlinked_bank_transaction_ids ++ List.wrap(changeset.data.bank_transaction_id)
-
-        changeset
-        |> Ash.Changeset.force_change_attribute(:unlinked_bank_transaction_ids, unlinked)
-        |> Ash.Changeset.force_change_attribute(:bank_transaction_id, nil)
-      end
+      change Changes.ForgetBankPayment
     end
 
     read :unpaid_at do
@@ -477,8 +477,7 @@ defmodule Edenflowers.Expenses.Expense do
         description: "The payment quoted no reference, so only its amount says it pays this expense."
 
       change set_attribute(:paid_on, arg(:booked_on))
-      # Keeps the id of a payment that matched it wrongly, so that payment never settles another expense.
-      change atomic_update(:bank_transaction_id, expr(bank_transaction_id || ^arg(:bank_transaction_id)))
+      change set_attribute(:bank_transaction_id, arg(:bank_transaction_id))
       change set_attribute(:matched_by_amount, arg(:matched_by_amount))
     end
 

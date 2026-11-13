@@ -151,7 +151,9 @@ defmodule Edenflowers.Bank.SyncPaymentsTest do
       other = seed_expense(total_amount: Decimal.new("130.83"), date: ~D[2026-11-05])
       Bank.sync_bank_payments!(actor: system_actor())
 
-      assert %{paid_on: ~D[2026-11-11], matched_by_amount: false} = reload(expense)
+      assert %{paid_on: ~D[2026-11-11], matched_by_amount: false, bank_transaction_id: "tx-123453-130.83"} =
+               reload(expense)
+
       assert reload(other).paid_on == nil
     end
   end
