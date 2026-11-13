@@ -88,7 +88,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
               {~t"Needs review"}
             </.badge>
           </:col>
-          <:col :let={expense} field="date" sort={[cycle: [nil, :desc, :asc]]} label={~t"Date"} class="max-sm:hidden">
+          <:col :let={expense} field="date" sort={[cycle: [nil, :asc]]} label={~t"Date"} class="max-sm:hidden">
             <span :if={expense.date} class="whitespace-nowrap tabular-nums">
               {Format.date(expense.date, @locale)}
             </span>

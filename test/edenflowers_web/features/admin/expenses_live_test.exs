@@ -61,17 +61,6 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     assert newer_position < older_position
   end
 
-  test "lists expenses needing review first, then unpaid ones", %{conn: conn} do
-    create_expense("paid", "Paid Vendor", "Done", date: ~D[2026-03-10], paid_on: ~D[2026-03-10])
-    create_expense("unsure", "Unsure Vendor", "Check", date: ~D[2026-01-05], paid_on: ~D[2026-01-05], confidence: :low)
-    create_expense("unpaid", "Unpaid Vendor", "Pending", date: ~D[2026-01-01])
-
-    {:ok, _view, html} = live(conn, ~p"/admin/expenses")
-
-    positions = Enum.map(["Unsure Vendor", "Unpaid Vendor", "Paid Vendor"], &elem(:binary.match(html, &1), 0))
-    assert positions == Enum.sort(positions)
-  end
-
   test "filters to expenses that need review", %{conn: conn} do
     create_expense("unsure", "Unsure Vendor", "Check", confidence: :medium)
     create_expense("sure", "Sure Vendor", "Fine")
@@ -172,6 +161,26 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
 
     view |> form("#expense-form", form: %{paid_on: ""}) |> render_submit()
     assert Ash.get!(Expenses.Expense, expense.id, authorize?: false).paid_on == nil
+  end
+
+  test "says when the bank sync went by the amount alone, until Jennie unmarks it", %{conn: conn} do
+    expense = create_expense("by-amount", "Kukkatukku", "Flowers")
+
+    {:ok, _expense} =
+      Expenses.mark_expense_paid_from_bank(expense, ~D[2026-06-02], %{matched_by_amount: true},
+        actor: Edenflowers.Actors.system_actor()
+      )
+
+    {:ok, list, _html} = live(conn, ~p"/admin/expenses?needs_review=true")
+    assert has_element?(list, "[data-item-id]", "Kukkatukku")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
+    assert render(view) =~ "Matched by amount"
+    assert render(view) =~ "Needs review"
+
+    view |> element("#expense-actions button", "Mark unpaid") |> render_click()
+    refute render(view) =~ "Matched by amount"
+    refute render(view) =~ "Needs review"
   end
 
   test "marks a paid expense unpaid", %{conn: conn} do

@@ -75,7 +75,6 @@ defmodule Edenflowers.Expenses.Expense do
 
   alias Edenflowers.Events
   alias Edenflowers.Expenses.Changes
-  alias Edenflowers.Payments.ReferenceNumber
 
   attributes do
     uuid_primary_key :id
@@ -105,6 +104,19 @@ defmodule Edenflowers.Expenses.Expense do
 
     attribute :reference_number, :string do
       description "The payment reference printed on an invoice, without spaces. The bank sync matches the payment by it."
+    end
+
+    attribute :bank_transaction_id, :string do
+      description "The bank's id for the payment the bank sync settled it with, so a payment quoting no " <>
+                    "reference settles one expense only. Kept when Jennie marks it unpaid, so a wrong match isn't repeated."
+    end
+
+    attribute :matched_by_amount, :boolean do
+      allow_nil? false
+      default false
+
+      description "The bank sync marked it paid from a payment quoting no reference, going by the amount alone, " <>
+                    "and Jennie hasn't saved or unmarked it since. Her page says so, as the match can be wrong."
     end
 
     attribute :total_amount, :decimal do
@@ -168,11 +180,13 @@ defmodule Edenflowers.Expenses.Expense do
     calculate :needs_review,
               :boolean,
               expr(
-                is_nil(reviewed_at) and
-                  (confidence != :high or is_nil(date) or is_nil(vendor_name) or is_nil(total_amount) or
-                     is_nil(currency))
+                matched_by_amount or
+                  (is_nil(reviewed_at) and
+                     (confidence != :high or is_nil(date) or is_nil(vendor_name) or is_nil(total_amount) or
+                        is_nil(currency)))
               ) do
-      description "Claude was unsure or left a required field empty, and Jennie hasn't saved it since."
+      description "Claude was unsure or left a required field empty, or the bank sync marked it paid by amount " <>
+                    "alone, and Jennie hasn't saved it since."
     end
   end
 
@@ -184,18 +198,10 @@ defmodule Edenflowers.Expenses.Expense do
     defaults [:read, :destroy]
 
     read :admin_list do
-      description "The admin Expenses table: ones needing review first, since a paid one goes into the monthly report as Claude read it, then unpaid, soonest due, then newest receipt date."
+      description "The admin Expenses table, newest document date first. Undated ones lead, since Jennie has to date them."
       pagination offset?: true, keyset?: true, countable: true, required?: false
 
-      prepare build(
-                sort: [
-                  needs_review: :desc,
-                  paid: :asc,
-                  due_on: :asc_nils_last,
-                  date: :desc_nils_first,
-                  processed_at: :desc
-                ]
-              )
+      prepare build(sort: [date: :desc_nils_first, processed_at: :desc])
     end
 
     create :ingest do
@@ -271,6 +277,7 @@ defmodule Edenflowers.Expenses.Expense do
 
       require_atomic? false
       change set_attribute(:reviewed_at, &DateTime.utc_now/0)
+      change set_attribute(:matched_by_amount, false)
 
       change fn changeset, _context ->
         if Ash.Changeset.get_argument(changeset, :paid_today) do
@@ -295,6 +302,7 @@ defmodule Edenflowers.Expenses.Expense do
     update :mark_unpaid do
       description "Clears the paid date, for an expense marked paid by mistake. A phone's date picker can't empty the field itself."
       change set_attribute(:paid_on, nil)
+      change set_attribute(:matched_by_amount, false)
     end
 
     read :awaiting_bank_payment do
@@ -310,6 +318,36 @@ defmodule Edenflowers.Expenses.Expense do
       filter expr(
                reference_number == ^arg(:reference_number) and total_amount == ^arg(:amount) and
                  currency == ^arg(:currency) and (is_nil(paid_on) or paid_on > helsinki_today())
+             )
+    end
+
+    read :awaiting_unreferenced_bank_payment do
+      description "The unpaid or scheduled expenses a bank payment quoting no reference could settle: the same " <>
+                    "amount and currency, dated in the 60 days up to the day it was booked. Undated ones are " <>
+                    "left out, and so are older ones: a payment today rarely pays those, and Jennie marks them."
+
+      argument :amount, :decimal, allow_nil?: false, description: "The payment's amount, which must equal total_amount."
+      argument :currency, __MODULE__.Currency, allow_nil?: false
+      argument :booked_on, :date, allow_nil?: false, description: "The day the bank booked the payment."
+
+      filter expr(
+               total_amount == ^arg(:amount) and currency == ^arg(:currency) and date <= ^arg(:booked_on) and
+                 date >= date_add(^arg(:booked_on), -60, :day) and (is_nil(paid_on) or paid_on > helsinki_today())
+             )
+    end
+
+    read :paid_without_bank_payment do
+      description "The expenses of this amount and currency marked paid in the week up to a booking, by a receipt " <>
+                    "or by Jennie, not by the bank sync. A payment quoting no reference is probably one of " <>
+                    "theirs reaching the bank, so it must not settle another expense."
+
+      argument :amount, :decimal, allow_nil?: false, description: "The payment's amount, which must equal total_amount."
+      argument :currency, __MODULE__.Currency, allow_nil?: false
+      argument :booked_on, :date, allow_nil?: false, description: "The day the bank booked the payment."
+
+      filter expr(
+               total_amount == ^arg(:amount) and currency == ^arg(:currency) and is_nil(bank_transaction_id) and
+                 paid_on <= ^arg(:booked_on) and paid_on >= date_add(^arg(:booked_on), -7, :day)
              )
     end
 
@@ -332,17 +370,26 @@ defmodule Edenflowers.Expenses.Expense do
       description "The bank booked this expense's payment, so its paid date becomes the booking date, replacing a scheduled one."
       accept []
       argument :booked_on, :date, allow_nil?: false, description: "The day the bank booked the payment."
+      argument :bank_transaction_id, :string, description: "The bank's id for the payment, if it gave one."
+
+      argument :matched_by_amount, :boolean,
+        default: false,
+        description: "The payment quoted no reference, so only its amount says it pays this expense."
+
       change set_attribute(:paid_on, arg(:booked_on))
+      change set_attribute(:bank_transaction_id, arg(:bank_transaction_id))
+      change set_attribute(:matched_by_amount, arg(:matched_by_amount))
     end
 
     action :settle_from_bank, :boolean do
       description "Marks the one expense a booked bank payment settles paid on its booking date. " <>
-                    "Matches the reference number, amount and currency exactly; with no match or several, " <>
+                    "A payment quoting a reference must match it, the amount and the currency exactly. " <>
+                    "One quoting none settles the only expense of its amount and currency dated in the 60 days " <>
+                    "up to the booking, unless it has settled one already or one of that amount was marked " <>
+                    "paid by hand that week. With no match or several, " <>
                     "nothing changes and Jennie marks it by hand. Returns whether one was settled."
 
-      argument :reference_number, :string,
-        allow_nil?: false,
-        description: "The reference the payment quotes, spaced or not."
+      argument :reference_number, :string, description: "The reference the payment quotes, spaced or not, if any."
 
       argument :amount, :decimal,
         allow_nil?: false,
@@ -351,20 +398,10 @@ defmodule Edenflowers.Expenses.Expense do
       argument :currency, __MODULE__.Currency, allow_nil?: false
       argument :booked_on, :date, allow_nil?: false, description: "The day the bank booked the payment."
 
-      run fn input, context ->
-        %{reference_number: reference, amount: amount, currency: currency, booked_on: booked_on} = input.arguments
-        opts = Ash.Context.to_opts(context)
+      argument :bank_transaction_id, :string,
+        description: "The bank's id for the payment. Without one, a payment quoting no reference settles nothing."
 
-        with reference when is_binary(reference) <- ReferenceNumber.normalize(reference),
-             {:ok, [expense]} <-
-               Edenflowers.Expenses.expenses_awaiting_bank_payment(reference, amount, currency, opts),
-             {:ok, _expense} <- Edenflowers.Expenses.mark_expense_paid_from_bank(expense, booked_on, opts) do
-          {:ok, true}
-        else
-          {:error, error} -> {:error, error}
-          _no_single_match -> {:ok, false}
-        end
-      end
+      run Edenflowers.Expenses.Actions.SettleExpenseFromBank
     end
   end
 

@@ -31,6 +31,10 @@ defmodule Edenflowers.Expenses do
         action: :awaiting_bank_payment,
         args: [:reference_number, :amount, :currency]
 
+      define :expenses_awaiting_unreferenced_bank_payment,
+        action: :awaiting_unreferenced_bank_payment,
+        args: [:amount, :currency, :booked_on]
+
       define :mark_expense_paid_from_bank, action: :paid_from_bank, args: [:booked_on]
 
       define :settle_expense_from_bank,

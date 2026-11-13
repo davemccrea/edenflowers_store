@@ -58,6 +58,86 @@ defmodule Edenflowers.Bank.SyncPaymentsTest do
     assert reload(expense).paid_on == nil
   end
 
+  describe "a payment quoting no reference" do
+    test "settles the only expense of its amount dated on or before the booking" do
+      connect()
+      expense = seed_expense(total_amount: Decimal.new("130.83"), date: ~D[2026-11-03], reference_number: "26082089")
+      stub_transactions([payment("130.83", nil, "2026-11-13")])
+
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      assert %{paid_on: ~D[2026-11-13], matched_by_amount: true} = reload(expense)
+    end
+
+    test "leaves several expenses of its amount, and one dated after the booking or long before it, unpaid" do
+      connect()
+      twin_a = seed_expense(total_amount: Decimal.new("50.00"), date: ~D[2026-11-01])
+      twin_b = seed_expense(total_amount: Decimal.new("50.00"), date: ~D[2026-11-02])
+      later = seed_expense(total_amount: Decimal.new("75.00"), date: ~D[2026-11-14])
+      long_before = seed_expense(total_amount: Decimal.new("80.00"), date: ~D[2026-08-01])
+
+      stub_transactions([
+        payment("50.00", nil, "2026-11-13"),
+        payment("75.00", nil, "2026-11-13"),
+        payment("80.00", nil, "2026-11-13")
+      ])
+
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      assert Enum.map([twin_a, twin_b, later, long_before], &reload(&1).paid_on) == [nil, nil, nil, nil]
+    end
+
+    test "settles nothing when an expense of its amount was marked paid that week without the bank" do
+      connect()
+      seed_expense(total_amount: Decimal.new("100.00"), date: ~D[2026-11-11], paid_on: ~D[2026-11-11])
+      invoice = seed_expense(total_amount: Decimal.new("100.00"), date: ~D[2026-11-01])
+      stub_transactions([payment("100.00", nil, "2026-11-13")])
+
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      assert reload(invoice).paid_on == nil
+    end
+
+    test "the earlier of two payments settles the expense, whatever order the bank sends them in" do
+      connect()
+      expense = seed_expense(total_amount: Decimal.new("50.00"), date: ~D[2026-11-03])
+
+      stub_transactions([
+        %{payment("50.00", nil, "2026-11-11") | "entry_reference" => "tx-later"},
+        %{payment("50.00", nil, "2026-11-04") | "entry_reference" => "tx-earlier"}
+      ])
+
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      assert reload(expense).paid_on == ~D[2026-11-04]
+    end
+
+    test "settles one expense only, however often it is read again" do
+      connect()
+      stub_transactions([payment("130.83", nil, "2026-11-13")])
+      first = seed_expense(total_amount: Decimal.new("130.83"), date: ~D[2026-11-03])
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      second = seed_expense(total_amount: Decimal.new("130.83"), date: ~D[2026-11-10])
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      assert reload(first).paid_on == ~D[2026-11-13]
+      assert reload(second).paid_on == nil
+    end
+
+    test "doesn't settle again the expense Jennie marked unpaid after a wrong match" do
+      connect()
+      stub_transactions([payment("130.83", nil, "2026-11-13")])
+      expense = seed_expense(total_amount: Decimal.new("130.83"), date: ~D[2026-11-03])
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      Expenses.mark_expense_unpaid!(reload(expense), actor: %{admin: true})
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      assert %{paid_on: nil, matched_by_amount: false} = reload(expense)
+    end
+  end
+
   test "reads nothing before the bank is connected or once the consent has ended" do
     Req.Test.stub(EnableBankingAPI, fn _conn -> flunk("Enable Banking was called") end)
     assert :ok = Bank.sync_bank_payments(actor: system_actor())

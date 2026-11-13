@@ -57,6 +57,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
               <.badge :if={@expense.paid_on && !@expense.scheduled} tone={:success} icon="hero-check">
                 {~t"Paid #{date = Format.date(@expense.paid_on, @locale)}"}
               </.badge>
+              <.badge :if={@expense.matched_by_amount} tone={:attention}>{~t"Matched by amount"}</.badge>
               <.badge :if={@expense.needs_review} tone={:attention}>{~t"Needs review"}</.badge>
             </span>
           </:subtitle>

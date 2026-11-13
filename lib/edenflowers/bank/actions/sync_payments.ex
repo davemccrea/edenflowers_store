@@ -81,8 +81,11 @@ defmodule Edenflowers.Bank.Actions.SyncPayments do
     end
   end
 
+  # Oldest first, so of two payments of one amount the earlier settles the earlier expense.
   defp settle_all(transactions) do
-    Enum.reduce_while(transactions, :ok, fn transaction, :ok ->
+    transactions
+    |> Enum.sort_by(& &1.booked_on, Date)
+    |> Enum.reduce_while(:ok, fn transaction, :ok ->
       case settle(transaction) do
         {:error, error} -> {:halt, {:error, error}}
         _settled_or_not -> {:cont, :ok}
@@ -90,13 +93,14 @@ defmodule Edenflowers.Bank.Actions.SyncPayments do
     end)
   end
 
-  defp settle(%{direction: :out, reference_number: reference} = transaction) when is_binary(reference) do
+  defp settle(%{direction: :out} = transaction) do
     if Expense.Currency.match?(transaction.currency) do
       Expenses.settle_expense_from_bank(
-        reference,
+        transaction.reference_number,
         transaction.amount,
         transaction.currency,
         transaction.booked_on,
+        %{bank_transaction_id: transaction.id},
         actor: system_actor()
       )
     end
