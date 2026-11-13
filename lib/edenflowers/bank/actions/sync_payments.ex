@@ -3,7 +3,9 @@ defmodule Edenflowers.Bank.Actions.SyncPayments do
   Reads the booked transactions of every account on the current bank
   connection and settles what they pay: a payment out marks its expense paid,
   a transfer in is recorded on its invoice. Payments the matching can't place
-  are left for Jennie. Then stores the accounts' balance for the Overview.
+  are left for Jennie. Every payment out is kept, and linked to its receipt
+  when one paid by other means matches, so Jennie sees which have none. Then
+  stores the accounts' balance for the Overview.
 
   Does nothing without Enable Banking configured (only production is), before
   the bank is first connected, or once the consent has ended.
@@ -28,7 +30,7 @@ defmodule Edenflowers.Bank.Actions.SyncPayments do
     with true <- EnableBankingAPI.configured?(),
          {:ok, %{expired: false} = connection} <-
            Bank.current_bank_connection(actor: system_actor(), load: [:expired]) do
-      result = sync(connection)
+      result = with :ok <- sync(connection), do: Bank.link_bank_receipts(actor: system_actor())
       store_balance(connection)
       result
     else
@@ -94,7 +96,7 @@ defmodule Edenflowers.Bank.Actions.SyncPayments do
   end
 
   defp settle(%{direction: :out} = transaction) do
-    if Expense.Currency.match?(transaction.currency) do
+    with :ok <- record(transaction), true <- Expense.Currency.match?(transaction.currency) do
       Expenses.settle_expense_from_bank(
         transaction.reference_number,
         transaction.amount,
@@ -112,4 +114,21 @@ defmodule Edenflowers.Bank.Actions.SyncPayments do
   end
 
   defp settle(_transaction), do: :skip
+
+  # Without the bank's id a payment read again couldn't be told from a new one.
+  defp record(%{id: nil}), do: :ok
+
+  defp record(transaction) do
+    attrs = %{
+      bank_id: transaction.id,
+      booked_on: transaction.booked_on,
+      amount: transaction.amount,
+      currency: transaction.currency,
+      counterparty: transaction.counterparty,
+      message: transaction.message,
+      reference_number: transaction.reference_number
+    }
+
+    with {:ok, _transaction} <- Bank.record_bank_transaction(attrs, actor: system_actor()), do: :ok
+  end
 end

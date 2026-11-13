@@ -301,6 +301,21 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
   describe "needs attention" do
     setup :log_in_admin
 
+    test "counts the bank payments without a receipt and links to them", %{conn: conn} do
+      Ash.Seed.seed!(Edenflowers.Bank.Transaction, %{
+        bank_id: "tx-missing",
+        booked_on: Date.add(Edenflowers.ShopTime.today(), -10),
+        amount: Decimal.new("24.90"),
+        currency: "eur",
+        counterparty: "Kahvila"
+      })
+
+      {:ok, view, _html} = live(conn, ~p"/admin")
+
+      assert has_element?(view, "#attention-missing-receipts summary .badge", "1")
+      assert has_element?(view, ~s|#attention-missing-receipts a[href="/admin/expenses#missing-receipts"]|, "Kahvila")
+    end
+
     test "is hidden when nothing needs Jennie", %{conn: conn} do
       placed_order(paid: true, fulfillment_status: :fulfilled)
 

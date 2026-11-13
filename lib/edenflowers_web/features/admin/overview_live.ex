@@ -34,6 +34,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         Events.admin_subscriptions(),
         Events.shop_calendar_changed(),
         Events.admin_bank(),
+        Events.admin_expenses(),
         Events.admin_report(socket.assigns.current_user.id)
       ])
 
@@ -233,7 +234,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
              &closed_day_subscription_row(&1, socket.assigns.locale)
            )},
           {"refund", "hero-arrow-uturn-left", ~t"To refund", to_refund},
-          {"payment-overdue", "hero-banknotes", ~t"Payment overdue", payment_overdue}
+          {"payment-overdue", "hero-banknotes", ~t"Payment overdue", payment_overdue},
+          {"missing-receipts", "hero-document-magnifying-glass", ~t"Bank payments without a receipt",
+           Enum.map(Bank.bank_payments_missing_receipt!(actor: actor), &missing_receipt_row(&1, socket.assigns.locale))}
         ],
         fn {_key, _icon, _title, rows} -> rows == [] end
       )
@@ -311,6 +314,16 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       end
 
     Enum.sort_by(order_rows ++ booking_rows, &Decimal.abs(&1.amount), {:desc, Decimal})
+  end
+
+  defp missing_receipt_row(payment, locale) do
+    %{
+      id: payment.id,
+      who: payment.counterparty || ~t"Unknown payee",
+      what: Format.date(payment.booked_on, locale),
+      amount: payment.amount,
+      href: ~p"/admin/expenses#missing-receipts"
+    }
   end
 
   defp order_row_link(order) do

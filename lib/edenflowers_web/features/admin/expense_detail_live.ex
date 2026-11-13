@@ -13,7 +13,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
 
-  @loads [:overdue, :scheduled, :needs_review]
+  @loads [:overdue, :scheduled, :needs_review, :bank_transaction]
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -184,6 +184,28 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
               </p>
             </.widget>
 
+            <.widget :if={@expense.bank_transaction} id="expense-bank-payment" title={~t"Bank payment"}>
+              <div class="space-y-1.5 text-sm">
+                <p class="text-base-content font-semibold">
+                  {@expense.bank_transaction.counterparty || ~t"Unknown payee"}
+                </p>
+                <p class="text-base-content/75 tabular-nums">
+                  {Format.date(@expense.bank_transaction.booked_on, @locale)} · {Format.currency_in(
+                    @expense.bank_transaction.amount,
+                    @expense.bank_transaction.currency,
+                    @locale
+                  )}
+                </p>
+                <p :if={@expense.bank_transaction.message} class="text-base-content/75">
+                  {@expense.bank_transaction.message}
+                </p>
+                <%!-- The paid date stays, as unlinking only says this payment wasn't the one. --%>
+                <.button phx-click="unlink_bank_payment" variant="secondary" size="sm" class="mt-2">
+                  {~t"Unlink"}
+                </.button>
+              </div>
+            </.widget>
+
             <.widget id="expense-receipt" title={~t"Receipt"}>
               <div class="space-y-1.5 text-sm">
                 <a
@@ -251,6 +273,22 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, ~t"The expense wasn't marked unpaid.")}
+    end
+  end
+
+  def handle_event("unlink_bank_payment", _params, socket) do
+    case Edenflowers.Expenses.unlink_expense_bank_payment(socket.assigns.expense,
+           actor: socket.assigns.current_user,
+           load: @loads
+         ) do
+      {:ok, updated} ->
+        {:noreply,
+         socket
+         |> assign_expense(updated)
+         |> put_flash(:success, ~t"Unlinked. The payment is back among those without a receipt.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, ~t"The payment wasn't unlinked.")}
     end
   end
 

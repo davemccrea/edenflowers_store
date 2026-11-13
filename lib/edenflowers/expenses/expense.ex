@@ -107,8 +107,15 @@ defmodule Edenflowers.Expenses.Expense do
     end
 
     attribute :bank_transaction_id, :string do
-      description "The bank's id for the payment the bank sync settled it with, so a payment quoting no " <>
+      description "The bank's id for the payment that paid it: the one the bank sync settled it with, a card " <>
+                    "payment linked by amount and date, or one Jennie linked by hand. So a payment quoting no " <>
                     "reference settles one expense only. Kept when Jennie marks it unpaid, so a wrong match isn't repeated."
+    end
+
+    attribute :unlinked_bank_transaction_ids, {:array, :string} do
+      description "Bank ids of payments Jennie unlinked from it, which must never link to it again by themselves."
+      allow_nil? false
+      default []
     end
 
     attribute :matched_by_amount, :boolean do
@@ -157,7 +164,28 @@ defmodule Edenflowers.Expenses.Expense do
     timestamps()
   end
 
+  relationships do
+    has_one :bank_transaction, Edenflowers.Bank.Transaction do
+      description "The stored bank payment that paid it. None for payments booked before the sync kept them."
+      source_attribute :bank_transaction_id
+      destination_attribute :bank_id
+    end
+  end
+
   calculations do
+    calculate :amount_distance,
+              :decimal,
+              expr(
+                if total_amount >= ^arg(:amount) do
+                  total_amount - ^arg(:amount)
+                else
+                  ^arg(:amount) - total_amount
+                end
+              ) do
+      description "How far its total is from a payment's amount, to offer the closest receipts first."
+      argument :amount, :decimal, allow_nil?: false
+    end
+
     calculate :matches?,
               :boolean,
               expr(contains(vendor_name, ^arg(:term)) or contains(description, ^arg(:term))) do
@@ -351,6 +379,78 @@ defmodule Edenflowers.Expenses.Expense do
              )
     end
 
+    read :paid_near_bank_payment do
+      description "Expenses a payment out could be the receipt for, though it settles none: paid by other " <>
+                    "means within a week of the booking, as a card receipt is, with the same amount and " <>
+                    "currency, not linked to any payment, and not unlinked from this one. Earliest paid first."
+
+      argument :bank_transaction_id, :string, allow_nil?: false
+      argument :amount, :decimal, allow_nil?: false, description: "The payment's amount, which must equal total_amount."
+      argument :currency, __MODULE__.Currency, allow_nil?: false
+      argument :booked_on, :date, allow_nil?: false, description: "The day the bank booked the payment."
+
+      filter expr(
+               total_amount == ^arg(:amount) and currency == ^arg(:currency) and is_nil(bank_transaction_id) and
+                 paid_on >= date_add(^arg(:booked_on), -7, :day) and paid_on <= date_add(^arg(:booked_on), 7, :day) and
+                 not fragment("? = ANY(?)", ^arg(:bank_transaction_id), unlinked_bank_transaction_ids)
+             )
+
+      prepare build(sort: [paid_on: :asc])
+    end
+
+    read :linkable_by_hand do
+      description "The expenses Jennie can pick for a payment missing its receipt: not linked to a payment and " <>
+                    "dated within 30 days of the booking, closest amount first. Any currency, as a card payment " <>
+                    "abroad books in euros."
+
+      argument :booked_on, :date, allow_nil?: false
+      argument :amount, :decimal, allow_nil?: false
+
+      filter expr(
+               is_nil(bank_transaction_id) and date >= date_add(^arg(:booked_on), -30, :day) and
+                 date <= date_add(^arg(:booked_on), 30, :day)
+             )
+
+      prepare fn query, _context ->
+        amount = Ash.Query.get_argument(query, :amount)
+        Ash.Query.sort(query, amount_distance: {%{amount: amount}, :asc_nils_last}, date: :desc)
+      end
+    end
+
+    update :link_bank_payment do
+      description "This bank payment paid it. An unpaid or scheduled expense becomes paid on the booking date; " <>
+                    "one already paid keeps its date."
+
+      accept []
+      argument :booked_on, :date, allow_nil?: false, description: "The day the bank booked the payment."
+      argument :bank_transaction_id, :string, allow_nil?: false
+
+      change set_attribute(:bank_transaction_id, arg(:bank_transaction_id))
+      change set_attribute(:matched_by_amount, false)
+
+      change atomic_update(
+               :paid_on,
+               expr(if is_nil(paid_on) or paid_on > helsinki_today(), do: ^arg(:booked_on), else: paid_on)
+             )
+    end
+
+    update :unlink_bank_payment do
+      description "Jennie says the linked bank payment didn't pay it. The payment goes back to missing a receipt " <>
+                    "and never links to this expense by itself again. The paid date stays."
+
+      accept []
+      require_atomic? false
+      change set_attribute(:matched_by_amount, false)
+
+      change fn changeset, _context ->
+        unlinked = changeset.data.unlinked_bank_transaction_ids ++ List.wrap(changeset.data.bank_transaction_id)
+
+        changeset
+        |> Ash.Changeset.force_change_attribute(:unlinked_bank_transaction_ids, unlinked)
+        |> Ash.Changeset.force_change_attribute(:bank_transaction_id, nil)
+      end
+    end
+
     read :unpaid_at do
       description "The expenses Jennie still owed at the end of a day, for the payables list in the accountant's " <>
                     "monthly report: dated by then and not paid by then. A scheduled payment counts as unpaid " <>
@@ -424,7 +524,7 @@ defmodule Edenflowers.Expenses.Expense do
     bypass actor_attribute_equals(:system, true) do
       authorize_if action(:ingest)
       # The bank sync settles the expenses its payments match.
-      authorize_if action([:settle_from_bank, :paid_from_bank])
+      authorize_if action([:settle_from_bank, :paid_from_bank, :link_bank_payment])
       # Papra's document:deleted webhook reads and deletes the document's expense.
       authorize_if action_type(:read)
       authorize_if action(:destroy)

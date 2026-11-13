@@ -3,7 +3,8 @@ defmodule Edenflowers.Bank do
   The shop's S-Pankki account, read through Enable Banking.
 
   `Connection` holds the consent Jennie gives by logging in to her bank. Its
-  booked payments mark expenses and invoices paid.
+  booked payments mark expenses and invoices paid. `Transaction` keeps the
+  payments out, so Jennie can see which have no receipt.
   """
 
   use Ash.Domain,
@@ -22,6 +23,16 @@ defmodule Edenflowers.Bank do
       define :sync_bank_payments, action: :sync_payments
       define :record_bank_balance, action: :record_balance
       define :booked_bank_transactions, action: :booked_transactions, args: [:date_from, :date_to]
+    end
+
+    resource Edenflowers.Bank.Transaction do
+      define :record_bank_transaction, action: :record
+      define :link_bank_receipts, action: :link_receipts
+      define :bank_transactions_awaiting_receipt, action: :awaiting_receipt
+      define :bank_payments_missing_receipt, action: :missing_receipt
+      define :dismissed_bank_payments, action: :dismissed
+      define :dismiss_bank_payment, action: :dismiss
+      define :restore_bank_payment, action: :restore
     end
   end
 end

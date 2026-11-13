@@ -1,6 +1,7 @@
 defmodule EdenflowersWeb.Admin.ExpensesLive do
   @moduledoc """
-  Admin list of expenses imported from Papra.
+  Admin list of expenses imported from Papra, under the bank payments that
+  have no receipt in it yet.
   """
 
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
@@ -8,7 +9,9 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
 
   import EdenflowersWeb.Admin.Components
 
+  alias Edenflowers.Bank
   alias Edenflowers.Events
+  alias Edenflowers.Expenses
   alias Edenflowers.Expenses.Expense
   alias Edenflowers.Format
   alias EdenflowersWeb.Admin.PubSub
@@ -16,12 +19,15 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    if connected?(socket), do: PubSub.subscribe([Events.admin_expenses()])
+    if connected?(socket), do: PubSub.subscribe([Events.admin_expenses(), Events.admin_bank()])
 
     {:ok,
      socket
      |> assign(:page_title, ~t"Expenses")
-     |> assign(:locale, Localize.get_locale())}
+     |> assign(:locale, Localize.get_locale())
+     |> assign(:linking, nil)
+     |> assign(:candidates, [])
+     |> load_bank_payments()}
   end
 
   @impl true
@@ -48,6 +54,15 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
             </.button>
           </:actions>
         </.admin_page_header>
+
+        <.missing_receipts
+          :if={@missing != [] or @dismissed != []}
+          missing={@missing}
+          dismissed={@dismissed}
+          linking={@linking}
+          candidates={@candidates}
+          locale={@locale}
+        />
 
         <Cinder.collection
           id="expenses-table"
@@ -130,14 +145,179 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
     """
   end
 
+  attr :missing, :list, required: true
+  attr :dismissed, :list, required: true
+  attr :linking, :any, required: true, doc: "the id of the payment whose expense picker is open, or nil"
+  attr :candidates, :list, required: true
+  attr :locale, :any, required: true
+
+  defp missing_receipts(assigns) do
+    ~H"""
+    <section
+      id="missing-receipts"
+      aria-labelledby="missing-receipts-title"
+      class="admin-card shadow-[inset_4px_0_0_var(--color-warning)] mb-6 p-4 sm:p-5"
+    >
+      <h2 id="missing-receipts-title" class="text-base-content mb-2 text-base font-semibold">
+        {~t"Bank payments without a receipt"}
+        <span :if={@missing != []} class="ml-1.5 inline-block align-middle">
+          <.count_badge count={length(@missing)} active={true} tone={:warning} />
+        </span>
+      </h2>
+      <p :if={@missing == []} class="text-base-content/75 text-sm">
+        {~t"Every bank payment has its receipt."}
+      </p>
+      <ul class="divide-base-content/12 divide-y text-sm">
+        <li :for={payment <- @missing} id={"bank-payment-#{payment.id}"} class="py-3">
+          <div class="flex items-baseline justify-between gap-4">
+            <span class="min-w-0">
+              <span class="text-base-content block truncate font-semibold">
+                {payment.counterparty || ~t"Unknown payee"}
+              </span>
+              <span class="text-base-content/75 block truncate">
+                {Format.date(payment.booked_on, @locale)}<span :if={payment.message}> · {payment.message}</span>
+              </span>
+            </span>
+            <span class="text-base-content shrink-0 tabular-nums">
+              {Format.currency_in(payment.amount, payment.currency, @locale)}
+            </span>
+          </div>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <.button phx-click="choose_expense" phx-value-id={payment.id} variant="secondary" size="sm">
+              <.icon name="hero-link" class="h-4 w-4" /> {~t"Link to expense"}
+            </.button>
+            <.button phx-click="dismiss" phx-value-id={payment.id} variant="ghost" size="sm">
+              {~t"No receipt needed"}
+            </.button>
+          </div>
+          <div :if={@linking == payment.id} id="linkable-expenses" class="mt-3">
+            <p :if={@candidates == []} class="text-base-content/75">
+              {~t"No unlinked expenses are dated within 30 days of this payment."}
+            </p>
+            <ul class="border-base-content/12 divide-base-content/12 divide-y border-l pl-4">
+              <li
+                :for={expense <- @candidates}
+                id={"linkable-expense-#{expense.id}"}
+                class="flex items-center justify-between gap-4 py-2"
+              >
+                <span class="min-w-0">
+                  <span class="text-base-content block truncate font-semibold">
+                    {expense.vendor_name || ~t"Unknown vendor"}
+                  </span>
+                  <span class="text-base-content/75 block">{Format.date(expense.date, @locale)}</span>
+                </span>
+                <span class="flex shrink-0 items-center gap-3">
+                  <span class="tabular-nums">{Format.currency_in(expense.total_amount, expense.currency, @locale)}</span>
+                  <.button
+                    phx-click="link"
+                    phx-value-expense={expense.id}
+                    variant="primary"
+                    size="sm"
+                    aria-label={~t"Choose #{vendor = expense.vendor_name || ~t"Unknown vendor"}"}
+                  >
+                    {~t"Choose"}
+                  </.button>
+                </span>
+              </li>
+            </ul>
+          </div>
+        </li>
+      </ul>
+      <details :if={@dismissed != []} id="dismissed-bank-payments" class="mt-2 text-sm">
+        <summary class="text-base-content/75 touch-target cursor-pointer py-2">
+          {~t"#{count = length(@dismissed)} dismissed"}
+        </summary>
+        <ul class="divide-base-content/12 divide-y">
+          <li
+            :for={payment <- @dismissed}
+            id={"dismissed-bank-payment-#{payment.id}"}
+            class="flex items-center justify-between gap-4 py-2"
+          >
+            <span class="min-w-0">
+              <span class="text-base-content block truncate">{payment.counterparty || ~t"Unknown payee"}</span>
+              <span class="text-base-content/75 block">{Format.date(payment.booked_on, @locale)}</span>
+            </span>
+            <span class="flex shrink-0 items-center gap-3">
+              <span class="tabular-nums">{Format.currency_in(payment.amount, payment.currency, @locale)}</span>
+              <.button phx-click="restore" phx-value-id={payment.id} variant="ghost" size="sm">
+                {~t"Restore"}
+              </.button>
+            </span>
+          </li>
+        </ul>
+      </details>
+    </section>
+    """
+  end
+
+  @impl true
+  def handle_event("choose_expense", %{"id" => id}, socket) do
+    if socket.assigns.linking == id do
+      {:noreply, assign(socket, linking: nil, candidates: [])}
+    else
+      payment = Enum.find(socket.assigns.missing, &(&1.id == id))
+
+      candidates =
+        Expenses.expenses_linkable_by_hand!(payment.booked_on, payment.amount, actor: socket.assigns.current_user)
+
+      {:noreply, assign(socket, linking: id, candidates: candidates)}
+    end
+  end
+
+  def handle_event("link", %{"expense" => expense_id}, socket) do
+    with %{} = payment <- Enum.find(socket.assigns.missing, &(&1.id == socket.assigns.linking)),
+         %{} = expense <- Enum.find(socket.assigns.candidates, &(&1.id == expense_id)),
+         {:ok, _expense} <-
+           Expenses.link_expense_bank_payment(expense, payment.booked_on, payment.bank_id,
+             actor: socket.assigns.current_user
+           ) do
+      {:noreply, socket |> load_bank_payments() |> put_flash(:success, ~t"Payment linked to its expense.")}
+    else
+      _not_linked -> {:noreply, socket |> load_bank_payments() |> put_flash(:error, ~t"The payment wasn't linked.")}
+    end
+  end
+
+  def handle_event("dismiss", %{"id" => id}, socket) do
+    payment = Enum.find(socket.assigns.missing, &(&1.id == id))
+    {:noreply, socket |> update_payment(&Bank.dismiss_bank_payment/2, payment)}
+  end
+
+  def handle_event("restore", %{"id" => id}, socket) do
+    payment = Enum.find(socket.assigns.dismissed, &(&1.id == id))
+    {:noreply, socket |> update_payment(&Bank.restore_bank_payment/2, payment)}
+  end
+
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{}, socket),
     do: {:noreply, PubSub.schedule_refresh(socket, :expenses_table)}
 
   def handle_info({:admin_refresh, :expenses_table}, socket),
-    do: {:noreply, Cinder.refresh_table(socket, "expenses-table")}
+    do: {:noreply, socket |> load_bank_payments() |> Cinder.refresh_table("expenses-table")}
 
   def handle_info(_message, socket), do: {:noreply, socket}
+
+  # Gone from the list since the page last loaded, as another tab handled it.
+  defp update_payment(socket, _action, nil), do: load_bank_payments(socket)
+
+  defp update_payment(socket, action, payment) do
+    case action.(payment, actor: socket.assigns.current_user) do
+      {:ok, _payment} -> load_bank_payments(socket)
+      {:error, _} -> put_flash(socket, :error, ~t"The payment wasn't updated.")
+    end
+  end
+
+  # Closes the expense picker when its payment has left the list.
+  defp load_bank_payments(socket) do
+    actor = socket.assigns.current_user
+    missing = Bank.bank_payments_missing_receipt!(actor: actor)
+    linking = Enum.find_value(missing, &(&1.id == socket.assigns.linking && &1.id))
+
+    socket
+    |> assign(:missing, missing)
+    |> assign(:dismissed, Bank.dismissed_bank_payments!(actor: actor))
+    |> assign(:linking, linking)
+    |> assign(:candidates, if(linking, do: socket.assigns.candidates, else: []))
+  end
 
   defp search_expenses(query, _searchable_columns, search_term) do
     require Ash.Query

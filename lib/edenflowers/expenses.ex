@@ -37,6 +37,14 @@ defmodule Edenflowers.Expenses do
 
       define :mark_expense_paid_from_bank, action: :paid_from_bank, args: [:booked_on]
 
+      define :expenses_paid_near_bank_payment,
+        action: :paid_near_bank_payment,
+        args: [:bank_transaction_id, :amount, :currency, :booked_on]
+
+      define :expenses_linkable_by_hand, action: :linkable_by_hand, args: [:booked_on, :amount]
+      define :link_expense_bank_payment, action: :link_bank_payment, args: [:booked_on, :bank_transaction_id]
+      define :unlink_expense_bank_payment, action: :unlink_bank_payment
+
       define :settle_expense_from_bank,
         action: :settle_from_bank,
         args: [:reference_number, :amount, :currency, :booked_on]

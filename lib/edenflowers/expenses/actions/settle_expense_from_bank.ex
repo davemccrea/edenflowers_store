@@ -7,7 +7,8 @@ defmodule Edenflowers.Expenses.Actions.SettleExpenseFromBank do
   the reference, settles the only expense of its amount and currency dated in
   the 60 days up to the booking. The sync re-reads the same payments for two
   weeks, so the expense keeps the payment's id and a payment that has settled
-  one expense never settles another of the same amount.
+  one expense, or that Jennie unlinked from one, never settles another of the
+  same amount.
 
   Most payments quoting no reference are card payments whose receipt arrived
   already paid, or ones Jennie marked paid herself. Such a payment settles
@@ -65,7 +66,10 @@ defmodule Edenflowers.Expenses.Actions.SettleExpenseFromBank do
 
   defp settled_an_expense?(transaction_id, opts) do
     Expense
-    |> Ash.Query.filter(bank_transaction_id == ^transaction_id)
+    |> Ash.Query.filter(
+      bank_transaction_id == ^transaction_id or
+        fragment("? = ANY(?)", ^transaction_id, unlinked_bank_transaction_ids)
+    )
     |> Ash.exists?(opts)
   end
 

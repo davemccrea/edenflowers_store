@@ -193,6 +193,58 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     assert has_element?(view, "button[name=paid_today]")
   end
 
+  describe "bank payments without a receipt" do
+    test "links one to the expense Jennie picks, which becomes paid on the booking date", %{conn: conn} do
+      booked_on = Date.add(Edenflowers.ShopTime.today(), -10)
+      payment = seed_bank_payment("tx-hand", booked_on, "Kukkatukku Oy")
+      expense = create_expense("hand-link", "Kukkatukku", "Roses", date: booked_on)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/expenses")
+      view |> element("#bank-payment-#{payment.id} button", "Link to expense") |> render_click()
+      view |> element("#linkable-expense-#{expense.id} button", "Choose") |> render_click()
+
+      assert Ash.get!(Expenses.Expense, expense.id, authorize?: false).paid_on == booked_on
+      refute has_element?(view, "#bank-payment-#{payment.id}")
+    end
+
+    test "dismisses one that needs no receipt and restores it", %{conn: conn} do
+      payment = seed_bank_payment("tx-fee", Date.add(Edenflowers.ShopTime.today(), -10), "S-Pankki")
+
+      {:ok, view, _html} = live(conn, ~p"/admin/expenses")
+      view |> element("#bank-payment-#{payment.id} button", "No receipt needed") |> render_click()
+      refute has_element?(view, "#bank-payment-#{payment.id}")
+
+      view |> element("#dismissed-bank-payment-#{payment.id} button", "Restore") |> render_click()
+      assert has_element?(view, "#bank-payment-#{payment.id}")
+    end
+
+    test "unlinking one on its expense's page puts it back on the list and keeps the paid date", %{conn: conn} do
+      booked_on = Date.add(Edenflowers.ShopTime.today(), -10)
+      payment = seed_bank_payment("tx-wrong", booked_on, "Kahvila")
+      expense = create_expense("wrong-link", "Kahvila", "Coffee", paid_on: booked_on)
+      Expenses.link_expense_bank_payment!(expense, booked_on, "tx-wrong", actor: %{admin: true})
+
+      {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
+      view |> element("#expense-bank-payment button", "Unlink") |> render_click()
+
+      assert %{bank_transaction_id: nil, paid_on: ^booked_on} =
+               Ash.get!(Expenses.Expense, expense.id, authorize?: false)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/expenses")
+      assert has_element?(view, "#bank-payment-#{payment.id}")
+    end
+  end
+
+  defp seed_bank_payment(bank_id, booked_on, counterparty) do
+    Ash.Seed.seed!(Edenflowers.Bank.Transaction, %{
+      bank_id: bank_id,
+      booked_on: booked_on,
+      amount: Decimal.new("10.00"),
+      currency: "eur",
+      counterparty: counterparty
+    })
+  end
+
   defp create_expense(document_id, vendor_name, description, attrs \\ []) do
     Expenses.ingest_expense!(
       Map.merge(
