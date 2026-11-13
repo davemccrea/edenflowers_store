@@ -11,6 +11,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   alias Edenflowers.Bank
   alias Edenflowers.Courses
   alias Edenflowers.Events
+  alias Edenflowers.Expenses
   alias Edenflowers.External.EnableBankingAPI
   alias Edenflowers.External.WeatherAPI
   alias Edenflowers.Format
@@ -95,6 +96,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               last_month_to={@last_month_to}
               today={@today}
               owed={@owed}
+              expenses={@expenses}
               locale={@locale}
             />
           </div>
@@ -255,6 +257,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     |> assign(:today, today)
     |> assign(:owed, owed |> Enum.filter(&(&1.kind == :order)) |> sum_amounts())
     |> assign(:sales, Orders.sales_summary!(Date.beginning_of_month(today), today, actor: actor))
+    |> assign(:expenses, Expenses.expenses_paid_totals!(Date.beginning_of_month(today), today, actor: actor))
     |> assign(:last_month_to, same_day_last_month)
     |> assign(
       :last_month_whole,
@@ -454,6 +457,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   attr :last_month_to, Date, required: true
   attr :today, Date, required: true
   attr :owed, :any, required: true, doc: "what placed orders still owe, overdue or not"
+  attr :expenses, :list, required: true, doc: "this month's paid expenses to today, from `paid_totals`"
   attr :locale, :any, required: true
 
   defp sales_widget(assigns) do
@@ -546,6 +550,19 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       >
         {~t"Still to come in"}
         <span class="text-base-content font-semibold tabular-nums">{Format.currency(@owed, @locale)}</span>
+      </p>
+
+      <p
+        :if={@expenses != []}
+        id="expenses-paid"
+        class="border-base-content/12 text-base-content/75 mt-4 flex items-baseline justify-between gap-4 border-t pt-3 text-sm"
+      >
+        {~t"Expenses paid"}
+        <span class="text-base-content text-right font-semibold tabular-nums">
+          <span :for={%{currency: currency, total: total} <- @expenses} class="block">
+            {Format.currency_in(total, currency, @locale)}
+          </span>
+        </span>
       </p>
     </.widget>
     """

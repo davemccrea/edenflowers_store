@@ -73,6 +73,8 @@ defmodule Edenflowers.Expenses.Expense do
     authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub]
 
+  require Ash.Query
+
   alias Edenflowers.Events
   alias Edenflowers.Expenses.Calculations
   alias Edenflowers.Expenses.Changes
@@ -251,6 +253,31 @@ defmodule Edenflowers.Expenses.Expense do
       pagination offset?: true, keyset?: true, countable: true, required?: false
 
       prepare build(sort: [date: :desc_nils_first, processed_at: :desc])
+    end
+
+    action :paid_totals, {:array, :map} do
+      description "The totals of expenses paid between two dates, inclusive, one per currency, euros first: " <>
+                    "what the monthly report's expense sheet sums for a month."
+
+      argument :from, :date, allow_nil?: false
+      argument :to, :date, allow_nil?: false
+
+      run fn input, context ->
+        %{from: from, to: to} = input.arguments
+
+        with {:ok, expenses} <-
+               __MODULE__
+               |> Ash.Query.filter(paid_on >= ^from and paid_on <= ^to and not is_nil(total_amount))
+               |> Ash.read(Ash.Context.to_opts(context)) do
+          {:ok,
+           expenses
+           |> Enum.group_by(& &1.currency, & &1.total_amount)
+           |> Enum.sort_by(fn {currency, _} -> currency != :eur end)
+           |> Enum.map(fn {currency, amounts} ->
+             %{currency: currency, total: Enum.reduce(amounts, Decimal.new("0.00"), &Decimal.add/2)}
+           end)}
+        end
+      end
     end
 
     create :ingest do

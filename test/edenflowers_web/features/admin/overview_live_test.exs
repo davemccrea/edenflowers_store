@@ -545,6 +545,37 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     assert has_element?(view, "#revenue dd", "90,00 €")
   end
 
+  test "totals the expenses paid this month to today, in each currency", %{conn: conn} do
+    admin = generate(admin_user()) |> with_token()
+    conn = log_in(conn, admin)
+    today = Edenflowers.ShopTime.today()
+
+    paid_expense(today, "40.00", :eur)
+    paid_expense(Date.beginning_of_month(today), "2.50", :eur)
+    paid_expense(today, "100.00", :sek)
+    # Paid last month, scheduled later or unpaid: none counts yet.
+    paid_expense(Date.add(Date.beginning_of_month(today), -1), "500.00", :eur)
+    paid_expense(Date.add(today, 1), "500.00", :eur)
+    paid_expense(nil, "500.00", :eur)
+
+    {:ok, view, _html} = live(conn, ~p"/admin")
+
+    assert has_element?(view, "#expenses-paid", "42,50\u00A0€")
+    assert has_element?(view, "#expenses-paid", "SEK")
+    refute has_element?(view, "#expenses-paid", "542,50\u00A0€")
+  end
+
+  defp paid_expense(paid_on, amount, currency) do
+    Ash.Seed.seed!(Edenflowers.Expenses.Expense, %{
+      document_id: "doc-#{System.unique_integer([:positive])}",
+      paid_on: paid_on,
+      total_amount: Decimal.new(amount),
+      currency: currency,
+      confidence: :high,
+      processed_at: DateTime.utc_now()
+    })
+  end
+
   test "compares with last month up to the same day", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
 
