@@ -56,7 +56,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
             </div>
           </div>
           <%!-- On phones a full-bleed strip above the title, cropped from the original to what the hands are doing. --%>
-          <div class="order-first -mx-4 -mt-4 flex-shrink-0 md:order-none md:mx-0 md:mt-0 md:w-80 lg:w-96 xl:w-[28rem]">
+          <figure class="order-first -mx-4 -mt-4 flex-shrink-0 md:order-none md:mx-0 md:mt-0 md:w-80 lg:w-96 xl:w-[28rem]">
             <.image
               src="local:///jennie_4.jpg"
               alt=""
@@ -69,7 +69,18 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
               priority
               class="aspect-[16/9] w-full object-cover md:aspect-[4/5] md:object-[50%_35%]"
             />
-          </div>
+            <figcaption class="text-base-content/70 mt-1.5 px-4 text-xs md:px-0">
+              {~t"Photo:"}
+              <a
+                href={photo_credit_url("https://emiliakavilo.com/")}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-underline-static-body"
+              >
+                Emilia Kavilo
+              </a>
+            </figcaption>
+          </figure>
         </section>
 
         <section
@@ -103,14 +114,37 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
           class="bg-cream text-cream-content -mx-4 mt-16 grid sm:mx-0 sm:mt-24 md:grid-cols-[2fr_3fr]"
           aria-labelledby="groups"
         >
-          <.image
-            src="local:///image_5.jpg"
-            alt=""
-            width={1500}
-            height={1000}
-            sizes="(min-width: 768px) 40vw, 100vw"
-            class="aspect-[4/3] object-[69%_30%] h-full w-full object-cover md:aspect-auto"
-          />
+          <figure class="md:flex md:flex-col">
+            <.image
+              src="local:///image_5.jpg"
+              alt=""
+              width={1500}
+              height={1000}
+              sizes="(min-width: 768px) 40vw, 100vw"
+              class="aspect-[4/3] object-[69%_30%] w-full object-cover md:aspect-auto md:min-h-0 md:flex-1"
+            />
+            <figcaption class="text-cream-content/80 px-4 py-1.5 text-xs sm:px-2">
+              {~t"Photo:"}
+              <a
+                href={photo_credit_url("https://www.danielastreng.com/")}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-underline-static-body"
+              >
+                Daniela Streng
+              </a>
+              <span aria-hidden="true"> · </span>
+              {~t"Dress:"}
+              <a
+                href={photo_credit_url("https://jennyaarrekangas.com/")}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-underline-static-body"
+              >
+                Jenny Aarrekangas
+              </a>
+            </figcaption>
+          </figure>
 
           <div class="flex flex-col items-start gap-6 px-4 py-12 sm:px-10 md:justify-center md:px-12 md:py-16 lg:px-16 lg:py-20">
             <.flower name="flower-30" class="text-cream-content/60 h-12 w-12" />

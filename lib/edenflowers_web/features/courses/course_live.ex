@@ -92,7 +92,11 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 priority
                 class="morph-photo bg-cream aspect-[4/5] w-full object-cover"
               />
-              <figcaption :if={@course.photo_credit_name} class="text-base-content/70 mt-2 text-sm">
+              <figcaption
+                :if={@course.photo_credit_name}
+                class="text-base-content/70 mt-2 text-sm"
+                data-testid="photo-credit"
+              >
                 <.photo_credit course={@course} />
               </figcaption>
             </figure>

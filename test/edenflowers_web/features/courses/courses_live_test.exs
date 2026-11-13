@@ -23,7 +23,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
                    "Anna Riska"
                  )
         else
-          refute has_element?(view, "figcaption a")
+          refute has_element?(view, ~s|[data-testid="photo-credit"] a|)
         end
       end
     end
@@ -34,8 +34,16 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
 
     for path <- [~p"/en/courses/#{course.slug}", ~p"/en/courses"] do
       {:ok, view, _html} = live(conn, path)
-      refute render(view) =~ "Photo:"
+      refute has_element?(view, ~s|[data-testid="photo-credit"]|)
     end
+  end
+
+  test "credits the people behind the page's own photos", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/en/courses")
+
+    assert has_element?(view, ~s|figcaption a[href^="https://emiliakavilo.com/?"]|, "Emilia Kavilo")
+    assert has_element?(view, ~s|figcaption a[href^="https://www.danielastreng.com/?"]|, "Daniela Streng")
+    assert has_element?(view, ~s|figcaption a[href^="https://jennyaarrekangas.com/?"]|, "Jenny Aarrekangas")
   end
 
   describe "/courses" do
