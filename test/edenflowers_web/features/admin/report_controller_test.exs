@@ -49,7 +49,7 @@ defmodule EdenflowersWeb.Admin.ReportControllerTest do
         paid_on: ~D[2026-09-03],
         total_amount: "10.00",
         currency: :eur,
-        confidence: :high
+        sure: true
       },
       actor: Edenflowers.Actors.system_actor()
     )

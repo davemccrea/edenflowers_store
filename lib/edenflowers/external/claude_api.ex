@@ -54,15 +54,15 @@ defmodule Edenflowers.External.ClaudeAPI do
           Enum.map_join(Category.values(), "\n", &"- #{&1}: #{Category.description(&1)}")
     ],
     description: [type: :string, doc: "Short description of what was purchased, in Finland Swedish."],
-    confidence: [
-      type: :string,
+    sure: [
+      type: :boolean,
       required: true,
-      doc: "Overall extraction certainty across all fields: high, medium, or low."
+      doc: "Whether you are sure of every field you filled in."
     ],
     uncertainty: [
       type: :string,
       doc:
-        "Only when confidence is not high: what you were unsure of and why, in one short sentence in Finland Swedish, e.g. which field was hard to read."
+        "Only when not sure: what you were unsure of and why, in one short sentence in Finland Swedish, e.g. which field was hard to read."
     ]
   ]
 
@@ -72,8 +72,7 @@ defmodule Edenflowers.External.ClaudeAPI do
   Write the description in Finland Swedish, whatever the language of the document.
   Decide whether the document shows it has already been paid, or is an invoice still to be paid.
   Omit any field you cannot determine with reasonable confidence.
-  Set confidence to reflect your overall certainty across all fields.
-  When it is not high, say in uncertainty what you were unsure of, so the shop owner knows what to check.
+  Set sure to false when you are unsure of any field you filled in, and then say in uncertainty what you were unsure of, so the shop owner knows what to check.
   """
 
   @translation_model "anthropic:claude-opus-5-5"

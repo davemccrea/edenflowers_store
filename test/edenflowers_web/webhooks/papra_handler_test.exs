@@ -89,7 +89,7 @@ defmodule EdenflowersWeb.Webhooks.PapraHandlerTest do
 
       for document_id <- ["doc_gone", "doc_kept"] do
         Edenflowers.Expenses.ingest_expense!(
-          %{document_id: document_id, confidence: :high},
+          %{document_id: document_id, sure: true},
           actor: Edenflowers.Actors.system_actor()
         )
       end

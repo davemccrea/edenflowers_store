@@ -62,7 +62,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
   end
 
   test "filters to expenses that need review", %{conn: conn} do
-    create_expense("unsure", "Unsure Vendor", "Check", confidence: :medium)
+    create_expense("unsure", "Unsure Vendor", "Check", sure: false)
     create_expense("sure", "Sure Vendor", "Fine")
 
     {:ok, view, _html} = live(conn, ~p"/admin/expenses?needs_review=true")
@@ -108,7 +108,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
   end
 
   test "marking paid keeps the corrections", %{conn: conn} do
-    expense = create_expense("pay-today", "Typo Vendr", "Flowers", confidence: :low)
+    expense = create_expense("pay-today", "Typo Vendr", "Flowers", sure: false)
 
     {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
 
@@ -127,7 +127,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
 
   test "offers payment only once flagged figures are confirmed", %{conn: conn} do
     due_on = Date.add(Edenflowers.ShopTime.today(), 14)
-    expense = create_expense("confirm-first", "Kukkatukku", "Flowers", confidence: :low, due_on: due_on)
+    expense = create_expense("confirm-first", "Kukkatukku", "Flowers", sure: false, due_on: due_on)
 
     {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
     refute has_element?(view, "button[name=paid_today]")
@@ -259,7 +259,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
           date: ~D[2026-06-01],
           total_amount: "10.00",
           currency: :eur,
-          confidence: :high
+          sure: true
         },
         Map.new(attrs)
       ),

@@ -36,14 +36,6 @@ defmodule Edenflowers.Expenses.Expense.Category do
     ]
 end
 
-defmodule Edenflowers.Expenses.Expense.Confidence do
-  @moduledoc """
-  Confidence levels for fields extracted from an expense receipt.
-  """
-
-  use Ash.Type.Enum, values: [:high, :medium, :low]
-end
-
 defmodule Edenflowers.Expenses.Expense.Currency do
   @moduledoc """
   Currencies accepted for recorded expenses.
@@ -151,13 +143,13 @@ defmodule Edenflowers.Expenses.Expense do
       description "A short note of what was bought, in Finland Swedish, as Claude wrote it or Jennie corrected it."
     end
 
-    attribute :confidence, __MODULE__.Confidence do
-      description "How sure Claude was of the extraction as a whole. Anything but :high asks for Jennie's review."
+    attribute :sure, :boolean do
+      description "Whether Claude was sure of the extraction as a whole. When it wasn't, Jennie reviews it."
       allow_nil? false
     end
 
     attribute :uncertainty, :string do
-      description "What Claude was unsure of when confidence isn't :high, in Finland Swedish, so Jennie knows " <>
+      description "What Claude was unsure of when it wasn't sure, in Finland Swedish, so Jennie knows " <>
                     "what to check. Nil for expenses read before Claude was asked."
     end
 
@@ -229,7 +221,7 @@ defmodule Edenflowers.Expenses.Expense do
               expr(
                 matched_by_amount or
                   (is_nil(reviewed_at) and
-                     (confidence != :high or is_nil(date) or is_nil(vendor_name) or is_nil(total_amount) or
+                     (not sure or is_nil(date) or is_nil(vendor_name) or is_nil(total_amount) or
                         is_nil(currency)))
               ) do
       description "Claude was unsure or left a required field empty, or the bank sync marked it paid by amount " <>
@@ -295,7 +287,7 @@ defmodule Edenflowers.Expenses.Expense do
         :currency,
         :category,
         :description,
-        :confidence,
+        :sure,
         :uncertainty,
         :reference_number,
         :processed_at
@@ -314,7 +306,7 @@ defmodule Edenflowers.Expenses.Expense do
         :currency,
         :category,
         :description,
-        :confidence,
+        :sure,
         :uncertainty
       ]
 

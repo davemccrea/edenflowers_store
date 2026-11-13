@@ -18,18 +18,18 @@ defmodule Edenflowers.Expenses.ExpenseTest do
     currency: "eur",
     category: "office_supplies",
     description: "Office chairs",
-    confidence: "high"
+    sure: true
   }
 
   describe ":ingest" do
     test "upserts on document_id — re-ingesting updates extracted fields" do
       {:ok, _} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
 
-      updated_attrs = Map.merge(@valid_attrs, %{vendor_name: "Acme Ab", confidence: "low"})
+      updated_attrs = Map.merge(@valid_attrs, %{vendor_name: "Acme Ab", sure: false})
       {:ok, updated} = Expenses.ingest_expense(updated_attrs, actor: system_actor())
 
       assert updated.vendor_name == "Acme Ab"
-      assert updated.confidence == :low
+      refute updated.sure
 
       assert [_single] = Ash.read!(Expense, authorize?: false)
     end
@@ -48,7 +48,7 @@ defmodule Edenflowers.Expenses.ExpenseTest do
       {:ok, sure} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
 
       {:ok, unsure} =
-        Expenses.ingest_expense(%{@valid_attrs | document_id: "doc_unsure", confidence: "medium"},
+        Expenses.ingest_expense(%{@valid_attrs | document_id: "doc_unsure", sure: false},
           actor: system_actor()
         )
 
@@ -66,7 +66,7 @@ defmodule Edenflowers.Expenses.ExpenseTest do
     end
 
     test "a payment matched by amount alone is a reason even after Jennie saved Claude's reading" do
-      {:ok, expense} = Expenses.ingest_expense(%{@valid_attrs | confidence: "low"}, actor: system_actor())
+      {:ok, expense} = Expenses.ingest_expense(%{@valid_attrs | sure: false}, actor: system_actor())
       {:ok, saved} = Expenses.correct_expense(expense, %{}, actor: admin_actor())
 
       {:ok, matched} =

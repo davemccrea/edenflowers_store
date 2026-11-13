@@ -233,7 +233,7 @@ defmodule Edenflowers.Bank.MissingReceiptsTest do
       vendor_name: "Kahvila Kukka",
       total_amount: Decimal.new("100.00"),
       currency: :eur,
-      confidence: :high,
+      sure: true,
       processed_at: DateTime.utc_now()
     }
 
@@ -250,7 +250,7 @@ defmodule Edenflowers.Bank.MissingReceiptsTest do
       document_id: "doc-#{System.unique_integer([:positive])}",
       vendor_name: "Kahvila Kukka",
       currency: "eur",
-      confidence: "high"
+      sure: true
     }
 
     Expenses.ingest_expense!(Map.merge(defaults, Map.new(attrs)), actor: system_actor())

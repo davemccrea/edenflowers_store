@@ -23,7 +23,7 @@ defmodule Edenflowers.Expenses.ExpenseImportTest do
     "currency" => "eur",
     "category" => "office_supplies",
     "description" => "Office chairs",
-    "confidence" => "high"
+    "sure" => true
   }
 
   test "fetches the document, extracts fields, and ingests the expense" do
@@ -47,7 +47,7 @@ defmodule Edenflowers.Expenses.ExpenseImportTest do
     assert expense.currency == :eur
     assert expense.category == :office_supplies
     assert expense.description == "Office chairs"
-    assert expense.confidence == :high
+    assert expense.sure
     assert expense.document_id == @document_id
     assert expense.processed_at != nil
     assert expense.reviewed_at == nil

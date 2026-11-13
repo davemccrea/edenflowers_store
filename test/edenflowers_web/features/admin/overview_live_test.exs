@@ -571,7 +571,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       paid_on: paid_on,
       total_amount: Decimal.new(amount),
       currency: currency,
-      confidence: :high,
+      sure: true,
       processed_at: DateTime.utc_now()
     })
   end

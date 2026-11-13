@@ -273,7 +273,7 @@ defmodule Edenflowers.Bank.SyncPaymentsTest do
 
     {:ok, expense} =
       Expenses.ingest_expense(
-        %{document_id: "doc-ref", confidence: "high", reference_number: " 0012 3453 "},
+        %{document_id: "doc-ref", sure: true, reference_number: " 0012 3453 "},
         actor: system_actor()
       )
 
@@ -290,7 +290,7 @@ defmodule Edenflowers.Bank.SyncPaymentsTest do
       vendor_name: "Pohjanmaan Kukkutukku",
       total_amount: Decimal.new("100.00"),
       currency: :eur,
-      confidence: :high,
+      sure: true,
       processed_at: DateTime.utc_now()
     }
 

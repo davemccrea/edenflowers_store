@@ -715,7 +715,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
         currency: String.downcase(currency),
         category: "office_supplies",
         description: "Supplies",
-        confidence: "high"
+        sure: true
       },
       authorize?: false
     )
