@@ -3134,8 +3134,8 @@ msgstr "Okänt sätt"
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:47
 #: lib/edenflowers_web/features/admin/expenses_live.ex:98
-#: lib/edenflowers_web/features/admin/expenses_live.ex:287
-#: lib/edenflowers_web/features/admin/expenses_live.ex:309
+#: lib/edenflowers_web/features/admin/expenses_live.ex:304
+#: lib/edenflowers_web/features/admin/expenses_live.ex:326
 #, elixir-autogen, elixir-format
 msgid "Unknown vendor"
 msgstr "Okänd leverantör"
@@ -5652,38 +5652,38 @@ msgstr "Moms redovisas senast"
 msgid "Bank payment"
 msgstr "Bankbetalning"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:168
+#: lib/edenflowers_web/features/admin/expenses_live.ex:170
 #: lib/edenflowers_web/features/admin/overview_live.ex:238
 #, elixir-autogen, elixir-format
 msgid "Bank payments without a receipt"
 msgstr "Bankbetalningar utan kvitto"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:208
+#: lib/edenflowers_web/features/admin/expenses_live.ex:224
 #, elixir-autogen, elixir-format
 msgid "Link to expense"
 msgstr "Koppla till utgift"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:211
+#: lib/edenflowers_web/features/admin/expenses_live.ex:227
 #, elixir-autogen, elixir-format
 msgid "No receipt needed"
 msgstr "Inget kvitto behövs"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:216
+#: lib/edenflowers_web/features/admin/expenses_live.ex:232
 #, elixir-autogen, elixir-format
 msgid "No unlinked expenses are dated within 30 days of this payment."
 msgstr "Inga okopplade utgifter är daterade inom 30 dagar från betalningen."
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:342
+#: lib/edenflowers_web/features/admin/expenses_live.ex:359
 #, elixir-autogen, elixir-format
 msgid "Payment linked to its expense."
 msgstr "Betalningen kopplades till sin utgift."
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:268
+#: lib/edenflowers_web/features/admin/expenses_live.ex:285
 #, elixir-autogen, elixir-format
 msgid "Restore"
 msgstr "Återställ"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:344
+#: lib/edenflowers_web/features/admin/expenses_live.ex:361
 #, elixir-autogen, elixir-format
 msgid "The payment wasn't linked."
 msgstr "Betalningen kopplades inte."
@@ -5693,14 +5693,14 @@ msgstr "Betalningen kopplades inte."
 msgid "The payment wasn't unlinked."
 msgstr "Kopplingen togs inte bort."
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:375
+#: lib/edenflowers_web/features/admin/expenses_live.ex:392
 #, elixir-autogen, elixir-format
 msgid "The payment wasn't updated."
 msgstr "Betalningen uppdaterades inte."
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:195
-#: lib/edenflowers_web/features/admin/expenses_live.ex:187
-#: lib/edenflowers_web/features/admin/expenses_live.ex:260
+#: lib/edenflowers_web/features/admin/expenses_live.ex:203
+#: lib/edenflowers_web/features/admin/expenses_live.ex:277
 #: lib/edenflowers_web/features/admin/overview_live.ex:322
 #, elixir-autogen, elixir-format
 msgid "Unknown payee"
@@ -5716,47 +5716,47 @@ msgstr "Ta bort koppling"
 msgid "Unlinked. The payment is back among those without a receipt."
 msgstr "Kopplingen togs bort. Betalningen finns igen bland dem utan kvitto."
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:312
+#: lib/edenflowers_web/features/admin/expenses_live.ex:329
 #, elixir-autogen, elixir-format
 msgid "Choose"
 msgstr "Välj"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:251
+#: lib/edenflowers_web/features/admin/expenses_live.ex:268
 #, elixir-autogen, elixir-format
 msgid "%{count} need no receipt"
 msgstr "%{count} behöver inget kvitto"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:357
+#: lib/edenflowers_web/features/admin/expenses_live.ex:374
 #, elixir-autogen, elixir-format
 msgid "Back among the payments without a receipt."
 msgstr "Tillbaka bland betalningarna utan kvitto."
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:309
+#: lib/edenflowers_web/features/admin/expenses_live.ex:326
 #, elixir-autogen, elixir-format
 msgid "Choose %{vendor}, %{amount}, %{date}"
 msgstr "Välj %{vendor}, %{amount}, %{date}"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:219
+#: lib/edenflowers_web/features/admin/expenses_live.ex:235
 #, elixir-autogen, elixir-format
 msgid "Closest amount first. An unpaid expense you choose becomes paid on %{date}."
 msgstr "Närmaste belopp först. En obetald utgift som du väljer markeras som betald %{date}."
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:350
+#: lib/edenflowers_web/features/admin/expenses_live.ex:367
 #, elixir-autogen, elixir-format
 msgid "Marked as needing no receipt."
 msgstr "Markerad som att inget kvitto behövs."
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:172
+#: lib/edenflowers_web/features/admin/expenses_live.ex:191
 #, elixir-autogen, elixir-format
 msgid "Nothing missing for payments over a week old."
 msgstr "Inget saknas för betalningar äldre än en vecka."
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:288
+#: lib/edenflowers_web/features/admin/expenses_live.ex:305
 #, elixir-autogen, elixir-format
 msgid "Same amount"
 msgstr "Samma belopp"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:235
+#: lib/edenflowers_web/features/admin/expenses_live.ex:252
 #, elixir-autogen, elixir-format
 msgid "Show %{count} more"
 msgstr "Visa %{count} till"
@@ -5766,18 +5766,13 @@ msgstr "Visa %{count} till"
 msgid "Unlink this payment? It goes back among those without a receipt, and the paid date stays."
 msgstr "Ta bort kopplingen till betalningen? Den hamnar igen bland dem utan kvitto, och betaldatumet står kvar."
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:175
-#, elixir-autogen, elixir-format
-msgid "Upload a missing receipt to Papra, then link it here."
-msgstr "Ladda upp kvittot som saknas till Papra och koppla det sedan här."
-
-#: lib/edenflowers_web/features/admin/expenses_live.ex:293
+#: lib/edenflowers_web/features/admin/expenses_live.ex:310
 #, elixir-autogen, elixir-format
 msgid "paid %{date}"
 msgstr "betald %{date}"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:190
-#: lib/edenflowers_web/features/admin/expenses_live.ex:297
+#: lib/edenflowers_web/features/admin/expenses_live.ex:206
+#: lib/edenflowers_web/features/admin/expenses_live.ex:314
 #, elixir-autogen, elixir-format
 msgid "ref. %{reference}"
 msgstr "ref. %{reference}"
@@ -5829,3 +5824,13 @@ msgstr "Ingen leverantör hittades."
 #, elixir-autogen, elixir-format
 msgid "What to check"
 msgstr "Att kontrollera"
+
+#: lib/edenflowers_web/features/admin/expenses_live.ex:177
+#, elixir-autogen, elixir-format
+msgid "How payments get their receipt"
+msgstr "Så kopplas kvitton till betalningar"
+
+#: lib/edenflowers_web/features/admin/expenses_live.ex:188
+#, elixir-autogen, elixir-format
+msgid "Upload the missing receipt to Papra. If its amount matches and it was paid within a week of the payment, it links itself at the next bank sync, within six hours. Otherwise, link it here."
+msgstr "Ladda upp kvittot som saknas till Papra. Om beloppet stämmer och det betalades inom en vecka från betalningen kopplas det automatiskt vid nästa banksynk, inom sex timmar. Annars kopplar du det här."

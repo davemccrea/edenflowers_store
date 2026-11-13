@@ -169,12 +169,26 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
       <h2 id="missing-receipts-title" class="text-base-content mb-2 flex items-center gap-1.5 text-base font-semibold">
         {~t"Bank payments without a receipt"}
         <.count_badge :if={@missing != []} count={length(@missing)} active={true} tone={:warning} />
+        <%!-- A tap-opened popover rather than a hover tooltip, since Jennie works on her phone. --%>
+        <.icon_button
+          popovertarget="missing-receipts-help"
+          style="anchor-name: --missing-receipts-help"
+          size="sm"
+          aria_label={~t"How payments get their receipt"}
+        >
+          <.icon name="hero-information-circle" class="text-base-content/60 h-5 w-5" />
+        </.icon_button>
       </h2>
+      <div
+        id="missing-receipts-help"
+        popover
+        style="position-anchor: --missing-receipts-help"
+        class="dropdown bg-base-100 border-base-content/12 text-base-content/75 rounded-box mt-2 max-w-xs border p-3 text-sm font-normal shadow"
+      >
+        {~t"Upload the missing receipt to Papra. If its amount matches and it was paid within a week of the payment, it links itself at the next bank sync, within six hours. Otherwise, link it here."}
+      </div>
       <p :if={@missing == []} class="text-base-content/75 text-sm">
         {~t"Nothing missing for payments over a week old."}
-      </p>
-      <p :if={@missing != []} class="text-base-content/75 text-sm">
-        {~t"Upload a missing receipt to Papra, then link it here."}
       </p>
       <ul class="divide-base-content/12 divide-y text-sm">
         <li
