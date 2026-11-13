@@ -155,7 +155,9 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
   attr :locale, :any, required: true
 
   defp missing_receipts(assigns) do
-    {first_candidates, more_candidates} = Enum.split(assigns.candidates, 5)
+    # Hiding only one or two expenses behind a link saves no room.
+    shown = if length(assigns.candidates) <= 7, do: 7, else: 5
+    {first_candidates, more_candidates} = Enum.split(assigns.candidates, shown)
     assigns = assign(assigns, first_candidates: first_candidates, more_candidates: more_candidates)
 
     ~H"""
@@ -230,8 +232,9 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
               :if={@more_candidates != []}
               id="more-linkable-expenses"
               phx-mounted={JS.ignore_attributes(["open"])}
+              class="group"
             >
-              <summary class="text-base-content/75 touch-target cursor-pointer py-2 pl-3">
+              <summary class="link-underline-hover text-base-content/75 touch-target inline-block cursor-pointer list-none py-2 pl-3 group-open:hidden">
                 {~t"Show #{count = length(@more_candidates)} more"}
               </summary>
               <ul class="border-base-content/12 divide-base-content/12 divide-y border-l pl-3">
