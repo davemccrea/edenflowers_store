@@ -322,7 +322,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       who: payment.counterparty || ~t"Unknown payee",
       what: Format.date(payment.booked_on, locale),
       amount: payment.amount,
-      href: ~p"/admin/expenses#missing-receipts"
+      href: ~p"/admin/expenses?#{[payment: payment.id]}" <> "#bank-payment-#{payment.id}"
     }
   end
 

@@ -187,6 +187,16 @@ defmodule Edenflowers.Expenses.Expense do
       argument :amount, :decimal, allow_nil?: false
     end
 
+    calculate :same_amount?,
+              :boolean,
+              expr(total_amount == ^arg(:amount) and currency == ^arg(:currency)) do
+      description "Whether its total is exactly a payment's amount, in the payment's currency. A nil currency, " <>
+                    "for one expenses can't be in, matches none."
+
+      argument :amount, :decimal, allow_nil?: false
+      argument :currency, __MODULE__.Currency
+    end
+
     calculate :matches?,
               :boolean,
               expr(contains(vendor_name, ^arg(:term)) or contains(description, ^arg(:term))) do
@@ -407,10 +417,11 @@ defmodule Edenflowers.Expenses.Expense do
     read :linkable_by_hand do
       description "The expenses Jennie can pick for a payment missing its receipt: not linked to a payment and " <>
                     "dated within 30 days of the booking, closest amount first. Any currency, as a card payment " <>
-                    "abroad books in euros."
+                    "abroad books in euros. Each says whether it is exactly the payment's amount and whether it is paid."
 
       argument :booked_on, :date, allow_nil?: false
       argument :amount, :decimal, allow_nil?: false
+      argument :currency, :string, allow_nil?: false, description: "The payment's currency, as the bank sent it."
 
       filter expr(
                is_nil(bank_transaction_id) and date >= date_add(^arg(:booked_on), -30, :day) and
@@ -419,7 +430,12 @@ defmodule Edenflowers.Expenses.Expense do
 
       prepare fn query, _context ->
         amount = Ash.Query.get_argument(query, :amount)
-        Ash.Query.sort(query, amount_distance: {%{amount: amount}, :asc_nils_last}, date: :desc)
+        currency = Ash.Query.get_argument(query, :currency)
+        currency = if __MODULE__.Currency.match?(currency), do: currency
+
+        query
+        |> Ash.Query.sort(amount_distance: {%{amount: amount}, :asc_nils_last}, date: :desc)
+        |> Ash.Query.load([:overdue, :scheduled, same_amount?: %{amount: amount, currency: currency}])
       end
     end
 

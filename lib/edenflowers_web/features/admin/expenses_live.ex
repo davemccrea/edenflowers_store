@@ -32,6 +32,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
 
   @impl true
   def handle_params(params, uri, socket) do
+    socket = assign(socket, :highlighted_payment_id, params["payment"])
     {:noreply, Cinder.UrlSync.handle_params(params, uri, socket)}
   end
 
@@ -61,6 +62,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           dismissed={@dismissed}
           linking={@linking}
           candidates={@candidates}
+          highlighted={@highlighted_payment_id}
           locale={@locale}
         />
 
@@ -149,33 +151,45 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
   attr :dismissed, :list, required: true
   attr :linking, :any, required: true, doc: "the id of the payment whose expense picker is open, or nil"
   attr :candidates, :list, required: true
+  attr :highlighted, :string, required: true, doc: "the id of the payment a link from the Overview was for, or nil"
   attr :locale, :any, required: true
 
   defp missing_receipts(assigns) do
+    {first_candidates, more_candidates} = Enum.split(assigns.candidates, 5)
+    assigns = assign(assigns, first_candidates: first_candidates, more_candidates: more_candidates)
+
     ~H"""
     <section
       id="missing-receipts"
       aria-labelledby="missing-receipts-title"
-      class="admin-card shadow-[inset_4px_0_0_var(--color-warning)] mb-6 p-4 sm:p-5"
+      class={["admin-card mb-6 p-4 sm:p-5", @missing != [] && "shadow-[inset_4px_0_0_var(--color-warning)]"]}
     >
-      <h2 id="missing-receipts-title" class="text-base-content mb-2 text-base font-semibold">
+      <h2 id="missing-receipts-title" class="text-base-content mb-2 flex items-center gap-1.5 text-base font-semibold">
         {~t"Bank payments without a receipt"}
-        <span :if={@missing != []} class="ml-1.5 inline-block align-middle">
-          <.count_badge count={length(@missing)} active={true} tone={:warning} />
-        </span>
+        <.count_badge :if={@missing != []} count={length(@missing)} active={true} tone={:warning} />
       </h2>
       <p :if={@missing == []} class="text-base-content/75 text-sm">
-        {~t"Every bank payment has its receipt."}
+        {~t"Nothing missing for payments over a week old."}
+      </p>
+      <p :if={@missing != []} class="text-base-content/75 text-sm">
+        {~t"Upload a missing receipt to Papra, then link it here."}
       </p>
       <ul class="divide-base-content/12 divide-y text-sm">
-        <li :for={payment <- @missing} id={"bank-payment-#{payment.id}"} class="py-3">
+        <li
+          :for={payment <- @missing}
+          id={"bank-payment-#{payment.id}"}
+          aria-current={payment.id == @highlighted && "true"}
+          class={["scroll-mt-[calc(env(safe-area-inset-top)+6rem)] py-3", payment.id == @highlighted && "row-flash"]}
+        >
           <div class="flex items-baseline justify-between gap-4">
             <span class="min-w-0">
               <span class="text-base-content block truncate font-semibold">
                 {payment.counterparty || ~t"Unknown payee"}
               </span>
-              <span class="text-base-content/75 block truncate">
-                {Format.date(payment.booked_on, @locale)}<span :if={payment.message}> · {payment.message}</span>
+              <span class="text-base-content/75 block break-words">
+                {Format.date(payment.booked_on, @locale)}<span :if={payment.reference_number}> · {~t"ref. #{reference = payment.reference_number}"}</span><span :if={
+                  payment.message
+                }> · {payment.message}</span>
               </span>
             </span>
             <span class="text-base-content shrink-0 tabular-nums">
@@ -183,7 +197,14 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
             </span>
           </div>
           <div class="mt-2 flex flex-wrap gap-2">
-            <.button phx-click="choose_expense" phx-value-id={payment.id} variant="secondary" size="sm">
+            <.button
+              phx-click="choose_expense"
+              phx-value-id={payment.id}
+              aria-expanded={to_string(@linking == payment.id)}
+              aria-controls={@linking == payment.id && "linkable-expenses"}
+              variant="secondary"
+              size="sm"
+            >
               <.icon name="hero-link" class="h-4 w-4" /> {~t"Link to expense"}
             </.button>
             <.button phx-click="dismiss" phx-value-id={payment.id} variant="ghost" size="sm">
@@ -191,41 +212,43 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
             </.button>
           </div>
           <div :if={@linking == payment.id} id="linkable-expenses" class="mt-3">
-            <p :if={@candidates == []} class="text-base-content/75">
+            <p :if={@candidates == []} role="status" class="text-base-content/75">
               {~t"No unlinked expenses are dated within 30 days of this payment."}
             </p>
-            <ul class="border-base-content/12 divide-base-content/12 divide-y border-l pl-4">
-              <li
-                :for={expense <- @candidates}
-                id={"linkable-expense-#{expense.id}"}
-                class="flex items-center justify-between gap-4 py-2"
-              >
-                <span class="min-w-0">
-                  <span class="text-base-content block truncate font-semibold">
-                    {expense.vendor_name || ~t"Unknown vendor"}
-                  </span>
-                  <span class="text-base-content/75 block">{Format.date(expense.date, @locale)}</span>
-                </span>
-                <span class="flex shrink-0 items-center gap-3">
-                  <span class="tabular-nums">{Format.currency_in(expense.total_amount, expense.currency, @locale)}</span>
-                  <.button
-                    phx-click="link"
-                    phx-value-expense={expense.id}
-                    variant="primary"
-                    size="sm"
-                    aria-label={~t"Choose #{vendor = expense.vendor_name || ~t"Unknown vendor"}"}
-                  >
-                    {~t"Choose"}
-                  </.button>
-                </span>
-              </li>
+            <p :if={@candidates != []} class="text-base-content/75 mb-1">
+              {~t"Closest amount first. An unpaid expense you choose becomes paid on #{date = Format.date(payment.booked_on, @locale)}."}
+            </p>
+            <ul class="border-base-content/12 divide-base-content/12 divide-y border-l pl-3">
+              <.linkable_expense
+                :for={{expense, index} <- Enum.with_index(@first_candidates)}
+                expense={expense}
+                best={index == 0}
+                locale={@locale}
+              />
             </ul>
+            <details
+              :if={@more_candidates != []}
+              id="more-linkable-expenses"
+              phx-mounted={JS.ignore_attributes(["open"])}
+            >
+              <summary class="text-base-content/75 touch-target cursor-pointer py-2 pl-3">
+                {~t"Show #{count = length(@more_candidates)} more"}
+              </summary>
+              <ul class="border-base-content/12 divide-base-content/12 divide-y border-l pl-3">
+                <.linkable_expense :for={expense <- @more_candidates} expense={expense} best={false} locale={@locale} />
+              </ul>
+            </details>
           </div>
         </li>
       </ul>
-      <details :if={@dismissed != []} id="dismissed-bank-payments" class="mt-2 text-sm">
+      <details
+        :if={@dismissed != []}
+        id="dismissed-bank-payments"
+        phx-mounted={JS.ignore_attributes(["open"])}
+        class="mt-2 text-sm"
+      >
         <summary class="text-base-content/75 touch-target cursor-pointer py-2">
-          {~t"#{count = length(@dismissed)} dismissed"}
+          {~t"#{count = length(@dismissed)} need no receipt"}
         </summary>
         <ul class="divide-base-content/12 divide-y">
           <li
@@ -235,7 +258,9 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           >
             <span class="min-w-0">
               <span class="text-base-content block truncate">{payment.counterparty || ~t"Unknown payee"}</span>
-              <span class="text-base-content/75 block">{Format.date(payment.booked_on, @locale)}</span>
+              <span class="text-base-content/75 block break-words">
+                {Format.date(payment.booked_on, @locale)}<span :if={payment.message}> · {payment.message}</span>
+              </span>
             </span>
             <span class="flex shrink-0 items-center gap-3">
               <span class="tabular-nums">{Format.currency_in(payment.amount, payment.currency, @locale)}</span>
@@ -250,6 +275,47 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
     """
   end
 
+  attr :expense, :map, required: true, doc: "an expense from the linkable_by_hand read"
+  attr :best, :boolean, required: true, doc: "the closest amount, offered as the primary choice"
+  attr :locale, :any, required: true
+
+  defp linkable_expense(assigns) do
+    ~H"""
+    <li id={"linkable-expense-#{@expense.id}"} class="flex items-center justify-between gap-4 py-2">
+      <span class="min-w-0">
+        <span class="flex min-w-0 items-center gap-1.5">
+          <span class="text-base-content truncate font-semibold">{@expense.vendor_name || ~t"Unknown vendor"}</span>
+          <.badge :if={@expense.same_amount?} tone={:tag} class="shrink-0">{~t"Same amount"}</.badge>
+        </span>
+        <span class="text-base-content/75 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span class="tabular-nums">{Format.date(@expense.date, @locale)}</span>
+          <span :if={@expense.paid_on && !@expense.scheduled} class="whitespace-nowrap tabular-nums">
+            {~t"paid #{date = Format.date(@expense.paid_on, @locale)}"}
+          </span>
+          <.expense_payment_status :if={is_nil(@expense.paid_on) or @expense.scheduled} expense={@expense} locale={@locale} />
+          <span :if={@expense.reference_number} class="break-all">
+            {~t"ref. #{reference = @expense.reference_number}"}
+          </span>
+        </span>
+      </span>
+      <span class="flex shrink-0 items-center gap-3">
+        <span class="tabular-nums">{Format.currency_in(@expense.total_amount, @expense.currency, @locale)}</span>
+        <.button
+          phx-click="link"
+          phx-value-expense={@expense.id}
+          variant={if @best, do: "primary", else: "secondary"}
+          size="sm"
+          aria-label={
+            ~t"Choose #{vendor = @expense.vendor_name || ~t"Unknown vendor"}, #{amount = Format.currency_in(@expense.total_amount, @expense.currency, @locale)}, #{date = Format.date(@expense.date, @locale)}"
+          }
+        >
+          {~t"Choose"}
+        </.button>
+      </span>
+    </li>
+    """
+  end
+
   @impl true
   def handle_event("choose_expense", %{"id" => id}, socket) do
     if socket.assigns.linking == id do
@@ -258,7 +324,9 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
       payment = Enum.find(socket.assigns.missing, &(&1.id == id))
 
       candidates =
-        Expenses.expenses_linkable_by_hand!(payment.booked_on, payment.amount, actor: socket.assigns.current_user)
+        Expenses.expenses_linkable_by_hand!(payment.booked_on, payment.amount, payment.currency,
+          actor: socket.assigns.current_user
+        )
 
       {:noreply, assign(socket, linking: id, candidates: candidates)}
     end
@@ -279,12 +347,14 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
 
   def handle_event("dismiss", %{"id" => id}, socket) do
     payment = Enum.find(socket.assigns.missing, &(&1.id == id))
-    {:noreply, socket |> update_payment(&Bank.dismiss_bank_payment/2, payment)}
+    {:noreply, socket |> update_payment(&Bank.dismiss_bank_payment/2, payment, ~t"Marked as needing no receipt.")}
   end
 
   def handle_event("restore", %{"id" => id}, socket) do
     payment = Enum.find(socket.assigns.dismissed, &(&1.id == id))
-    {:noreply, socket |> update_payment(&Bank.restore_bank_payment/2, payment)}
+
+    {:noreply,
+     socket |> update_payment(&Bank.restore_bank_payment/2, payment, ~t"Back among the payments without a receipt.")}
   end
 
   @impl true
@@ -297,11 +367,11 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
   def handle_info(_message, socket), do: {:noreply, socket}
 
   # Gone from the list since the page last loaded, as another tab handled it.
-  defp update_payment(socket, _action, nil), do: load_bank_payments(socket)
+  defp update_payment(socket, _action, nil, _done), do: load_bank_payments(socket)
 
-  defp update_payment(socket, action, payment) do
+  defp update_payment(socket, action, payment, done) do
     case action.(payment, actor: socket.assigns.current_user) do
-      {:ok, _payment} -> load_bank_payments(socket)
+      {:ok, _payment} -> socket |> load_bank_payments() |> put_flash(:success, done)
       {:error, _} -> put_flash(socket, :error, ~t"The payment wasn't updated.")
     end
   end

@@ -218,14 +218,18 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
       assert has_element?(view, "#bank-payment-#{payment.id}")
     end
 
-    test "unlinking one on its expense's page puts it back on the list and keeps the paid date", %{conn: conn} do
+    test "unlinking one on its expense's page puts it back on the list, keeps the paid date and unsaved corrections",
+         %{conn: conn} do
       booked_on = Date.add(Edenflowers.ShopTime.today(), -10)
       payment = seed_bank_payment("tx-wrong", booked_on, "Kahvila")
       expense = create_expense("wrong-link", "Kahvila", "Coffee", paid_on: booked_on)
       Expenses.link_expense_bank_payment!(expense, booked_on, "tx-wrong", actor: %{admin: true})
 
       {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
+      view |> form("#expense-form", form: %{vendor_name: "Kahvila Oy"}) |> render_change()
       view |> element("#expense-bank-payment button", "Unlink") |> render_click()
+
+      assert has_element?(view, ~s(#expense-form input[name="form[vendor_name]"][value="Kahvila Oy"]))
 
       assert %{bank_transaction_id: nil, paid_on: ^booked_on} =
                Ash.get!(Expenses.Expense, expense.id, authorize?: false)

@@ -200,7 +200,15 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                   {@expense.bank_transaction.message}
                 </p>
                 <%!-- The paid date stays, as unlinking only says this payment wasn't the one. --%>
-                <.button phx-click="unlink_bank_payment" variant="secondary" size="sm" class="mt-2">
+                <.button
+                  phx-click="unlink_bank_payment"
+                  data-confirm={
+                    ~t"Unlink this payment? It goes back among those without a receipt, and the paid date stays."
+                  }
+                  variant="secondary"
+                  size="sm"
+                  class="mt-2"
+                >
                   {~t"Unlink"}
                 </.button>
               </div>
@@ -282,9 +290,10 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
            load: @loads
          ) do
       {:ok, updated} ->
+        # Only the expense, so corrections typed in the form and not yet saved stay.
         {:noreply,
          socket
-         |> assign_expense(updated)
+         |> assign(:expense, updated)
          |> put_flash(:success, ~t"Unlinked. The payment is back among those without a receipt.")}
 
       {:error, _} ->

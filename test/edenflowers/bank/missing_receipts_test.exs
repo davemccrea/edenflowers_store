@@ -121,9 +121,26 @@ defmodule Edenflowers.Bank.MissingReceiptsTest do
       seed_expense(total_amount: Decimal.new("50.00"), date: Date.add(booked_on, -31))
       seed_expense(total_amount: Decimal.new("50.00"), date: booked_on, bank_transaction_id: "other")
 
-      offered = Expenses.expenses_linkable_by_hand!(booked_on, Decimal.new("50.00"), actor: @admin)
+      offered = Expenses.expenses_linkable_by_hand!(booked_on, Decimal.new("50.00"), "eur", actor: @admin)
 
       assert Enum.map(offered, & &1.id) == [closest.id, further.id]
+    end
+
+    test "says which expense is exactly the payment's amount in its currency" do
+      booked_on = days_ago(10)
+      seed_expense(total_amount: Decimal.new("50.00"), currency: :eur, date: booked_on)
+
+      assert [%{same_amount?: true}] =
+               Expenses.expenses_linkable_by_hand!(booked_on, Decimal.new("50.00"), "eur", actor: @admin)
+
+      assert [%{same_amount?: false}] =
+               Expenses.expenses_linkable_by_hand!(booked_on, Decimal.new("50.00"), "sek", actor: @admin)
+
+      assert [%{same_amount?: false}] =
+               Expenses.expenses_linkable_by_hand!(booked_on, Decimal.new("49.00"), "eur", actor: @admin)
+
+      assert [%{same_amount?: nil}] =
+               Expenses.expenses_linkable_by_hand!(booked_on, Decimal.new("50.00"), "usd", actor: @admin)
     end
 
     test "marks an unpaid expense paid on the booking date and leaves a paid one's date" do
