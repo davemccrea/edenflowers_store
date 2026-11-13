@@ -1,6 +1,6 @@
 defmodule EdenflowersWeb.Admin.OrdersLive do
   @moduledoc """
-  Searchable, sortable admin order list. It opens on open orders, soonest
+  Searchable, sortable admin order list. It opens on open orders, latest
   fulfillment date first.
   """
 
@@ -16,8 +16,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
   alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
 
-  # Open orders, soonest first, so overdue ones lead.
-  @default_view %{"open" => "true", "sort" => "fulfillment_date"}
+  @default_view %{"open" => "true", "sort" => "-fulfillment_date"}
 
   @impl true
   def mount(_params, _session, socket) do
@@ -89,6 +88,9 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             options={[{~t"Flowers", "flowers"}, {~t"Gift vouchers", "gift_vouchers"}]}
             fn={fn query, %{value: value} -> Ash.Query.set_argument(query, :kind, value) end}
           />
+          <:col :let={order} field="ordered_at" sort label={~t"Ordered"} class="max-sm:hidden">
+            <span class="tabular-nums">{Format.date(order.ordered_at, @locale)}</span>
+          </:col>
           <:col :let={order} field="customer_name" search sort label={~t"Customer"}>
             <.link
               navigate={~p"/admin/orders/#{order.id}"}
@@ -103,15 +105,10 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
               icon="hero-pencil-square"
               class="ml-1.5 align-middle max-sm:hidden"
             >
-              {~t"Card to write"}
+              {~t"Card"}
             </.badge>
           </:col>
-          <:col
-            :let={order}
-            field="fulfillment_date"
-            sort={[cycle: [:asc, :desc]]}
-            label={~t"Fulfillment date"}
-          >
+          <:col :let={order} field="fulfillment_date" sort label={~t"Fulfillment date"}>
             <span :if={order.gift_voucher_sale?} class="text-base-content/75">{~t"Gift voucher"}</span>
             <span
               :if={!order.gift_voucher_sale?}

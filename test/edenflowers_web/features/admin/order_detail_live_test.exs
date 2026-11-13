@@ -616,7 +616,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     {sale, voucher} = paid_voucher_sale(%{collect_voucher_card: true})
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders")
-    assert has_element?(view, "[data-item-id]", "Card to write")
+    assert has_element?(view, "[data-item-id]", "Card")
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{sale.id}")
     assert has_element?(view, "#order-status", "Card to write")

@@ -55,8 +55,8 @@ defmodule EdenflowersWeb.Admin.OrdersPaginationTest do
     view |> element(~s(button[title="Next page"])) |> render_click()
     render_async(view)
 
-    assert has_element?(view, ~s([data-item-id="#{List.last(orders).id}"]))
-    refute has_element?(view, ~s([data-item-id="#{hd(orders).id}"]))
+    assert has_element?(view, ~s([data-item-id="#{hd(orders).id}"]))
+    refute has_element?(view, ~s([data-item-id="#{List.last(orders).id}"]))
     assert has_element?(view, ~s([data-key="pagination_info_class"]), "showing 26-26 of 26")
   end
 end

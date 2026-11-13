@@ -172,12 +172,12 @@ msgstr "Adress"
 msgid "After %{date}"
 msgstr "Efter %{date}"
 
-#: lib/edenflowers/courses/course.ex:257
+#: lib/edenflowers/courses/course.ex:299
 #, elixir-autogen, elixir-format
 msgid "After that, %{fee}% of the price is kept."
 msgstr "Efter det behålls %{fee} % av priset."
 
-#: lib/edenflowers/courses/course.ex:256
+#: lib/edenflowers/courses/course.ex:298
 #, elixir-autogen, elixir-format
 msgid "After that, the booking can't be refunded."
 msgstr "Efter det kan bokningen inte återbetalas."
@@ -447,7 +447,7 @@ msgstr "Kan företag betala mot faktura?"
 msgid "Cancel"
 msgstr "Avbryt"
 
-#: lib/edenflowers/courses/course.ex:252
+#: lib/edenflowers/courses/course.ex:294
 #, elixir-autogen, elixir-format
 msgid "Cancel at least %{days} days before the course for a full refund."
 msgstr "Avboka minst %{days} dagar före kursen för full återbetalning."
@@ -4030,17 +4030,17 @@ msgstr "Din beställning är klar att hämta %{date}."
 msgid "My account"
 msgstr "Mitt konto"
 
-#: lib/edenflowers/courses/course.ex:273
+#: lib/edenflowers/courses/course.ex:315
 #, elixir-autogen, elixir-format
 msgid "After that, %{fee}% of the price is charged."
 msgstr "Efter det debiteras %{fee} % av priset."
 
-#: lib/edenflowers/courses/course.ex:272
+#: lib/edenflowers/courses/course.ex:314
 #, elixir-autogen, elixir-format
 msgid "After that, the full price is charged."
 msgstr "Efter det debiteras hela priset."
 
-#: lib/edenflowers/courses/course.ex:268
+#: lib/edenflowers/courses/course.ex:310
 #, elixir-autogen, elixir-format
 msgid "Cancel at least %{days} days before the course at no cost."
 msgstr "Avboka minst %{days} dagar före kursen utan kostnad."

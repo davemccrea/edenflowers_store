@@ -120,6 +120,19 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
     assert has_element?(view, "[data-item-id]", "Called Off")
   end
 
+  test "opens on the latest fulfillment date first", %{conn: conn} do
+    placed_order(customer_name: "Old Late", fulfillment_date: ~D[2026-06-20])
+    placed_order(customer_name: "New Soon", fulfillment_date: ~D[2026-06-10])
+    placed_order(customer_name: "Mid Soonest", fulfillment_date: ~D[2026-06-01])
+
+    names = fn view ->
+      view |> render() |> then(&Regex.scan(~r/Old Late|New Soon|Mid Soonest/, &1)) |> List.flatten() |> Enum.uniq()
+    end
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders")
+    assert names.(view) == ["Old Late", "New Soon", "Mid Soonest"]
+  end
+
   test "a cancelled custom order stays searchable and directly accessible, with late money visible in Overview", %{
     conn: conn
   } do
