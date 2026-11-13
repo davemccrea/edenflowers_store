@@ -1,13 +1,13 @@
 defmodule Edenflowers.Fulfillment.Changes.ToggleDate do
   @moduledoc """
-  Toggles a date override in the shop calendar. Dates without an override
-  switch away from their weekday rule; dates with an override return to it.
-  Overrides are removed when the date matches its weekday rule.
+  Toggles a date in the shop calendar: an open date closes and a closed one
+  opens. An override is only kept while the date differs from its rule (its
+  weekday, or open for a key date).
   """
   use Ash.Resource.Change
 
+  alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Fulfillment.ShopCalendar
-  alias Edenflowers.Fulfillment.Weekday
 
   @impl true
   def change(changeset, _opts, _context) do
@@ -34,14 +34,14 @@ defmodule Edenflowers.Fulfillment.Changes.ToggleDate do
     disabled = calendar.disabled_dates
 
     cond do
-      date in enabled ->
-        %{enabled_dates: List.delete(enabled, date), disabled_dates: disabled}
-
       date in disabled ->
         %{enabled_dates: enabled, disabled_dates: List.delete(disabled, date)}
 
-      Weekday.from_date(date) in calendar.available_days ->
-        %{enabled_dates: enabled, disabled_dates: [date | disabled]}
+      Availability.open_by_rule?(calendar, date) ->
+        %{enabled_dates: List.delete(enabled, date), disabled_dates: [date | disabled]}
+
+      date in enabled ->
+        %{enabled_dates: List.delete(enabled, date), disabled_dates: disabled}
 
       true ->
         %{enabled_dates: [date | enabled], disabled_dates: disabled}

@@ -166,7 +166,9 @@ defmodule Edenflowers.Fulfillment.ShopCalendar do
     end
 
     attribute :available_days, {:array, Weekday} do
-      description "The weekdays the shop is open, unless a date is overridden in `enabled_dates` or `disabled_dates`."
+      description "The weekdays the shop is open, unless a date is overridden in `enabled_dates` or `disabled_dates`. " <>
+                    "Florist key dates are open on any weekday unless they are in `disabled_dates`."
+
       allow_nil? false
       default Weekday.all()
       public? true

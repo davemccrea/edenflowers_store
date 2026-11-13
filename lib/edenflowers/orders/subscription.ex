@@ -14,6 +14,8 @@ defmodule Edenflowers.Orders.Subscription do
   import Edenflowers.Actors
 
   alias Edenflowers.Events
+  alias Edenflowers.Fulfillment.KeyDates
+  alias Edenflowers.Fulfillment.Weekday
   alias Edenflowers.Orders.Changes.NotifyShop
   alias Edenflowers.Orders.Subscription.Calculations.PlanChangesFrom
   alias Edenflowers.Orders.Subscription.Changes
@@ -52,9 +54,16 @@ defmodule Edenflowers.Orders.Subscription do
   @doc """
   The calendar a checkout `order` books against. A cart starting a subscription
   can't take a date Jennie opens outside the calendar's weekdays, such as a
-  special Sunday: the subscription would repeat on a weekday the shop is closed.
+  special Sunday or a key date: the subscription would repeat on a weekday the
+  shop is closed.
   """
-  def calendar_for(%{subscription?: true}, shop_calendar), do: %{shop_calendar | enabled_dates: []}
+  def calendar_for(%{subscription?: true}, shop_calendar) do
+    key_dates_on_closed_weekdays =
+      Enum.flat_map(Weekday.all() -- shop_calendar.available_days, &KeyDates.dates_for_weekday/1)
+
+    %{shop_calendar | enabled_dates: [], disabled_dates: shop_calendar.disabled_dates ++ key_dates_on_closed_weekdays}
+  end
+
   def calendar_for(_order, shop_calendar), do: shop_calendar
 
   @doc """

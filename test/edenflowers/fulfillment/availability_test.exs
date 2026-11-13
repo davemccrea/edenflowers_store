@@ -21,6 +21,20 @@ defmodule Edenflowers.Fulfillment.AvailabilityTest do
       assert :weekday_disabled == Availability.unavailable_reason(calendar, ~D[2023-09-10], now)
     end
 
+    test "a key date is open on a closed weekday until its date is closed" do
+      calendar =
+        struct!(ShopCalendar, available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday])
+
+      now = DateTime.from_naive!(~N[2026-11-13 10:00:00], "Europe/Helsinki")
+
+      # Easter 2027 is Sunday 28 March.
+      assert nil == Availability.unavailable_reason(calendar, ~D[2027-03-28], now)
+      assert :weekday_disabled == Availability.unavailable_reason(calendar, ~D[2027-03-21], now)
+
+      closed = %{calendar | disabled_dates: [~D[2027-03-28]]}
+      assert :date_disabled == Availability.unavailable_reason(closed, ~D[2027-03-28], now)
+    end
+
     test ":same_day_delivery_disabled when same day fulfillment is not enabled" do
       calendar = struct!(ShopCalendar, same_day: false, order_deadline: ~T[14:00:00])
       now = DateTime.from_naive!(~N[2023-09-20 09:45:00], "Europe/Helsinki")

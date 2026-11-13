@@ -55,6 +55,18 @@ defmodule Edenflowers.Orders.OrderCalendarTest do
       assert {:ok, _order} = submit.(available_from)
     end
 
+    test "a cart starting a subscription can't take a key date on a closed weekday" do
+      [key_date | _] = Edenflowers.Fulfillment.KeyDates.dates_for_weekday(:sunday)
+
+      calendar =
+        struct!(Edenflowers.Fulfillment.ShopCalendar,
+          available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
+        )
+
+      assert key_date in Edenflowers.Orders.Subscription.calendar_for(%{subscription?: true}, calendar).disabled_dates
+      assert Edenflowers.Orders.Subscription.calendar_for(%{subscription?: false}, calendar) == calendar
+    end
+
     # It would repeat on a weekday the shop is closed.
     test "submit_delivery refuses a subscription's first delivery on a date opened outside the weekdays" do
       pickup_option = generate(fulfillment_option(fulfillment_method: :pickup))

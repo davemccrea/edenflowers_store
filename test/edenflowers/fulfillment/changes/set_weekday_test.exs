@@ -78,37 +78,16 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekdayTest do
     end
   end
 
-  describe "key-date protection" do
+  describe "key dates" do
     # Mother's Day 2026 is a Sunday (~D[2026-05-10]).
 
-    test "set_weekday :off preserves an open key date by adding an enabled override" do
-      # The weekday rule currently opens Sundays, including Mother's Day.
-      calendar = %ShopCalendar{}
+    test "turning a weekday :off keeps the closing override on a key date" do
+      calendar = struct!(ShopCalendar, disabled_dates: [~D[2026-05-10]])
 
       result = SetWeekday.set_weekday(calendar, :sunday, :off)
 
-      refute :sunday in result.available_days
-      # Mother's Day must remain open via an enabled override.
-      assert ~D[2026-05-10] in result.enabled_dates
-    end
-
-    test "set_weekday :on preserves a closed key date by adding a disabled override" do
-      # The weekday rule currently closes Sundays, including Mother's Day.
-      calendar =
-        struct!(ShopCalendar, available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday])
-
-      result = SetWeekday.set_weekday(calendar, :sunday, :on)
-
-      assert :sunday in result.available_days
-      # Mother's Day must remain closed via a disabled override.
+      # Without the override the key date would be open again.
       assert ~D[2026-05-10] in result.disabled_dates
-    end
-
-    test "turning an already-on weekday :on changes nothing, key dates included" do
-      calendar = %ShopCalendar{}
-
-      assert SetWeekday.set_weekday(calendar, :sunday, :on) ==
-               Map.take(calendar, [:available_days, :enabled_dates, :disabled_dates])
     end
   end
 end

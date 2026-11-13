@@ -9,6 +9,7 @@ defmodule Edenflowers.Fulfillment.Availability do
   `:reset_calendar` action.
   """
 
+  alias Edenflowers.Fulfillment.KeyDates
   alias Edenflowers.Fulfillment.ShopCalendar
   alias Edenflowers.Fulfillment.Weekday
 
@@ -40,7 +41,7 @@ defmodule Edenflowers.Fulfillment.Availability do
       Date.compare(date, now) == :lt -> :past
       available_from && Date.compare(date, available_from) == :lt -> :before_available_from
       date in calendar.disabled_dates -> :date_disabled
-      date not in calendar.enabled_dates and Weekday.from_date(date) not in calendar.available_days -> :weekday_disabled
+      date not in calendar.enabled_dates and not open_by_rule?(calendar, date) -> :weekday_disabled
       today? and not calendar.same_day -> :same_day_delivery_disabled
       today? and Time.compare(now, calendar.order_deadline) == :gt -> :order_deadline_passed
       true -> nil
@@ -125,9 +126,20 @@ defmodule Edenflowers.Fulfillment.Availability do
       Date.compare(date, today) == :lt -> :past
       date in calendar.disabled_dates -> :date_disabled
       date in calendar.enabled_dates -> :open
-      Weekday.from_date(date) in calendar.available_days -> :open
+      open_by_rule?(calendar, date) -> :open
       true -> :weekday_disabled
     end
+  end
+
+  @doc """
+  Whether `date` is open before any date override: its weekday is open, or it
+  is a florist key date. A key date stays open on a closed weekday until Jennie
+  closes that date herself, so one added later or in a later year needs no
+  override written for it.
+  """
+  @spec open_by_rule?(ShopCalendar.t(), Date.t()) :: boolean()
+  def open_by_rule?(%ShopCalendar{} = calendar, %Date{} = date) do
+    Weekday.from_date(date) in calendar.available_days or KeyDates.key_date?(date)
   end
 
   @doc """

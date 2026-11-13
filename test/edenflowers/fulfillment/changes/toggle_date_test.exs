@@ -31,7 +31,12 @@ defmodule Edenflowers.Fulfillment.Changes.ToggleDateTest do
     end
 
     test "removes an existing on-override" do
-      calendar = struct!(ShopCalendar, enabled_dates: [~D[2024-04-07]])
+      # Sundays are closed, and 2024-04-07 is a Sunday opened by an override.
+      calendar =
+        struct!(ShopCalendar,
+          available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday],
+          enabled_dates: [~D[2024-04-07]]
+        )
 
       assert %{enabled_dates: [], disabled_dates: []} =
                ToggleDate.toggle_date(calendar, ~D[2024-04-07])
@@ -43,6 +48,18 @@ defmodule Edenflowers.Fulfillment.Changes.ToggleDateTest do
       assert %{disabled_dates: dates} = ToggleDate.toggle_date(calendar, ~D[2024-04-10])
       assert ~D[2024-04-15] in dates
       assert ~D[2024-04-10] in dates
+    end
+
+    # Mother's Day 2026 is a Sunday (~D[2026-05-10]).
+    test "closes a key date on a closed weekday, dropping a leftover on-override" do
+      calendar =
+        struct!(ShopCalendar,
+          available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday],
+          enabled_dates: [~D[2026-05-10]]
+        )
+
+      assert ToggleDate.toggle_date(calendar, ~D[2026-05-10]) ==
+               %{enabled_dates: [], disabled_dates: [~D[2026-05-10]]}
     end
   end
 end
