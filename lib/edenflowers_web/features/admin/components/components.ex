@@ -385,22 +385,6 @@ defmodule EdenflowersWeb.Admin.Components do
   def category_label(:unknown), do: ~t"Unknown"
   def category_label(value), do: to_string(value)
 
-  attr :confidence, :atom, required: true
-
-  @doc "Pill for Claude's extraction confidence, shown only when it isn't high."
-  def confidence_badge(assigns) do
-    ~H"""
-    <.badge tone={confidence_tone(@confidence)}>
-      <span
-        :if={@confidence == :low}
-        class="inline-block h-1.5 w-1.5 rounded-full bg-current"
-        aria-hidden="true"
-      />
-      {confidence_label(@confidence)}
-    </.badge>
-    """
-  end
-
   attr :expense, :map, required: true, doc: "an expense with `overdue` and `scheduled` loaded"
   attr :locale, :any, required: true
 
@@ -971,15 +955,6 @@ defmodule EdenflowersWeb.Admin.Components do
     </header>
     """
   end
-
-  defp confidence_tone(:low), do: :error
-  defp confidence_tone(:medium), do: :warning
-  defp confidence_tone(_), do: :neutral
-
-  # Context keeps "Medium" apart from the variant size, which translates differently.
-  defp confidence_label(:low), do: dpgettext("admin", "expense confidence", "Low")
-  defp confidence_label(:medium), do: dpgettext("admin", "expense confidence", "Medium")
-  defp confidence_label(value), do: to_string(value)
 
   defp payment_status_tone(:paid), do: :success
   defp payment_status_tone(:refunded), do: :attention

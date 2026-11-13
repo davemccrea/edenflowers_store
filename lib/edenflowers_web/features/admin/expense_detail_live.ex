@@ -180,13 +180,6 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                   {~t"No amount"}
                 </span>
               </p>
-              <%!-- Claude's doubt stops mattering once Jennie has confirmed the figures. --%>
-              <p
-                :if={@expense.confidence != :high and is_nil(@expense.reviewed_at)}
-                class="text-base-content/75 mt-3 flex items-center gap-2 text-sm"
-              >
-                {~t"Confidence"} <.confidence_badge confidence={@expense.confidence} />
-              </p>
             </.widget>
 
             <.widget :if={@expense.bank_transaction} id="expense-bank-payment" title={~t"Bank payment"}>
@@ -331,8 +324,6 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   defp review_reason(:missing_total, _expense), do: ~t"No total amount found."
   defp review_reason(:missing_currency, _expense), do: ~t"No currency found."
 
-  defp review_reason(:unsure, %{uncertainty: nil}),
-    do: ~t"Claude was unsure of the reading. Compare the details with the document."
-
-  defp review_reason(:unsure, expense), do: ~t"Claude was unsure: #{note = expense.uncertainty}"
+  defp review_reason(:unsure, %{uncertainty: nil}), do: ~t"Compare the details with the document."
+  defp review_reason(:unsure, expense), do: expense.uncertainty
 end
