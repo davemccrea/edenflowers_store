@@ -136,6 +136,24 @@ defmodule Edenflowers.Bank.SyncPaymentsTest do
 
       assert %{paid_on: nil, matched_by_amount: false} = reload(expense)
     end
+
+    test "doesn't settle another expense after the real payment pays the one it wrongly matched" do
+      connect()
+      wrong_match = payment("130.83", nil, "2026-11-10")
+      stub_transactions([wrong_match])
+      expense = seed_expense(total_amount: Decimal.new("130.83"), date: ~D[2026-11-03], reference_number: "123453")
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      Expenses.mark_expense_unpaid!(reload(expense), actor: %{admin: true})
+      stub_transactions([wrong_match, payment("130.83", "123453", "2026-11-11")])
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      other = seed_expense(total_amount: Decimal.new("130.83"), date: ~D[2026-11-05])
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      assert %{paid_on: ~D[2026-11-11], matched_by_amount: false} = reload(expense)
+      assert reload(other).paid_on == nil
+    end
   end
 
   test "reads nothing before the bank is connected or once the consent has ended" do

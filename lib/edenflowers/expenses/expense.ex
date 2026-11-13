@@ -377,7 +377,8 @@ defmodule Edenflowers.Expenses.Expense do
         description: "The payment quoted no reference, so only its amount says it pays this expense."
 
       change set_attribute(:paid_on, arg(:booked_on))
-      change set_attribute(:bank_transaction_id, arg(:bank_transaction_id))
+      # Keeps the id of a payment that matched it wrongly, so that payment never settles another expense.
+      change atomic_update(:bank_transaction_id, expr(bank_transaction_id || ^arg(:bank_transaction_id)))
       change set_attribute(:matched_by_amount, arg(:matched_by_amount))
     end
 
