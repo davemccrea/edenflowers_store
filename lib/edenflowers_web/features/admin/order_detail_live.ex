@@ -48,7 +48,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> assign(:mapbox_token, Application.get_env(:edenflowers, :mapbox_token))
          |> assign(stale: false)
          |> assign_order(order)
-         |> assign(fulfillment_form: nil, photo_error: nil)
+         |> assign(:fulfillment_form, nil)
          |> assign(cancelling: nil, cancel_form: nil)
          |> assign(email_form: nil, email_kind: nil, preview: nil)
          |> assign(:settlement_mode, :settle)
@@ -165,7 +165,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           :if={@order.can_mark_fulfilled?}
           stale={@stale}
           form={@fulfillment_form}
-          photo_error={@photo_error}
           order={@order}
           uploads={@uploads}
           preview={@preview}
@@ -564,7 +563,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply,
      socket
      |> PhotoUpload.forget([@photo_field])
-     |> assign(fulfillment_form: form, photo_error: nil)
+     |> assign(:fulfillment_form, form)
      |> assign_fulfillment_preview()
      |> push_event("js-exec", %{to: "#confirm-fulfillment", attr: "phx-show"})}
   end
@@ -592,7 +591,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     socket = PhotoUpload.store_uploads(socket, [@photo_field], basename)
 
     case socket.assigns.photo_slugs[@photo_field] do
-      nil -> {:noreply, assign(socket, :photo_error, ~t"Take a photo of where you left the order.")}
+      nil -> mark_fulfilled(socket, params)
       slug -> mark_fulfilled(socket, Map.put(params, "delivery_photo_slug", slug))
     end
   end
@@ -861,8 +860,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   # Include the delivery photo in the email when the order was left while nobody
-  # was home. `customer_home` controls the drawer and is not an action argument.
-  defp fulfillment_params(form, %{"customer_home" => "false"} = params, action),
+  # was home and Jennie took one; without one the customer gets the plain
+  # Delivered email. `customer_home` controls the drawer and is not an action argument.
+  defp fulfillment_params(form, %{"customer_home" => "false", "delivery_photo_slug" => _} = params, action),
     do: Drawers.keep_email_edits(form, Map.put(params, "email_delivery_photo", "true"), action)
 
   defp fulfillment_params(form, params, action), do: Drawers.keep_email_edits(form, params, action)
@@ -937,7 +937,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     do: assign(socket, :preview, DrawerPreview.build(kind, socket.assigns.order, form))
 
   defp assign_fulfillment_preview(socket) do
-    photo? = socket.assigns.fulfillment_form[:customer_home].value == "false"
+    photo? =
+      socket.assigns.fulfillment_form[:customer_home].value == "false" and
+        socket.assigns.uploads["photo_" <> @photo_field].entries != []
+
     assign(socket, :preview, Preview.build(:fulfillment, socket.assigns.order, %{photo?: photo?}))
   end
 

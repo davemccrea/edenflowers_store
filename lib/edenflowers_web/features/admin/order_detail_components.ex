@@ -226,7 +226,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   def nothing_to_settle?(order, :settle), do: not order.to_collect?
 
   attr :form, :any, default: nil
-  attr :photo_error, :string, default: nil
   attr :stale, :boolean, default: false
   attr :order, Order, required: true
   attr :uploads, :map, required: true
@@ -250,7 +249,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       >
         <.drawer_body>
           <.refusal form={@form} />
-          <p :if={@photo_error} role="alert" class="text-error text-sm">{@photo_error}</p>
           <.input
             :let={option}
             :if={@order.fulfillment_method == :delivery}

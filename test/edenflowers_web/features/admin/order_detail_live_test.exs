@@ -770,7 +770,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   end
 
   describe "confirming a delivery" do
-    test "reopening after native drawer dismissal forgets the previous photo", %{conn: conn} do
+    test "reopening after native drawer dismissal forgets the previous photo, which isn't required", %{conn: conn} do
       order = placed_order(fulfillment_status: :ready, fulfillment_method: :delivery)
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
@@ -786,9 +786,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "false"}) |> render_change()
       view |> form("#confirm-fulfillment-form") |> render_submit()
 
-      assert has_element?(view, "#confirm-fulfillment-dialog [role=alert]", "Take a photo of where you left the order.")
-      assert Orders.get_order_for_admin!(order.id, actor: %{admin: true}).fulfillment_status == :ready
-      refute_enqueued(worker: Edenflowers.Orders.Workers.SendFulfillmentEmail)
+      assert has_element?(view, "#order-status", "Fulfilled")
+      refute has_element?(view, "#order-delivery-photo")
+      reloaded = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
+      assert is_nil(reloaded.delivery_photo_slug)
+      refute reloaded.email_delivery_photo
+      assert_enqueued(worker: Edenflowers.Orders.Workers.SendFulfillmentEmail)
     end
 
     test "the customer was home: fulfils with no photo and, by default, no email", %{conn: conn} do
@@ -809,16 +812,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       refute_enqueued(worker: Edenflowers.Orders.Workers.SendFulfillmentEmail)
     end
 
-    test "nobody was home: requires a photo, then names it after the time and order reference", %{conn: conn} do
+    test "nobody was home: names the photo after the time and order reference", %{conn: conn} do
       order = placed_order(fulfillment_status: :ready, fulfillment_method: :delivery)
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
       view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "false"}) |> render_change()
-
-      view |> form("#confirm-fulfillment-form") |> render_submit()
-      assert has_element?(view, "#confirm-fulfillment-dialog [role=alert]", "Take a photo of where you left the order.")
-      assert Orders.get_order_for_admin!(order.id, actor: %{admin: true}).fulfillment_status == :ready
 
       view
       |> file_input("#confirm-fulfillment-form", "photo_fulfillment[photo]", [
@@ -839,22 +838,26 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   end
 
   describe "choosing whether to email the customer" do
-    test "nobody home sends Left at the door with the photo, unless Jennie unticks it", %{conn: conn} do
+    test "nobody home sends Left at the door once there's a photo, unless Jennie unticks it", %{conn: conn} do
       order = placed_order(fulfillment_status: :ready, fulfillment_method: :delivery, locale: "en-GB")
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
       view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "false"}) |> render_change()
-      assert has_element?(view, "#fulfillment-email-preview", "was left at the door")
-      assert has_element?(view, "#fulfillment-email-preview", "Attached: eden-flowers-delivery.jpg")
-
-      view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer?: "false"}) |> render_change()
-      refute has_element?(view, "#fulfillment-email-preview")
+      assert has_element?(view, "#fulfillment-email-preview", "has been delivered")
 
       view
       |> file_input("#confirm-fulfillment-form", "photo_fulfillment[photo]", [
         %{name: "door.jpg", content: "jpeg bytes", type: "image/jpeg"}
       ])
       |> render_upload("door.jpg")
+
+      # A browser sends the form's change on picking the file; the test has to.
+      view |> form("#confirm-fulfillment-form") |> render_change()
+      assert has_element?(view, "#fulfillment-email-preview", "was left at the door")
+      assert has_element?(view, "#fulfillment-email-preview", "Attached: eden-flowers-delivery.jpg")
+
+      view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer?: "false"}) |> render_change()
+      refute has_element?(view, "#fulfillment-email-preview")
 
       view |> form("#confirm-fulfillment-form") |> render_submit()
       order = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
