@@ -50,7 +50,7 @@ defmodule Edenflowers.Payments.Payment do
     end
 
     attribute :payment_method_type, :string do
-      description "What paid, for the receipt: Stripe's payment method type, such as \"card\" or \"mobilepay\", or " <>
+      description ~s(What paid, for the receipt: Stripe's payment method type, such as "card" or "mobilepay", or ) <>
                     "the method Jennie recorded. Nil on payments from before it was kept."
     end
 
