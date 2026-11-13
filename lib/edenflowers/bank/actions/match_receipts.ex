@@ -30,14 +30,12 @@ defmodule Edenflowers.Bank.Actions.MatchReceipts do
     with {:ok, transactions} <- Bank.bank_transactions_awaiting_receipt(opts) do
       transactions
       |> Enum.filter(&Expense.Currency.match?(&1.currency))
-      |> Enum.reduce_while(:ok, fn transaction, :ok ->
-        case fun.(transaction) do
-          {:error, error} -> {:halt, {:error, error}}
-          _matched_or_not -> {:cont, :ok}
-        end
-      end)
+      |> Enum.reduce_while(:ok, fn transaction, :ok -> halt_on_error(fun.(transaction)) end)
     end
   end
+
+  defp halt_on_error({:error, error}), do: {:halt, {:error, error}}
+  defp halt_on_error(_matched_or_not), do: {:cont, :ok}
 
   defp settle(transaction, opts) do
     Expenses.settle_expense_from_bank(
