@@ -734,7 +734,8 @@ defmodule Edenflowers.Orders.Subscription do
               )
       end
 
-      # The emails below get 16 attempts, backing off over about 18 hours, to outlast an email provider outage (ADR 0005).
+      # The emails below get 16 attempts, backing off over about 18 hours,
+      # to outlast an email provider outage (ADR 0005).
       # Queued only by :activate, so subscriptions started before this email
       # existed are never sent one.
       trigger :send_setup_email do
