@@ -362,14 +362,14 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
         |> LazyHTML.attribute("phx-mounted")
 
       assert Jason.decode!(disclosure) == [["ignore_attrs", %{"attrs" => ["open"]}]]
-      assert has_element?(view, "#booking-email-preview-toggle", "Please pay at the course.")
+      assert has_element?(view, "#booking-email-preview-toggle", "You can pay when you come to the course.")
 
       view
       |> form("#booking-form", form: %{payment_terms: "payment_link"})
       |> render_change()
 
       assert has_element?(view, "#booking-email-preview-toggle", "You can pay online here:")
-      refute has_element?(view, "#booking-email-preview-toggle", "Please pay at the course.")
+      refute has_element?(view, "#booking-email-preview-toggle", "You can pay when you come to the course.")
     end
 
     test "invalid details leave the form open without creating a booking", %{conn: conn} do
@@ -448,7 +448,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
         assert email.to == [{"", "birgitta@example.com"}]
         refute email.text_body =~ "/pay/courses/"
         assert email.text_body =~ "Your 2 places on Autumn wreaths are confirmed."
-        assert email.text_body =~ "Please pay at the course."
+        assert email.text_body =~ "You can pay when you come to the course."
         assert email.attachments == []
       end)
     end
@@ -512,7 +512,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       |> render_change()
 
       assert has_element?(view, "#booking-email-preview-toggle", "You can pay online here:")
-      refute has_element?(view, "#booking-email-preview-toggle", "Please pay at the course.")
+      refute has_element?(view, "#booking-email-preview-toggle", "You can pay when you come to the course.")
 
       booking = add_booking(view, course, "true", "payment_link")
       assert booking.status == :confirmed
@@ -524,7 +524,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       assert_email_sent(fn email ->
         assert email.text_body =~ EdenflowersWeb.PaymentLink.url_for(booking)
         assert email.text_body =~ "confirmed"
-        refute email.text_body =~ "Please pay at the course."
+        refute email.text_body =~ "You can pay when you come to the course."
         assert email.attachments == []
       end)
 

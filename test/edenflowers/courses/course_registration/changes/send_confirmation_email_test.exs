@@ -16,7 +16,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmailTe
       assert email.to == [{"", "anna@example.com"}]
       assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
       assert email.subject =~ "You're booked on Course "
-      assert email.text_body =~ "Please pay at the course."
+      assert email.text_body =~ "You can pay when you come to the course."
       refute email.text_body =~ "Your receipt is attached."
       refute email.text_body =~ "/pay/courses/"
       assert email.attachments == []

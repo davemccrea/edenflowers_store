@@ -5,6 +5,6 @@
 <% end %><%= if Decimal.positive?(@back_on_voucher) do %>
 <%= dgettext("emails", "Back on your gift voucher: %{amount}", amount: @format_currency.(@back_on_voucher)) %>
 <% end %>
-<%= dgettext("emails", "Questions? Reply to this email.") %>
+<%= dgettext("emails", "If you have any questions, just reply to this email.") %>
 
 Eden Flowers

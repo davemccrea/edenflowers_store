@@ -2,6 +2,6 @@
 <%= if @charged_on do %>
 <%= if @pickup? do %><%= dgettext("emails", "Your order will still be ready to collect on %{date}.", date: @format_date.(@charged_on)) %><% else %><%= dgettext("emails", "Your delivery on %{date} will still come.", date: @format_date.(@charged_on)) %><% end %>
 <% end %>
-<%= dgettext("emails", "Questions? Reply to this email.") %>
+<%= dgettext("emails", "If you have any questions, just reply to this email.") %>
 
 Eden Flowers

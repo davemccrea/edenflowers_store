@@ -533,7 +533,7 @@ defmodule Edenflowers.Email.PreviewTest do
     end)
 
     reminder = reminder(registration)
-    refute reminder.text_body =~ "Please pay at the course."
+    refute reminder.text_body =~ "You can pay when you come to the course."
     assert reminder.text_body =~ EdenflowersWeb.PaymentLink.url_for(registration)
   end
 

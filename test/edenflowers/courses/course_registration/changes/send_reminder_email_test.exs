@@ -29,7 +29,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmailTest d
       assert email.subject == "A reminder about #{course.name}"
       assert email.text_body =~ "When:"
       assert email.text_body =~ "Where:"
-      assert email.text_body =~ "Please pay at the course."
+      assert email.text_body =~ "You can pay when you come to the course."
       assert email.attachments == []
     end)
 
