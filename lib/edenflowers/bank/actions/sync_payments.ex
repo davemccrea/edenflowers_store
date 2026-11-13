@@ -30,7 +30,7 @@ defmodule Edenflowers.Bank.Actions.SyncPayments do
     with true <- EnableBankingAPI.configured?(),
          {:ok, %{expired: false} = connection} <-
            Bank.current_bank_connection(actor: system_actor(), load: [:expired]) do
-      result = with :ok <- sync(connection), do: Bank.link_bank_receipts(actor: system_actor())
+      result = with :ok <- sync(connection), do: Bank.match_bank_receipts(actor: system_actor())
       store_balance(connection)
       result
     else

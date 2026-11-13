@@ -196,8 +196,8 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
   describe "bank payments without a receipt" do
     test "links one to the expense Jennie picks, which becomes paid on the booking date", %{conn: conn} do
       booked_on = Date.add(Edenflowers.ShopTime.today(), -10)
-      payment = seed_bank_payment("tx-hand", booked_on, "Kukkatukku Oy")
       expense = create_expense("hand-link", "Kukkatukku", "Roses", date: booked_on)
+      payment = seed_bank_payment("tx-hand", booked_on, "Kukkatukku Oy")
 
       {:ok, view, _html} = live(conn, ~p"/admin/expenses")
       view |> element("#bank-payment-#{payment.id} button", "Link to expense") |> render_click()
@@ -221,8 +221,8 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     test "unlinking one on its expense's page puts it back on the list, keeps the paid date and unsaved corrections",
          %{conn: conn} do
       booked_on = Date.add(Edenflowers.ShopTime.today(), -10)
-      payment = seed_bank_payment("tx-wrong", booked_on, "Kahvila")
       expense = create_expense("wrong-link", "Kahvila", "Coffee", paid_on: booked_on)
+      payment = seed_bank_payment("tx-wrong", booked_on, "Kahvila")
       Expenses.link_expense_bank_payment!(expense, booked_on, "tx-wrong", actor: %{admin: true})
 
       {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")

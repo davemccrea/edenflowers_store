@@ -2,6 +2,7 @@ defmodule Edenflowers.Bank.MissingReceiptsTest do
   use Edenflowers.DataCase, async: true
 
   import Edenflowers.Actors
+  import Mox
 
   alias Edenflowers.Bank
   alias Edenflowers.Expenses
@@ -191,6 +192,31 @@ defmodule Edenflowers.Bank.MissingReceiptsTest do
     assert [%{bank_id: "tx-1"}] = Bank.bank_payments_missing_receipt!(actor: @admin)
   end
 
+  describe "a receipt ingested after its payment was stored" do
+    setup do
+      stub(Edenflowers.External.PapraAPI.Mock, :update_document, fn _document_id, _fields -> :ok end)
+      :ok
+    end
+
+    test "is settled by the payment quoting its reference, without waiting for the sync" do
+      seed_transaction("tx-1", days_ago(1), amount: Decimal.new("875.00"), reference_number: "00000000000000123453")
+
+      expense = ingest(total_amount: "875.00", reference_number: "123453", date: days_ago(10))
+
+      assert %{paid_on: paid_on, bank_transaction_id: "tx-1"} = reload(expense)
+      assert paid_on == days_ago(1)
+    end
+
+    test "that arrived paid links to the card payment of its amount, keeping its paid date" do
+      seed_transaction("tx-1", days_ago(1), amount: Decimal.new("12.40"))
+
+      expense = ingest(total_amount: "12.40", date: days_ago(2), paid_on: days_ago(2))
+
+      assert %{paid_on: paid_on, bank_transaction_id: "tx-1"} = reload(expense)
+      assert paid_on == days_ago(2)
+    end
+  end
+
   defp days_ago(days), do: Date.add(Edenflowers.ShopTime.today(), -days)
 
   defp connect do
@@ -214,13 +240,20 @@ defmodule Edenflowers.Bank.MissingReceiptsTest do
     Ash.Seed.seed!(Expense, Map.merge(defaults, Map.new(attrs)))
   end
 
-  defp seed_transaction(bank_id, booked_on) do
-    Ash.Seed.seed!(Bank.Transaction, %{
-      bank_id: bank_id,
-      booked_on: booked_on,
-      amount: Decimal.new("10.00"),
-      currency: "eur"
-    })
+  defp seed_transaction(bank_id, booked_on, attrs \\ []) do
+    defaults = %{bank_id: bank_id, booked_on: booked_on, amount: Decimal.new("10.00"), currency: "eur"}
+    Ash.Seed.seed!(Bank.Transaction, Map.merge(defaults, Map.new(attrs)))
+  end
+
+  defp ingest(attrs) do
+    defaults = %{
+      document_id: "doc-#{System.unique_integer([:positive])}",
+      vendor_name: "Kahvila Kukka",
+      currency: "eur",
+      confidence: "high"
+    }
+
+    Expenses.ingest_expense!(Map.merge(defaults, Map.new(attrs)), actor: system_actor())
   end
 
   defp reload(expense), do: Ash.get!(Expense, expense.id, authorize?: false)

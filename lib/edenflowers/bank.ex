@@ -27,7 +27,7 @@ defmodule Edenflowers.Bank do
 
     resource Edenflowers.Bank.Transaction do
       define :record_bank_transaction, action: :record
-      define :link_bank_receipts, action: :link_receipts
+      define :match_bank_receipts, action: :match_receipts
       define :bank_transactions_awaiting_receipt, action: :awaiting_receipt
       define :bank_payments_missing_receipt, action: :missing_receipt
       define :dismissed_bank_payments, action: :dismissed

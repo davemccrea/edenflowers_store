@@ -323,6 +323,7 @@ defmodule Edenflowers.Expenses.Expense do
       # Re-processing only fills an empty paid date, so Jennie's stays.
       change atomic_update(:paid_on, expr(paid_on || upsert_conflict(:paid_on)))
       change Changes.UpdatePapraDocument
+      change Changes.MatchBankPayments
     end
 
     update :correct do

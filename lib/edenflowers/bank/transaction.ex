@@ -76,7 +76,7 @@ defmodule Edenflowers.Bank.Transaction do
     end
 
     read :awaiting_receipt do
-      description "Payments not dismissed and not yet paying an expense, oldest first: the ones linking tries."
+      description "Payments not dismissed and not yet paying an expense, oldest first: the ones matching tries."
       filter expr(is_nil(dismissed_at) and not exists(expense, paid))
       prepare build(sort: [booked_on: :asc])
     end
@@ -125,19 +125,20 @@ defmodule Edenflowers.Bank.Transaction do
       change set_attribute(:dismissed_at, nil)
     end
 
-    action :link_receipts do
-      description "Links each payment awaiting a receipt to the paid expense of its amount and currency paid " <>
-                    "within a week of the booking, such as a card payment's receipt. Leaves the expense's paid " <>
-                    "date alone and skips a pair Jennie unlinked."
+    action :match_receipts do
+      description "Matches each payment awaiting a receipt to an expense, without reading the bank: first it " <>
+                    "settles the unpaid expense it pays, as the sync would, then the rest link to the paid " <>
+                    "expense of their amount and currency paid within a week of the booking, such as a card " <>
+                    "payment's receipt. Linking leaves the expense's paid date alone and skips a pair Jennie unlinked."
 
-      run Edenflowers.Bank.Actions.LinkReceipts
+      run Edenflowers.Bank.Actions.MatchReceipts
     end
   end
 
   policies do
     bypass actor_attribute_equals(:system, true) do
       authorize_if action_type(:read)
-      authorize_if action([:record, :link_receipts])
+      authorize_if action([:record, :match_receipts])
     end
 
     bypass actor_attribute_equals(:admin, true) do
