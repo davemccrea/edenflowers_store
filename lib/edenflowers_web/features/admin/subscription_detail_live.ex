@@ -208,10 +208,10 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
                 <:col :let={order} label={~t"Reference"} class="max-sm:hidden">
                   <span class="text-base-content/75 tabular-nums">{order.order_reference}</span>
                 </:col>
-                <:col :let={order} field="fulfillment_status" sort label={~t"Fulfillment"}>
+                <:col :let={order} field="fulfillment_status_rank" sort label={~t"Fulfillment"}>
                   <.fulfillment_status_badge status={order.fulfillment_status} />
                 </:col>
-                <:col :let={order} field="payment_status" sort label={~t"Payment"} class="max-sm:hidden">
+                <:col :let={order} field="payment_status_rank" sort label={~t"Payment"} class="max-sm:hidden">
                   <.order_payment_badge order={order} locale={@locale} />
                 </:col>
                 <:col :let={order} field="grand_total" sort label={~t"Total"} class="text-right">

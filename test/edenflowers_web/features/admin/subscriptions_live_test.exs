@@ -97,10 +97,51 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
     refute has_element?(view, "[data-item-id]", "Ada Lovelace")
   end
 
+  test "sorts sizes small to large, not alphabetically", %{conn: conn} do
+    admin = generate(admin_user()) |> with_token()
+    conn = log_in(conn, admin)
+
+    for {name, size} <- [{"Lars Large", :large}, {"Sam Small", :small}, {"Mia Medium", :medium}] do
+      {:ok, customer} = Edenflowers.Accounts.upsert_user("#{size}@example.com", name, authorize?: false)
+      variant = generate(product_variant(product_id: generate(product()).id, size: size))
+      generate(subscription(user_id: customer.id, product_variant_id: variant.id))
+    end
+
+    {:ok, view, _html} = live(conn, ~p"/admin/subscriptions")
+    view |> element("[phx-click=toggle_sort][phx-value-key='product_variant.size_rank']") |> render_click()
+
+    assert row_names(render(view), ["Lars Large", "Sam Small", "Mia Medium"]) == [
+             "Sam Small",
+             "Mia Medium",
+             "Lars Large"
+           ]
+  end
+
+  # Ranked from a list in the resource, so a new state must be added there too or it sorts last.
+  test "sorts states in the state machine's order", %{conn: conn} do
+    admin = generate(admin_user()) |> with_token()
+    conn = log_in(conn, admin)
+    states = AshStateMachine.Info.state_machine_all_states(Edenflowers.Orders.Subscription)
+
+    for state <- Enum.reverse(states) do
+      {:ok, customer} = Edenflowers.Accounts.upsert_user("#{state}@example.com", "Customer #{state}", authorize?: false)
+      generate(subscription(user_id: customer.id, state: state))
+    end
+
+    {:ok, _view, html} = live(conn, ~p"/admin/subscriptions?sort=state_rank")
+    names = Enum.map(states, &"Customer #{&1}")
+    assert row_names(html, names) == names
+  end
+
   # The filter offers whatever the state machine holds, so a new state must get a label.
   test "labels every subscription state" do
     for state <- AshStateMachine.Info.state_machine_all_states(Edenflowers.Orders.Subscription) do
       assert is_binary(EdenflowersWeb.Admin.Components.subscription_state_label(state))
     end
+  end
+
+  defp row_names(html, names) do
+    rows = html |> String.split("<tbody") |> List.last()
+    Enum.sort_by(names, &(rows |> :binary.match(&1) |> elem(0)))
   end
 end

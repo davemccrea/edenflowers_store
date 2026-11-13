@@ -57,6 +57,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
           theme={EdenflowersWeb.Admin.CinderTheme}
           click={fn subscription -> JS.navigate(~p"/admin/subscriptions/#{subscription.id}") end}
         >
+          <:filter field="state" type={:multi_select} label={~t"Status"} prompt={~t"All"} options={state_options()} />
           <:col :let={subscription} field="user.name" search sort label={~t"Customer"}>
             <.link
               navigate={~p"/admin/subscriptions/#{subscription.id}"}
@@ -68,7 +69,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
           <:col :let={subscription} field="user.email" label={~t"Email"} class="max-sm:hidden">
             <span class="text-base-content/75">{subscription.user.email}</span>
           </:col>
-          <:col :let={subscription} field="product_variant.size" sort label={~t"Size"} class="max-sm:hidden">
+          <:col :let={subscription} field="product_variant.size_rank" sort label={~t"Size"} class="max-sm:hidden">
             {variant_size_label(subscription.product_variant.size)}
           </:col>
           <:col :let={subscription} field="interval_weeks" sort label={~t"Interval"} class="max-sm:hidden">
@@ -85,9 +86,8 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
           </:col>
           <:col
             :let={subscription}
-            field="state"
+            field="state_rank"
             sort
-            filter={[type: :multi_select, label: ~t"Status", prompt: ~t"All", options: state_options()]}
             label={~t"Status"}
           >
             <.subscription_state_badge state={subscription.state} />

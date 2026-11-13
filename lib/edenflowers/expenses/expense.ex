@@ -174,6 +174,13 @@ defmodule Edenflowers.Expenses.Expense do
   end
 
   calculations do
+    calculate :category_rank,
+              :integer,
+              {Edenflowers.Calculations.Rank, field: :category, order: __MODULE__.Category.values()} do
+      description "Its category's place on Vero's form, as the admin category filter lists them: what the admin " <>
+                    "Expenses table sorts it by."
+    end
+
     calculate :amount_distance,
               :decimal,
               expr(

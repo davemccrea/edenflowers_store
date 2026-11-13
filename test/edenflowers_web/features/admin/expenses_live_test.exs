@@ -81,6 +81,20 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     refute has_element?(view, "[data-item-id]", "Paid Vendor")
   end
 
+  test "sorts by the paid date", %{conn: conn} do
+    create_expense("paid-early", "Early Vendor", "Done", date: ~D[2026-06-03], paid_on: ~D[2026-06-04])
+    create_expense("paid-late", "Late Vendor", "Done", date: ~D[2026-06-01], paid_on: ~D[2026-06-10])
+
+    {:ok, view, _html} = live(conn, ~p"/admin/expenses")
+    view |> element("[phx-click=toggle_sort][phx-value-key=paid_on]") |> render_click()
+    oldest_first = render(view)
+    view |> element("[phx-click=toggle_sort][phx-value-key=paid_on]") |> render_click()
+    newest_first = render(view)
+
+    assert position(oldest_first, "Early Vendor") < position(oldest_first, "Late Vendor")
+    assert position(newest_first, "Late Vendor") < position(newest_first, "Early Vendor")
+  end
+
   test "a clean expense editor warns when the bank marks it paid and reload catches up", %{conn: conn} do
     expense = create_expense("bank-paid", "Bank Vendor", "Bank payment")
     paid_on = Edenflowers.ShopTime.today()
@@ -248,6 +262,8 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
       counterparty: counterparty
     })
   end
+
+  defp position(html, text), do: html |> :binary.match(text) |> elem(0)
 
   defp create_expense(document_id, vendor_name, description, attrs \\ []) do
     Expenses.ingest_expense!(

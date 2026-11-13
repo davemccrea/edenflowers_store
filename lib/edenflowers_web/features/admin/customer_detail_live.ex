@@ -95,7 +95,7 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
           class="mb-8"
           click={fn subscription -> JS.navigate(~p"/admin/subscriptions/#{subscription.id}") end}
         >
-          <:col :let={subscription} field="product_variant.size" sort label={~t"Size"}>
+          <:col :let={subscription} field="product_variant.size_rank" sort label={~t"Size"}>
             <.link navigate={~p"/admin/subscriptions/#{subscription.id}"} class="touch-target font-semibold hover:underline">
               {variant_size_label(subscription.product_variant.size)}
             </.link>
@@ -109,7 +109,7 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
             </span>
             <.blank :if={!subscription.next_delivery_date} />
           </:col>
-          <:col :let={subscription} field="state" sort label={~t"Status"}>
+          <:col :let={subscription} field="state_rank" sort label={~t"Status"}>
             <.subscription_state_badge state={subscription.state} />
           </:col>
         </Cinder.collection>
@@ -148,10 +148,10 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
               {Format.date(order.fulfillment_date, @locale)}
             </span>
           </:col>
-          <:col :let={order} field="fulfillment_status" sort label={~t"Fulfillment"}>
+          <:col :let={order} field="fulfillment_status_rank" sort label={~t"Fulfillment"}>
             <.fulfillment_status_badge status={order.fulfillment_status} />
           </:col>
-          <:col :let={order} field="payment_status" sort label={~t"Payment"} class="max-sm:hidden">
+          <:col :let={order} field="payment_status_rank" sort label={~t"Payment"} class="max-sm:hidden">
             <.order_payment_badge order={order} locale={@locale} />
           </:col>
           <:col :let={order} field="grand_total" sort label={~t"Total"} class="text-right">
@@ -159,7 +159,7 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
               {Format.currency(order.grand_total, @locale)}
             </span>
           </:col>
-          <:col :let={order} field="fulfillment_method" sort label={~t"Method"} class="max-sm:hidden">
+          <:col :let={order} field="fulfillment_method_rank" sort label={~t"Method"} class="max-sm:hidden">
             <.fulfillment_method method={order.fulfillment_method} />
           </:col>
         </Cinder.collection>

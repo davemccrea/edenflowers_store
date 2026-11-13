@@ -67,6 +67,20 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           click={fn order -> JS.navigate(~p"/admin/orders/#{order.id}") end}
         >
           <:filter
+            field="payment_status"
+            type={:select}
+            label={~t"Payment"}
+            prompt={~t"All"}
+            options={payment_status_options()}
+          />
+          <:filter
+            field="fulfillment_method"
+            type={:select}
+            label={~t"Delivery or pickup"}
+            prompt={~t"All"}
+            options={fulfillment_method_options()}
+          />
+          <:filter
             field="open"
             type={:select}
             label={~t"Show"}
@@ -124,7 +138,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           </:col>
           <:col
             :let={order}
-            field="fulfillment_status"
+            field="fulfillment_status_rank"
             sort
             label={~t"Fulfillment"}
           >
@@ -132,14 +146,8 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           </:col>
           <:col
             :let={order}
-            field="payment_status"
+            field="payment_status_rank"
             sort
-            filter={[
-              type: :select,
-              label: ~t"Payment",
-              prompt: ~t"All",
-              options: payment_status_options()
-            ]}
             label={~t"Payment"}
             class="max-sm:hidden"
           >
@@ -150,14 +158,8 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           </:col>
           <:col
             :let={order}
-            field="fulfillment_method"
+            field="fulfillment_method_rank"
             sort
-            filter={[
-              type: :select,
-              label: ~t"Delivery or pickup",
-              prompt: ~t"All",
-              options: fulfillment_method_options()
-            ]}
             label={~t"Method"}
             class="max-sm:hidden"
           >

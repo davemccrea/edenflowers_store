@@ -203,6 +203,13 @@ defmodule Edenflowers.Orders.Subscription do
   end
 
   calculations do
+    calculate :state_rank,
+              :integer,
+              {Edenflowers.Calculations.Rank, field: :state, order: [:active, :payment_failed, :paused, :cancelled]} do
+      description "Its state's place in the state machine's order, as the admin status filter lists them: " <>
+                    "what the admin tables sort it by."
+    end
+
     calculate :cancelled?, :boolean, expr(state == :cancelled) do
       description "Whether the customer or Jennie has ended it."
     end

@@ -64,6 +64,12 @@ defmodule Edenflowers.Catalog.ProductVariant do
   end
 
   calculations do
+    calculate :size_rank,
+              :integer,
+              {Edenflowers.Calculations.Rank, field: :size, order: Edenflowers.Catalog.ProductVariantSize.values()} do
+      description "Small 1, medium 2, large 3: what the admin tables sort sizes by."
+    end
+
     calculate :photo_slug, :string, expr(own_photo_slug || product.main_photo_slug) do
       description "The photo to show for this size: its own, else the product's main photo."
     end

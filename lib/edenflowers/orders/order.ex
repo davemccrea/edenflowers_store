@@ -344,6 +344,26 @@ defmodule Edenflowers.Orders.Order do
   end
 
   calculations do
+    calculate :fulfillment_status_rank,
+              :integer,
+              {Edenflowers.Calculations.Rank,
+               field: :fulfillment_status, order: __MODULE__.Types.FulfillmentStatus.values()} do
+      description "Its fulfillment status's place from pending to cancelled: what the admin tables sort it by."
+    end
+
+    calculate :payment_status_rank,
+              :integer,
+              {Edenflowers.Calculations.Rank, field: :payment_status, order: __MODULE__.Types.PaymentStatus.values()} do
+      description "Its payment status's place from pending to refunded: what the admin tables sort it by."
+    end
+
+    calculate :fulfillment_method_rank,
+              :integer,
+              {Edenflowers.Calculations.Rank,
+               field: :fulfillment_method, order: FulfillmentOption.FulfillmentMethod.values()} do
+      description "Delivery 1, pickup 2: what the admin tables sort the method by."
+    end
+
     # Calculations written as `fn` use their explicitly loaded values in Elixir.
     # This avoids repeating the balance and payment-status calculations' dependent
     # expressions in SQL (ADR 0007).

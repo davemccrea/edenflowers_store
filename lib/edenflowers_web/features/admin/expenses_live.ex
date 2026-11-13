@@ -84,6 +84,20 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           click={fn expense -> JS.navigate(~p"/admin/expenses/#{expense.id}") end}
         >
           <:filter
+            field="paid"
+            type={:select}
+            label={~t"Payment"}
+            prompt={~t"All"}
+            options={[{~t"Paid or scheduled", true}, {~t"Unpaid", false}]}
+          />
+          <:filter
+            field="category"
+            type={:select}
+            label={~t"Category"}
+            prompt={~t"All"}
+            options={category_options()}
+          />
+          <:filter
             field="needs_review"
             type={:select}
             label={~t"Review"}
@@ -117,25 +131,13 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
             </span>
             <.blank :if={is_nil(expense.total_amount) or is_nil(expense.currency)} />
           </:col>
-          <:col
-            :let={expense}
-            field="paid"
-            sort
-            filter={[
-              type: :select,
-              label: ~t"Payment",
-              prompt: ~t"All",
-              options: [{~t"Paid or scheduled", true}, {~t"Unpaid", false}]
-            ]}
-            label={~t"Paid"}
-          >
+          <:col :let={expense} field="paid_on" sort label={~t"Paid"}>
             <.expense_payment_status expense={expense} locale={@locale} />
           </:col>
           <:col
             :let={expense}
-            field="category"
+            field="category_rank"
             sort
-            filter={[type: :select, label: ~t"Category", prompt: ~t"All", options: category_options()]}
             label={~t"Category"}
             class="max-sm:hidden"
           >

@@ -210,4 +210,16 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
       assert EdenflowersWeb.Admin.Components.payment_status_label(status) != to_string(status)
     end
   end
+
+  test "sorts fulfillment from pending to fulfilled, not alphabetically", %{conn: conn} do
+    placed_order(customer_name: "Fran Fulfilled", fulfillment_status: :fulfilled, paid: true)
+    placed_order(customer_name: "Pat Pending", fulfillment_status: :pending)
+    placed_order(customer_name: "Rae Ready", fulfillment_status: :ready, paid: true)
+
+    {:ok, _view, html} = live(conn, ~p"/admin/orders?sort=fulfillment_status_rank")
+    rows = html |> String.split("<tbody") |> List.last()
+    names = Enum.sort_by(["Fran Fulfilled", "Pat Pending", "Rae Ready"], &(rows |> :binary.match(&1) |> elem(0)))
+
+    assert names == ["Pat Pending", "Rae Ready", "Fran Fulfilled"]
+  end
 end
