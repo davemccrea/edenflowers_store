@@ -140,7 +140,7 @@ defmodule EdenflowersWeb.Checkout.Fields do
   defp step_summary(:gift_options, _), do: nil
 
   defp step_summary(:delivery, %{fulfillment_method: method, fulfillment_date: date} = order)
-       when not is_nil(method) and not is_nil(date) do
+       when method != nil and date != nil do
     method_label = if method == :delivery, do: ~t"Home delivery", else: ~t"In-store pickup"
     address = if method == :delivery, do: order.delivery_address, else: nil
 

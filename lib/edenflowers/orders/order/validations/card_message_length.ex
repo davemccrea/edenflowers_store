@@ -46,8 +46,8 @@ defmodule Edenflowers.Orders.Order.Validations.CardMessageLength do
   end
 
   defp chosen_card_size(changeset) do
-    with variant_id when not is_nil(variant_id) <- Ash.Changeset.get_argument(changeset, :card_variant_id),
-         {:ok, %{size: size}} when not is_nil(size) <- Catalog.get_variant_by_id(variant_id, authorize?: false) do
+    with variant_id when variant_id != nil <- Ash.Changeset.get_argument(changeset, :card_variant_id),
+         {:ok, %{size: size}} when size != nil <- Catalog.get_variant_by_id(variant_id, authorize?: false) do
       size
     else
       _ -> :large

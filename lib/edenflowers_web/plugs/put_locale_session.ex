@@ -14,7 +14,7 @@ defmodule EdenflowersWeb.Plugs.PutLocaleSession do
 
   def call(conn, _opts) do
     case Localize.Plug.PutLocale.get_locale(conn) do
-      %Localize.LanguageTag{cldr_locale_id: id} when not is_nil(id) ->
+      %Localize.LanguageTag{cldr_locale_id: id} when id != nil ->
         put_session(conn, @session_key, to_string(id))
 
       _ ->

@@ -923,7 +923,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     %{order: order, fee: fee} = assigns
 
     case Enum.find(order.line_items, & &1.interval_weeks) do
-      %{} = line when not is_nil(order.fulfillment_date) ->
+      %{} = line when order.fulfillment_date != nil ->
         assigns =
           assign(assigns,
             amount:

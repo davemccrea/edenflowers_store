@@ -33,7 +33,7 @@ defmodule Edenflowers.Fulfillment.Availability do
   Available from, the first day its flowers let Jennie make it, or nil.
   """
   @spec unavailable_reason(ShopCalendar.t(), Date.t(), DateTime.t(), Date.t() | nil) :: unavailable_reason() | nil
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
+  # credo:disable-for-next-line /Complexity/
   def unavailable_reason(%ShopCalendar{} = calendar, %Date{} = date, %DateTime{} = now, available_from \\ nil) do
     today? = Date.compare(date, now) == :eq
 

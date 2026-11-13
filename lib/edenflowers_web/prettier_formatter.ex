@@ -30,7 +30,10 @@ defmodule EdenflowersWeb.PrettierFormatter do
     try do
       File.write!(tmp_file, content)
 
-      case System.cmd("npx", ["--yes", @prettier, tmp_file], stderr_to_stdout: true) do
+      case System.cmd("npx", ["--yes", @prettier, tmp_file],
+             stderr_to_stdout: true,
+             env: Edenflowers.ChildEnv.without_secrets()
+           ) do
         {output, 0} ->
           {:ok, String.trim(output)}
 

@@ -768,7 +768,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   def discount_label(_order), do: ~t"Discount"
 
   # A fulfilled order is historical, so we skip relative framing there.
-  def fulfillment_relative(date, locale, status) when not is_nil(date) and status != :fulfilled do
+  def fulfillment_relative(date, locale, status) when date != nil and status != :fulfilled do
     today = Edenflowers.ShopTime.today()
 
     if Date.diff(date, today) == 0,

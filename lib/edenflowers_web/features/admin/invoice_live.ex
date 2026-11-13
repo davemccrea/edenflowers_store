@@ -732,7 +732,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   def handle_event("close_email", _params, socket), do: {:noreply, EmailDrawer.close(socket)}
 
   def handle_event("validate_email", %{"email" => params}, %{assigns: %{email_form: form}} = socket)
-      when not is_nil(form),
+      when form != nil,
       do: {:noreply, EmailDrawer.validate(socket, params)}
 
   def handle_event("validate_credit", %{"credit" => params}, socket),
@@ -801,7 +801,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   end
 
   def handle_event("send_email", %{"email" => params}, %{assigns: %{email_form: form, preview: preview}} = socket)
-      when not is_nil(form) and not is_nil(preview) do
+      when form != nil and preview != nil do
     case EmailDrawer.submit(socket, params) do
       {:ok, socket} ->
         message = if socket.assigns.email_kind == :invoice, do: ~t"Invoice emailed.", else: ~t"Credit note emailed."

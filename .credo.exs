@@ -51,7 +51,14 @@
         {Credo.Check.Warning.UnusedStringOperation, []},
         {Credo.Check.Warning.UnusedTupleOperation, []},
         {Credo.Check.Warning.WrongTestFilename, []},
-        {Credo.Check.Readability.ModuleDoc, false},
+        {Credo.Check.Readability.PreferUnquotedAtoms, []},
+        {Credo.Check.Refactor.CaseTrivialMatches, []},
+        {Credo.Check.Refactor.MapInto, []},
+        {Credo.Check.Refactor.NegatedIsNil, []},
+        {Credo.Check.Refactor.PerceivedComplexity, []},
+        {Credo.Check.Warning.LazyLogging, []},
+        {Credo.Check.Warning.LeakyEnvironment, []},
+        {Credo.Check.Warning.WrongTestFileExtension, []},
         # Disable this check because it flags valid Ash expr(if(condition, then, else)) expressions.
         {Credo.Check.Readability.ParenthesesInCondition, false}
       ]

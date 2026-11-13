@@ -18,7 +18,7 @@ defmodule Edenflowers.Payments.Validations.Cancellable do
 
   @impl true
   def validate(changeset, _opts, _context) do
-    with id when not is_nil(id) <- Ash.Changeset.get_attribute(changeset, :invoice_id),
+    with id when id != nil <- Ash.Changeset.get_attribute(changeset, :invoice_id),
          %Invoice{} = invoice <- Invoice.get_locked(id, load()) do
       check(invoice)
     else

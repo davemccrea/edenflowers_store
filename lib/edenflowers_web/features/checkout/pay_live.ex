@@ -184,7 +184,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
     {:noreply, assign(socket, :email_form, AshPhoenix.Form.validate(socket.assigns.email_form, params))}
   end
 
-  def handle_event("pay", params, %{assigns: %{email_form: form}} = socket) when not is_nil(form) do
+  def handle_event("pay", params, %{assigns: %{email_form: form}} = socket) when form != nil do
     case AshPhoenix.Form.submit(form, params: Map.get(params, "form", %{})) do
       {:ok, _order} -> handle_event("pay", %{}, assign(socket, :email_form, nil))
       {:error, form} -> {:noreply, assign(socket, :email_form, form)}

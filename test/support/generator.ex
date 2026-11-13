@@ -1,4 +1,8 @@
 defmodule Generator do
+  @moduledoc """
+  Ash generators that build the records tests need.
+  """
+
   use Ash.Generator
 
   alias Edenflowers.Accounts.User

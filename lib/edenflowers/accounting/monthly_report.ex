@@ -294,7 +294,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
     end
   end
 
-  defp sale_rows(%Payment{invoice_id: id, invoice: invoice} = payment) when not is_nil(id) do
+  defp sale_rows(%Payment{invoice_id: id, invoice: invoice} = payment) when id != nil do
     allocation = InvoiceReceiptAllocation.allocate(invoice.financial_snapshot, invoice.payments)
 
     for row <- Map.fetch!(allocation, payment.id) do

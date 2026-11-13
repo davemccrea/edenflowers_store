@@ -32,7 +32,7 @@ defmodule Edenflowers.Typst do
       ] ++ if(format == "png", do: ["--pages", "1", "--ppi", to_string(Keyword.get(opts, :ppi, 96))], else: [])
 
     # Keep stderr separate: merging it would corrupt the PDF bytes on stdout.
-    case System.cmd(@typst_bin, args) do
+    case System.cmd(@typst_bin, args, env: Edenflowers.ChildEnv.without_secrets()) do
       {pdf, 0} -> {:ok, pdf}
       {output, status} -> {:error, {:typst_failed, status, output}}
     end

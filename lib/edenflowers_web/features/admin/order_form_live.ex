@@ -706,7 +706,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     end
   end
 
-  defp card_message_max(%{size: size}) when not is_nil(size), do: ProductVariantSize.max_message_length(size)
+  defp card_message_max(%{size: size}) when size != nil, do: ProductVariantSize.max_message_length(size)
   defp card_message_max(_card), do: ProductVariantSize.max_message_length(:large)
 
   defp prefill_customer(params, %{mode: :new} = assigns),

@@ -41,7 +41,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionLog do
   defp title(%{user: %{name: name}} = version) when is_binary(name),
     do: ~t"#{event = event(version)} · #{name = name}"
 
-  defp title(%{user: %{email: email}} = version) when not is_nil(email),
+  defp title(%{user: %{email: email}} = version) when email != nil,
     do: ~t"#{event = event(version)} · #{name = to_string(email)}"
 
   defp title(version), do: event(version)

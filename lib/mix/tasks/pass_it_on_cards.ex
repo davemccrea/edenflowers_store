@@ -71,7 +71,7 @@ defmodule Mix.Tasks.PassItOnCards do
         ["-sColorConversionStrategy=CMYK", "-sProcessColorModel=DeviceCMYK"] ++
         ["--permit-file-read=#{profile}", "-sOutputICCProfile=#{profile}", "-o", out, source]
 
-    case System.cmd("gs", args, stderr_to_stdout: true) do
+    case System.cmd("gs", args, stderr_to_stdout: true, env: Edenflowers.ChildEnv.without_secrets()) do
       {_, 0} -> :ok
       {output, status} -> Mix.raise("Ghostscript failed (#{status}): #{output}")
     end

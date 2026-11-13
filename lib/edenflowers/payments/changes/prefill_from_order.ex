@@ -23,7 +23,7 @@ defmodule Edenflowers.Payments.Changes.PrefillFromOrder do
 
   @impl true
   def change(changeset, _opts, _context) do
-    with id when not is_nil(id) <- Ash.Changeset.get_attribute(changeset, :order_id),
+    with id when id != nil <- Ash.Changeset.get_attribute(changeset, :order_id),
          %Order{invoiceable?: true} = order <- load(id) do
       Ash.Changeset.change_attributes(changeset, Map.merge(previous_customer(order.customer_email), prefill(order)))
     else
@@ -88,7 +88,7 @@ defmodule Edenflowers.Payments.Changes.PrefillFromOrder do
     items ++ fee_line(order)
   end
 
-  defp fee_line(%{fulfillment_fee: fee} = order) when not is_nil(fee) do
+  defp fee_line(%{fulfillment_fee: fee} = order) when fee != nil do
     if Decimal.positive?(fee) do
       description =
         if order.fulfillment_method == :delivery,

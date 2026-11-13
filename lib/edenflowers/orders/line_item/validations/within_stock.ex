@@ -31,7 +31,7 @@ defmodule Edenflowers.Orders.LineItem.Validations.WithinStock do
   def message(stock), do: ~t"Only #{stock} left"
 
   defp validate_stock(changeset, variant_id, order_id) do
-    with {:ok, %{stock_quantity: stock}} when not is_nil(stock) <-
+    with {:ok, %{stock_quantity: stock}} when stock != nil <-
            Catalog.get_variant_by_id(variant_id, authorize?: false),
          {:ok, %{origin: :online, state: state}} when state != :placed <-
            Ash.get(Order, order_id, authorize?: false),

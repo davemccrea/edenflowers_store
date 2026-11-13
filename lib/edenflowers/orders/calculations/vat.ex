@@ -49,7 +49,7 @@ defmodule Edenflowers.Orders.Calculations.Vat do
   end
 
   defp fulfillment_fee_entry(%{fulfillment_fee: fee, fulfillment_tax_rate: rate})
-       when not is_nil(fee) and not is_nil(rate) do
+       when fee != nil and rate != nil do
     if Decimal.positive?(fee), do: [{rate, fee}], else: []
   end
 

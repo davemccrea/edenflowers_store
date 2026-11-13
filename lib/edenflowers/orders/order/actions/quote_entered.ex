@@ -126,7 +126,7 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEntered do
 
   defp fulfillment_fee(changeset, delivery_quote, free_delivery?) do
     case quoted_fee(changeset, delivery_quote) do
-      %{quoted_fulfillment_fee: quoted, quoted_free_delivery_fee: quoted_free} when not is_nil(quoted) ->
+      %{quoted_fulfillment_fee: quoted, quoted_free_delivery_fee: quoted_free} when quoted != nil ->
         override = Ash.Changeset.get_attribute(changeset, :fulfillment_fee_override)
         Orders.charged_fulfillment_fee!(quoted, quoted_free, free_delivery?, override)
 

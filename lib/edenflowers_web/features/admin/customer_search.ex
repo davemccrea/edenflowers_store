@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.Admin.CustomerSearch do
   """
   def prefill(%{"customer_id" => id} = params, picked_id, actor) when id not in [nil, ""] and id != picked_id do
     case Accounts.get_customer_for_admin(id, actor: actor) do
-      {:ok, customer} when not is_nil(customer) ->
+      {:ok, customer} when customer != nil ->
         last = Orders.get_last_order_with_customer_phone!(customer.id, actor: actor, not_found_error?: false)
 
         Map.merge(params, %{

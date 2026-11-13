@@ -60,7 +60,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
     {:noreply, socket |> assign(editing?: false) |> render_preview()}
   end
 
-  def handle_params(_params, _uri, %{assigns: %{sale: sale, editing?: false}} = socket) when not is_nil(sale) do
+  def handle_params(_params, _uri, %{assigns: %{sale: sale, editing?: false}} = socket) when sale != nil do
     {:noreply, socket |> assign(editing?: true) |> assign_form() |> render_preview()}
   end
 
@@ -581,7 +581,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
     end
   end
 
-  defp preview_voucher(%{sale: sale, editing?: false}) when not is_nil(sale) do
+  defp preview_voucher(%{sale: sale, editing?: false}) when sale != nil do
     %{
       amount: sale.grand_total,
       locale: sale.voucher_locale,
