@@ -59,11 +59,11 @@ defmodule Edenflowers.Bank.MissingReceiptsTest do
   end
 
   describe "the payments missing a receipt" do
-    test "are those booked over a week ago, or in a month that has ended, paying no expense and not dismissed" do
+    test "are those booked over three days ago, or in a month that has ended, paying no expense and not dismissed" do
       today = Edenflowers.ShopTime.today()
       last_month = Date.add(Date.beginning_of_month(today), -1)
 
-      old = seed_transaction("old", days_ago(8))
+      old = seed_transaction("old", days_ago(4))
       ended_month = seed_transaction("ended-month", last_month)
       seed_transaction("this-week", today)
       dismissed = seed_transaction("dismissed", days_ago(10))

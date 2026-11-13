@@ -5746,11 +5746,6 @@ msgstr "Närmaste belopp först. En obetald utgift som du väljer markeras som b
 msgid "Marked as needing no receipt."
 msgstr "Markerad som att inget kvitto behövs."
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:191
-#, elixir-autogen, elixir-format
-msgid "Nothing missing for payments over a week old."
-msgstr "Inget saknas för betalningar äldre än en vecka."
-
 #: lib/edenflowers_web/features/admin/expenses_live.ex:305
 #, elixir-autogen, elixir-format
 msgid "Same amount"
@@ -5834,3 +5829,8 @@ msgstr "Så kopplas kvitton till betalningar"
 #, elixir-autogen, elixir-format
 msgid "Upload the missing receipt to Papra. If its amount matches and it was paid within a week of the payment, it links itself at the next bank sync, within six hours. Otherwise, link it here."
 msgstr "Ladda upp kvittot som saknas till Papra. Om beloppet stämmer och det betalades inom en vecka från betalningen kopplas det automatiskt vid nästa banksynk, inom sex timmar. Annars kopplar du det här."
+
+#: lib/edenflowers_web/features/admin/expenses_live.ex:191
+#, elixir-autogen, elixir-format
+msgid "Nothing missing for payments over three days old."
+msgstr "Inget saknas för betalningar äldre än tre dagar."

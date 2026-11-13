@@ -5732,11 +5732,6 @@ msgstr ""
 msgid "Marked as needing no receipt."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:191
-#, elixir-autogen, elixir-format
-msgid "Nothing missing for payments over a week old."
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/expenses_live.ex:305
 #, elixir-autogen, elixir-format
 msgid "Same amount"
@@ -5811,4 +5806,9 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/expenses_live.ex:188
 #, elixir-autogen, elixir-format
 msgid "Upload the missing receipt to Papra. If its amount matches and it was paid within a week of the payment, it links itself at the next bank sync, within six hours. Otherwise, link it here."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/expenses_live.ex:191
+#, elixir-autogen, elixir-format
+msgid "Nothing missing for payments over three days old."
 msgstr ""

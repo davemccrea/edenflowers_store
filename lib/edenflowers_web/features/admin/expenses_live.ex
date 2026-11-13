@@ -188,7 +188,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
         {~t"Upload the missing receipt to Papra. If its amount matches and it was paid within a week of the payment, it links itself at the next bank sync, within six hours. Otherwise, link it here."}
       </div>
       <p :if={@missing == []} class="text-base-content/75 text-sm">
-        {~t"Nothing missing for payments over a week old."}
+        {~t"Nothing missing for payments over three days old."}
       </p>
       <ul class="divide-base-content/12 divide-y text-sm">
         <li
