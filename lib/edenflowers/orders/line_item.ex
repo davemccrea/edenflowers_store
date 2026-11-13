@@ -49,23 +49,64 @@ defmodule Edenflowers.Orders.LineItem do
   attributes do
     uuid_primary_key :id
     attribute :quantity, :integer, allow_nil?: false, default: 1, constraints: [min: 1]
-    attribute :unit_price, Edenflowers.Types.Price, allow_nil?: false, constraints: [min: 0, scale: 2]
-    attribute :tax_rate, :decimal, allow_nil?: false
-    attribute :product_name, :string, allow_nil?: false
-    # Nil for a custom item, which has no product photo.
-    attribute :product_image_slug, :string
-    attribute :is_card, :boolean, default: false, allow_nil?: false
-    # A Gift voucher sold: its unit price is the voucher's amount, and it is outside VAT.
-    attribute :is_gift_voucher, :boolean, default: false, allow_nil?: false
-    # Snapshotted from the product, so unflagging it later leaves existing orders' fees alone.
-    attribute :free_delivery, :boolean, default: false, allow_nil?: false
-    # How often a subscription line is to be delivered, chosen on the product
-    # page. Nil for a one-off.
-    attribute :interval_weeks, :integer
-    # The bow the customer chose on the product page. Nil for a product that
-    # offers none, and for a Custom Order line Jennie leaves to herself.
-    attribute :bow_colour, Edenflowers.Catalog.BowColour
-    attribute :variant_size, Edenflowers.Catalog.ProductVariantSize
+
+    attribute :unit_price, Edenflowers.Types.Price do
+      description "The price of one in euros, VAT included: snapshotted from the variant when the line is " <>
+                    "added, or what Jennie typed for a custom item."
+
+      allow_nil? false
+      constraints min: 0, scale: 2
+    end
+
+    attribute :tax_rate, :decimal do
+      description "The VAT rate included in unit_price, as a fraction: 0.14 is 14%. Snapshotted, so a later " <>
+                    "change of the product's rate leaves the line alone. 0 for a Gift voucher."
+
+      allow_nil? false
+    end
+
+    attribute :product_name, :string do
+      description "The product's name when the line was added, or Jennie's description of a custom item."
+      allow_nil? false
+    end
+
+    attribute :product_image_slug, :string do
+      description "The product's photo when the line was added. Nil for a custom item, which has none."
+    end
+
+    attribute :is_card, :boolean do
+      description "Whether the line is the greeting card that goes with the order, not one of its items."
+      default false
+      allow_nil? false
+    end
+
+    attribute :is_gift_voucher, :boolean do
+      description "A Gift voucher sold: its unit price is the voucher's amount, and it is outside VAT."
+      default false
+      allow_nil? false
+    end
+
+    attribute :free_delivery, :boolean do
+      description "Whether it earns its order the free-delivery fee. Snapshotted from the product, so unflagging it " <>
+                    "later leaves existing orders' fees alone."
+
+      default false
+      allow_nil? false
+    end
+
+    attribute :interval_weeks, :integer do
+      description "How often a subscription line is to be delivered, chosen on the product page. Nil for a one-off."
+    end
+
+    attribute :bow_colour, Edenflowers.Catalog.BowColour do
+      description "The bow the customer chose on the product page. Nil for a product that offers none, and for " <>
+                    "a Custom Order line Jennie leaves to herself."
+    end
+
+    attribute :variant_size, Edenflowers.Catalog.ProductVariantSize do
+      description "The size sold, snapshotted from the variant. Nil for a custom item."
+    end
+
     timestamps()
   end
 
@@ -174,8 +215,14 @@ defmodule Edenflowers.Orders.LineItem do
       accept [:product_variant_id, :product_name, :unit_price, :quantity, :is_card, :bow_colour]
       # A catalogue line takes them from its variant; a custom one is checked below.
       allow_nil_input [:product_name, :unit_price]
-      argument :kind, :atom, allow_nil?: false, constraints: [one_of: [:catalogue, :custom]]
-      argument :tax_rate_id, :uuid
+
+      argument :kind, :atom,
+        allow_nil?: false,
+        constraints: [one_of: [:catalogue, :custom]],
+        description: "Whether the line is a size from the catalogue or an item Jennie describes and prices."
+
+      argument :tax_rate_id, :uuid,
+        description: "The VAT rate of a custom item, whose percentage the line snapshots. Ignored for a catalogue line."
 
       validate present(:product_variant_id), message: "choose a product", where: [argument_equals(:kind, :catalogue)]
       validate present(:product_name), message: "describe the item", where: [argument_equals(:kind, :custom)]

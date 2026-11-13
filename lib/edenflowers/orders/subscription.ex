@@ -104,7 +104,10 @@ defmodule Edenflowers.Orders.Subscription do
   attributes do
     uuid_primary_key :id
 
-    attribute :interval_weeks, :integer, allow_nil?: false
+    attribute :interval_weeks, :integer do
+      description "How many weeks apart the deliveries are: 1, 2 or 4 (intervals/0)."
+      allow_nil? false
+    end
 
     attribute :delivery_day, Edenflowers.Fulfillment.Weekday do
       allow_nil? false
@@ -113,7 +116,12 @@ defmodule Edenflowers.Orders.Subscription do
                     "changes it. next_fulfillment_date always falls on it."
     end
 
-    attribute :next_fulfillment_date, :date, allow_nil?: false
+    attribute :next_fulfillment_date, :date do
+      description "The delivery the next Occurrence will be for. The occurrence job creates and charges it " <>
+                    "lead_days before, then moves this on by interval_weeks."
+
+      allow_nil? false
+    end
 
     # Copied from the first order. Each occurrence prices its fee afresh from
     # the address, so no fee or geocode is kept here.
@@ -127,7 +135,11 @@ defmodule Edenflowers.Orders.Subscription do
     attribute :locale, :string, allow_nil?: false
 
     attribute :stripe_customer_id, :string, allow_nil?: false
-    attribute :stripe_payment_method_id, :string, allow_nil?: false
+
+    attribute :stripe_payment_method_id, :string do
+      description "The saved card each Occurrence is charged to, off session. replace_card swaps it."
+      allow_nil? false
+    end
 
     # Shown to the customer only; Stripe holds the card.
     attribute :card_brand, :string
@@ -135,9 +147,14 @@ defmodule Edenflowers.Orders.Subscription do
     attribute :card_exp_month, :integer
     attribute :card_exp_year, :integer
 
-    attribute :setup_emailed_at, :utc_datetime
-    # The delivery the last heads-up was about.
-    attribute :heads_up_emailed_for, :date
+    attribute :setup_emailed_at, :utc_datetime do
+      description "When the customer was emailed that it is set up. Nil until then, so the email goes once."
+    end
+
+    attribute :heads_up_emailed_for, :date do
+      description "The delivery the last heads-up email was about. One is due while this differs from " <>
+                    "next_fulfillment_date, so each delivery gets one."
+    end
 
     timestamps()
   end
@@ -598,7 +615,10 @@ defmodule Edenflowers.Orders.Subscription do
       description "Saves a new card for future charges from a succeeded SetupIntent, and reactivates a subscription " <>
                     "held at payment_failed. An unpaid Occurrence keeps its Payment Link."
 
-      argument :stripe_payment_method_id, :string, allow_nil?: false
+      argument :stripe_payment_method_id, :string,
+        allow_nil?: false,
+        description: "The payment method the succeeded SetupIntent saved."
+
       validate attribute_does_not_equal(:state, :cancelled)
       change set_attribute(:stripe_payment_method_id, arg(:stripe_payment_method_id))
       change Changes.SnapshotCard

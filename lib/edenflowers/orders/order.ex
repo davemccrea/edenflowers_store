@@ -47,30 +47,62 @@ defmodule Edenflowers.Orders.Order do
   attributes do
     uuid_primary_key :id
 
-    attribute :order_reference, :string
+    attribute :order_reference, :string do
+      description "The order number the customer and Jennie quote, from the sequence course registrations share."
+    end
 
-    attribute :ordered_at, :utc_datetime
+    attribute :ordered_at, :utc_datetime do
+      description "When the order was placed: paid at checkout, entered by Jennie, or created as an Occurrence. " <>
+                    "Nil on a cart."
+    end
 
-    attribute :fulfillment_status, __MODULE__.Types.FulfillmentStatus, allow_nil?: false, default: :pending
-    attribute :ready_at, :utc_datetime
+    attribute :fulfillment_status, __MODULE__.Types.FulfillmentStatus do
+      description "Where Jennie is with a placed order: :pending is to make, :ready is prepared, then " <>
+                    ":fulfilled or :cancelled. Apart from state, which is the checkout's."
+
+      allow_nil? false
+      default :pending
+    end
+
+    attribute :ready_at, :utc_datetime do
+      description "When Jennie marked it prepared. Cleared if she undoes that."
+    end
+
     attribute :cancelled_at, :utc_datetime
-    # Why Jennie cancelled, for her own record in the log.
-    attribute :cancellation_reason, :string
-    # The customer's email can change later; the log names who was told.
-    attribute :cancellation_emailed_to, :string
 
-    attribute :origin, __MODULE__.Types.Origin, allow_nil?: false, default: :online
-    # Custom orders only.
-    attribute :payment_terms, __MODULE__.Types.PaymentTerms
+    attribute :cancellation_reason, :string do
+      description "Why Jennie cancelled, for her own record in the log."
+    end
+
+    attribute :cancellation_emailed_to, :string do
+      description "The address the cancellation email went to, which the log names, as the customer's email " <>
+                    "can change later."
+    end
+
+    attribute :origin, __MODULE__.Types.Origin do
+      description "How it came about: :online through checkout, :custom entered by Jennie, :subscription an " <>
+                    "Occurrence a Subscription created."
+
+      allow_nil? false
+      default :online
+    end
+
+    attribute :payment_terms, __MODULE__.Types.PaymentTerms do
+      description "How a custom order's customer will pay, as Jennie chose when placing it. Custom orders only."
+    end
 
     # Step 1 - Your Details
     attribute :customer_name, :string
     attribute :customer_email, Edenflowers.Types.Email
-    # The Customer's own number, on every origin. Checkout asks for it on the
-    # delivery step unless the order is a gift delivery.
-    attribute :customer_phone_number, :string
-    # Stored as Jennie typed it, with or without the @.
-    attribute :customer_instagram, :string
+
+    attribute :customer_phone_number, :string do
+      description "The Customer's own number, on every origin. Checkout asks for it on the delivery step " <>
+                    "unless the order is a gift delivery."
+    end
+
+    attribute :customer_instagram, :string do
+      description "The Customer's Instagram handle, stored as Jennie typed it, with or without the @."
+    end
 
     # Step 2 - Gift Options
     attribute :gift, :boolean, allow_nil?: false, default: false
@@ -78,66 +110,120 @@ defmodule Edenflowers.Orders.Order do
 
     # Step 3 - Delivery Information
     attribute :recipient_name, :string
-    # Only a gift's Recipient's number, never the Customer's own.
-    attribute :recipient_phone_number, :string
+
+    attribute :recipient_phone_number, :string do
+      description "Only a gift's Recipient's number, never the Customer's own."
+    end
+
     attribute :delivery_address, :string
     attribute :delivery_instructions, :string
     attribute :fulfillment_date, :date
-    # Only Custom Orders have these for now; checkout doesn't ask for a time.
-    attribute :fulfillment_time_start, :time
+
+    attribute :fulfillment_time_start, :time do
+      description "The time of day it is wanted, with fulfillment_time_end. Only Custom Orders have these for " <>
+                    "now; checkout doesn't ask for a time."
+    end
+
     attribute :fulfillment_time_end, :time
-    # The Subscription's date an Occurrence was made for. Its fulfillment_date
-    # is later when that day was closed.
-    attribute :subscription_date, :date
-    # The fee for the address and option, and the lower one a cart holding a
-    # free-delivery product pays; see the `fulfillment_fee` calculation for
-    # which is charged.
-    attribute :quoted_fulfillment_fee, :decimal, constraints: [min: 0, scale: 2]
-    attribute :quoted_free_delivery_fee, :decimal, constraints: [min: 0, scale: 2]
-    # Set by Jennie on a custom order to charge her own fee, e.g. free delivery
-    # for a regular. Nil means the fee is calculated, as at checkout.
-    attribute :fulfillment_fee_override, Edenflowers.Types.Price, constraints: [min: 0, scale: 2]
-    # Snapshotted from FulfillmentOption (+ its TaxRate) by
-    # SnapshotFulfillmentMethod. Frozen once the order is placed.
-    attribute :fulfillment_method, FulfillmentOption.FulfillmentMethod
+
+    attribute :subscription_date, :date do
+      description "The Subscription's date an Occurrence was made for. Its fulfillment_date is later when that " <>
+                    "day was closed."
+    end
+
+    attribute :quoted_fulfillment_fee, :decimal do
+      description "The fee quoted for the address and option, in euros. See the fulfillment_fee calculation " <>
+                    "for whether this, the free-delivery one or Jennie's override is charged."
+
+      constraints min: 0, scale: 2
+    end
+
+    attribute :quoted_free_delivery_fee, :decimal do
+      description "The lower fee a cart holding a free-delivery product pays for the same address and option."
+      constraints min: 0, scale: 2
+    end
+
+    attribute :fulfillment_fee_override, Edenflowers.Types.Price do
+      description "Set by Jennie on a custom order to charge her own fee, such as free delivery for a regular. " <>
+                    "Nil means the fee is calculated, as at checkout."
+
+      constraints min: 0, scale: 2
+    end
+
+    attribute :fulfillment_method, FulfillmentOption.FulfillmentMethod do
+      description "Snapshotted from the FulfillmentOption and its TaxRate by SnapshotFulfillmentMethod, with " <>
+                    "fulfillment_tax_rate and fulfillment_option_name. Frozen once the order is placed."
+    end
+
     attribute :fulfillment_tax_rate, :decimal
     attribute :fulfillment_option_name, :string
-    attribute :geocoded_address, :string
+
+    attribute :geocoded_address, :string do
+      description "The delivery address as HERE resolved it, which the fee was quoted for."
+    end
+
     attribute :here_id, :string
-    attribute :distance, :integer
-    attribute :position, :string
+
+    attribute :distance, :integer do
+      description "The drive from the shop to the address in metres, one way."
+    end
+
+    attribute :position, :string do
+      description "The address's coordinates as HERE gave them: \"latitude,longitude\"."
+    end
 
     # Step 4 - Payment
     attribute :payment_intent_id, :string
-    # The card a subscription cart saved, which its Subscription is started with.
-    attribute :stripe_customer_id, :string
-    attribute :stripe_payment_method_id, :string
-    # The secret in a custom order's payment link URL. Nil when the customer
-    # pays in person.
-    attribute :payment_link_token, :string, sensitive?: true
 
-    # Snapshotted from Promotion by ApplyPromotion. Frozen once the order
-    # is placed.
-    attribute :discount_rate, :decimal
+    attribute :stripe_customer_id, :string do
+      description "With stripe_payment_method_id, the card a subscription cart saved, which its Subscription " <>
+                    "is started with."
+    end
+
+    attribute :stripe_payment_method_id, :string
+
+    attribute :payment_link_token, :string do
+      description "The secret in a custom order's payment link URL. Nil when the customer pays in person."
+      sensitive? true
+    end
+
+    attribute :discount_rate, :decimal do
+      description "The promotion's discount as a fraction: 0.1 is 10% off. Snapshotted from the Promotion by " <>
+                    "ApplyPromotion with promotion_name, promotion_code and promotion_minimum_cart_total, and " <>
+                    "frozen once the order is placed."
+    end
+
     attribute :promotion_name, :string
     attribute :promotion_code, :string
     attribute :promotion_minimum_cart_total, :decimal
 
     attribute :locale, :string, allow_nil?: false, default: "sv-FI"
 
-    # The browser whose cart this is, from the visitor_id in its signed session.
-    # Cleared when Stripe hands the customer back, so their next add opens a new cart.
-    attribute :visitor_id, :uuid
+    attribute :visitor_id, :uuid do
+      description "The browser whose cart this is, from the visitor_id in its signed session. Cleared when " <>
+                    "Stripe hands the customer back, so their next add opens a new cart."
+    end
 
-    # The browser that started this Gift voucher sale, so it can resume it after a
-    # reload or reconnect. Kept apart from visitor_id, as a voucher sale is no cart.
-    attribute :voucher_visitor_id, :uuid
+    attribute :voucher_visitor_id, :uuid do
+      description "The browser that started this Gift voucher sale, so it can resume it after a reload or " <>
+                    "reconnect. Kept apart from visitor_id, as a voucher sale is no cart."
+    end
 
     attribute :receipt_emailed_at, :utc_datetime
-    attribute :shop_reminded_at, :utc_datetime
-    # The last queued receipt ran out of attempts. Cleared by a successful send.
-    attribute :receipt_email_failed_at, :utc_datetime
-    attribute :vat_breakdown, {:array, Edenflowers.Orders.VatRow}
+
+    attribute :shop_reminded_at, :utc_datetime do
+      description "When :remind_shop reminded Jennie of the unfinished order. Nil until then, so she is " <>
+                    "reminded once."
+    end
+
+    attribute :receipt_email_failed_at, :utc_datetime do
+      description "When the last queued receipt ran out of attempts. Cleared by a successful send."
+    end
+
+    attribute :vat_breakdown, {:array, Edenflowers.Orders.VatRow} do
+      description "The order's VAT per rate, stored with stored_grand_total whenever a placed order's lines or " <>
+                    "fees are set."
+    end
 
     attribute :stored_grand_total, :decimal do
       description "The grand total in euros, stored alongside vat_breakdown whenever a placed order's lines or " <>
@@ -147,25 +233,44 @@ defmodule Edenflowers.Orders.Order do
     end
 
     attribute :fulfillment_emailed_at, :utc_datetime
-    # The customer's email can change later; the log names who was sent it.
-    attribute :fulfillment_emailed_to, :string
-    # Where Jennie left a delivery nobody answered the door for.
-    attribute :delivery_photo_slug, :string
-    # Sends the photo in place of the fulfillment email.
-    attribute :email_delivery_photo, :boolean, allow_nil?: false, default: false
-    # The last queued send ran out of attempts. Cleared by a successful send.
-    attribute :fulfillment_email_failed_at, :utc_datetime
-    # The order details a custom order's customer is sent when it is placed.
-    attribute :order_details_emailed_at, :utc_datetime
+
+    attribute :fulfillment_emailed_to, :string do
+      description "The address the fulfillment email went to, which the log names, as the customer's email " <>
+                    "can change later."
+    end
+
+    attribute :delivery_photo_slug, :string do
+      description "The photo of where Jennie left a delivery nobody answered the door for."
+    end
+
+    attribute :email_delivery_photo, :boolean do
+      description "Sends the delivery photo in place of the fulfillment email."
+      allow_nil? false
+      default false
+    end
+
+    attribute :fulfillment_email_failed_at, :utc_datetime do
+      description "When the last queued fulfillment email ran out of attempts. Cleared by a successful send."
+    end
+
+    attribute :order_details_emailed_at, :utc_datetime do
+      description "When a custom order's customer was sent its order details, which go out when it is placed."
+    end
+
     attribute :order_details_email_failed_at, :utc_datetime
 
-    # A Gift voucher buyer asked to collect a gift card at the shop, so Jennie
-    # writes the recipient and code on one of her ready-printed cards, and the
-    # order stays open until it's collected.
-    attribute :collect_voucher_card, :boolean, allow_nil?: false, default: false
-    # The language a Gift voucher sale's PDF is in, chosen by the buyer for
-    # whoever receives it. Nil on any other order.
-    attribute :voucher_locale, :string
+    attribute :collect_voucher_card, :boolean do
+      description "A Gift voucher buyer asked to collect a gift card at the shop, so Jennie writes the recipient " <>
+                    "and code on one of her ready-printed cards, and the order stays open until it's collected."
+
+      allow_nil? false
+      default false
+    end
+
+    attribute :voucher_locale, :string do
+      description "The language a Gift voucher sale's PDF is in, chosen by the buyer for whoever receives it. " <>
+                    "Nil on any other order."
+    end
 
     attribute :voucher_style, Edenflowers.Payments.GiftVoucherStyle do
       description "How a Gift voucher sale's PDF looks, chosen with it. Nil on any other order, and on sales " <>
@@ -179,8 +284,9 @@ defmodule Edenflowers.Orders.Order do
                     "buyer last saw in the preview. Nil on sales made without one, which all get the same snow."
     end
 
-    # Jennie's own working note. Never shown to the customer.
-    attribute :florist_note, :string
+    attribute :florist_note, :string do
+      description "Jennie's own working note. Never shown to the customer."
+    end
 
     timestamps()
   end

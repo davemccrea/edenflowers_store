@@ -30,6 +30,7 @@ defmodule Edenflowers.Pricing.Promotion do
     end
 
     attribute :code, :ci_string do
+      description "What the customer types, in any case. No two promotions share one."
       allow_nil? false
       constraints allow_empty?: false, trim?: true
     end
@@ -46,9 +47,18 @@ defmodule Edenflowers.Pricing.Promotion do
       constraints min: 0, scale: 2
     end
 
-    attribute :start_date, :date
-    attribute :expiration_date, :date
-    attribute :usage_limit, :integer, constraints: [min: 1]
+    attribute :start_date, :date do
+      description "The first day the code works. Nil for one that works at once."
+    end
+
+    attribute :expiration_date, :date do
+      description "The last day the code works, that day included. Nil for one that never expires."
+    end
+
+    attribute :usage_limit, :integer do
+      description "How many placed orders may use the code, counted by `usage`. Nil for no limit."
+      constraints min: 1
+    end
   end
 
   relationships do
@@ -321,8 +331,12 @@ defmodule Edenflowers.Pricing.Promotion do
                     "cards. All or none: if one code fails (a rare clash with an existing code), none are kept " <>
                     "and the batch can simply be run again."
 
-      argument :name, :string, allow_nil?: false
-      argument :count, :integer, allow_nil?: false, constraints: [min: 1]
+      argument :name, :string, allow_nil?: false, description: "The name every code in the batch gets."
+
+      argument :count, :integer,
+        allow_nil?: false,
+        constraints: [min: 1],
+        description: "How many codes to make, one per card."
 
       run fn input, context ->
         %{name: name, count: count} = input.arguments

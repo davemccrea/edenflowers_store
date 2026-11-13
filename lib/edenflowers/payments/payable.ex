@@ -69,7 +69,12 @@ defmodule Edenflowers.Payments.Payable do
                     "from what the customer saw."
 
       argument :token, :string, allow_nil?: false, sensitive?: true
-      argument :shown_balance, :decimal, allow_nil?: false, constraints: [greater_than: 0]
+
+      argument :shown_balance, :decimal,
+        allow_nil?: false,
+        constraints: [greater_than: 0],
+        description: "The Balance the payment page showed the customer, in euros, so they are never charged another."
+
       run Edenflowers.Payments.Actions.PrepareLinkPayment
     end
 
@@ -106,8 +111,15 @@ defmodule Edenflowers.Payments.Payable do
       description "Records money Jennie took by any method except Stripe, optionally emailing the customer a receipt. " <>
                     "Payments belong directly to this purchase."
 
-      argument :amount, Edenflowers.Types.Price, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
-      argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
+      argument :amount, Edenflowers.Types.Price,
+        allow_nil?: false,
+        constraints: [greater_than: 0, scale: 2],
+        description: "What Jennie took, in euros."
+
+      argument :payment_method, Edenflowers.Payments.PaymentMethod,
+        allow_nil?: false,
+        description: "How it was paid: any method but :stripe and :voucher, which record themselves."
+
       argument :email_receipt?, :boolean, default: false
 
       argument :subject, :string,
@@ -148,8 +160,17 @@ defmodule Edenflowers.Payments.Payable do
                     "recorded as handed back. What was owed back is an ordinary refund and the rest a Goodwill " <>
                     "refund, so the record stays settled either way."
 
-      argument :amount, Edenflowers.Types.Price, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
-      argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
+      argument :amount, Edenflowers.Types.Price,
+        allow_nil?: false,
+        constraints: [greater_than: 0, scale: 2],
+        description: "What to hand back in euros, as a positive amount. It is recorded negative."
+
+      argument :payment_method, Edenflowers.Payments.PaymentMethod,
+        allow_nil?: false,
+        description:
+          "How it goes back, one of refund_methods: :stripe refunds the card now, :voucher puts it back on " <>
+            "the Gift voucher, and any other only records what Jennie already handed back."
+
       argument :note, :string, description: "Jennie's note on the refund, for her own records and Stripe's."
       argument :email_customer?, :boolean, default: true
 
@@ -159,10 +180,24 @@ defmodule Edenflowers.Payments.Payable do
       argument :body, :string,
         description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
 
-      argument :refund, :decimal, public?: false
-      argument :owed_back, :decimal, public?: false
-      argument :goodwill_refund, :decimal, public?: false
-      argument :gift_voucher_id, :uuid, public?: false
+      argument :refund, :decimal,
+        public?: false,
+        description:
+          "Set by Changes.Refund: the amount negated, for any method but Stripe, whose refund is recorded " <>
+            "through :record_stripe_refund instead."
+
+      argument :owed_back, :decimal,
+        public?: false,
+        description: "Set by Changes.SplitOffGoodwill: the negative part of the refund that was owed back, if any."
+
+      argument :goodwill_refund, :decimal,
+        public?: false,
+        description: "Set by Changes.SplitOffGoodwill: the negative part beyond what was owed back, if any."
+
+      argument :gift_voucher_id, :uuid,
+        public?: false,
+        description:
+          "Set by Changes.Refund on a :voucher refund: the purchase's Gift voucher, which gets the money back."
 
       validate Validations.Refundable
       change Changes.Refund
@@ -177,7 +212,10 @@ defmodule Edenflowers.Payments.Payable do
       description "Takes back a payment or refund Jennie recorded by mistake by recording the opposite amount. " <>
                     "Once per payment, never a Stripe one."
 
-      argument :payment_id, :uuid, allow_nil?: false
+      argument :payment_id, :uuid, allow_nil?: false, description: "The payment or refund to take back."
+
+      # Changes.UndoPayment sets the rest from that payment, for RecordPayment:
+      # its amount negated, and its own method and goodwill.
       argument :amount, :decimal, public?: false
       argument :payment_method, Edenflowers.Payments.PaymentMethod, public?: false
       argument :reverses_payment_id, :uuid, public?: false
@@ -199,11 +237,26 @@ defmodule Edenflowers.Payments.Payable do
                     "without her entering it again. Recorded whatever it is, because the money moved."
 
       argument :stripe_refund_id, :string, allow_nil?: false
-      argument :amount, :decimal, allow_nil?: false, constraints: [max: 0, scale: 2]
-      argument :goodwill, :boolean
+
+      argument :amount, :decimal,
+        allow_nil?: false,
+        constraints: [max: 0, scale: 2],
+        description: "What Stripe handed back in euros, as a negative amount."
+
+      argument :goodwill, :boolean,
+        description:
+          "Whether all of it is a Goodwill refund (true) or all of it owed back (false), for a refund made " <>
+            "here. Nil for one made in the Stripe dashboard, which is split by the Balance."
+
       argument :note, :string
-      argument :owed_back, :decimal, public?: false
-      argument :goodwill_refund, :decimal, public?: false
+
+      argument :owed_back, :decimal,
+        public?: false,
+        description: "Set by Changes.SplitOffGoodwill: the negative part of the refund that was owed back, if any."
+
+      argument :goodwill_refund, :decimal,
+        public?: false,
+        description: "Set by Changes.SplitOffGoodwill: the negative part beyond what was owed back, if any."
 
       change Changes.SplitOffGoodwill
 

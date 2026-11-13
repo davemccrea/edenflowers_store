@@ -18,7 +18,11 @@ defmodule Edenflowers.Courses.Course do
 
   attributes do
     uuid_primary_key :id
-    attribute :name, :string, allow_nil?: false
+
+    attribute :name, :string do
+      description "The course's name in English. The Swedish and Finnish ones are in translations, as are the description's."
+      allow_nil? false
+    end
 
     attribute :draft, :boolean do
       description "Hidden from the public courses list and sitemap while Jennie prepares it."
@@ -48,20 +52,56 @@ defmodule Edenflowers.Courses.Course do
       description "Optional photographer website linked from the photo credit."
     end
 
-    attribute :date, :date, allow_nil?: false
+    attribute :date, :date do
+      description "The day it is held. start_time and end_time are Helsinki times on that day."
+      allow_nil? false
+    end
+
     attribute :start_time, :time, allow_nil?: false
     attribute :end_time, :time, allow_nil?: false
-    attribute :register_before, :date, allow_nil?: false
-    attribute :total_places, :integer, allow_nil?: false
-    attribute :price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
 
-    # A booking cancelled at least this many days before the course is refunded in full.
-    attribute :cancellation_days, :integer, allow_nil?: false, default: 7, constraints: [min: 0]
-    # What's kept of the price after that; 100 means no refund.
-    attribute :cancellation_fee_percent, :integer, allow_nil?: false, default: 0, constraints: [min: 0, max: 100]
+    attribute :register_before, :date do
+      description "The last day customers can book online, that day included, in Helsinki. Jennie can still " <>
+                    "add a booking herself after it."
 
-    # The language the course is taught in, not the language of its page.
-    attribute :language, :atom, allow_nil?: false, default: :sv, constraints: [one_of: [:sv, :fi, :en]]
+      allow_nil? false
+    end
+
+    attribute :total_places, :integer do
+      description "How many places the course has. seats_left is what confirmed bookings leave of it."
+      allow_nil? false
+    end
+
+    attribute :price, :decimal do
+      description "What one place costs in euros, VAT included. A booking's amount is this times its seats, " <>
+                    "snapshotted when it is made."
+
+      allow_nil? false
+      constraints min: 0, scale: 2
+    end
+
+    attribute :cancellation_days, :integer do
+      description "A booking cancelled at least this many days before the course is refunded in full."
+      allow_nil? false
+      default 7
+      constraints min: 0
+    end
+
+    attribute :cancellation_fee_percent, :integer do
+      description "What is kept of the price when a booking is cancelled later than cancellation_days allows; " <>
+                    "100 means no refund."
+
+      allow_nil? false
+      default 0
+      constraints min: 0, max: 100
+    end
+
+    attribute :language, :atom do
+      description "The language the course is taught in, not the language of its page."
+      allow_nil? false
+      default :sv
+      constraints one_of: [:sv, :fi, :en]
+    end
 
     timestamps()
   end

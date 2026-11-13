@@ -49,7 +49,11 @@ defmodule Edenflowers.Catalog.ProductCategory do
       default false
     end
 
-    attribute :product_type, Edenflowers.Catalog.ProductType, allow_nil?: false, default: :flowers
+    attribute :product_type, Edenflowers.Catalog.ProductType do
+      description "What kind of thing it sells, which decides the measurements each of its products' sizes has."
+      allow_nil? false
+      default :flowers
+    end
   end
 
   relationships do

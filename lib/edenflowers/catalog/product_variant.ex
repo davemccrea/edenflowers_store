@@ -26,9 +26,13 @@ defmodule Edenflowers.Catalog.ProductVariant do
     end
 
     attribute :size, Edenflowers.Catalog.ProductVariantSize
-    # Display text such as "30–40", so a range or a single value both fit. The category's
-    # product type says which of these its sizes have; see ProductType.
-    attribute :height_cm, :string
+
+    attribute :height_cm, :string do
+      description "Display text such as \"30–40\", so a range or a single value both fit, as are the other " <>
+                    "measurements below. The category's product type says which of them its sizes have; see " <>
+                    "ProductType."
+    end
+
     attribute :stem_count, :string
     attribute :diameter_cm, :string
     attribute :dimensions_cm, :string
@@ -45,7 +49,11 @@ defmodule Edenflowers.Catalog.ProductVariant do
       constraints min: 0
     end
 
-    attribute :draft, :boolean, allow_nil?: false, default: true
+    attribute :draft, :boolean do
+      description "Not on sale yet, or no longer: the store reads leave a draft size out while the product's others stay."
+      allow_nil? false
+      default true
+    end
   end
 
   relationships do

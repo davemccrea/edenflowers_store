@@ -58,7 +58,13 @@ defmodule Edenflowers.Catalog.Product do
       constraints min: 0
     end
 
-    attribute :free_delivery, :boolean, allow_nil?: false, default: false
+    attribute :free_delivery, :boolean do
+      description "A cart holding it pays the option's free-delivery fee: nothing within its free distance, " <>
+                    "and only the distance beyond it otherwise (Fulfillment.Fee)."
+
+      allow_nil? false
+      default false
+    end
 
     attribute :subscribable, :boolean do
       description "Can also be bought as a Subscription, which the customer opts into on the product page. " <>

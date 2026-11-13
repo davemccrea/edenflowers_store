@@ -50,22 +50,48 @@ defmodule Edenflowers.Courses.CourseRegistration do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
     attribute :email, Edenflowers.Types.Email, allow_nil?: false
-    # Seats bought, as on the receipt. Seats held is seats minus removed_seats.
-    attribute :seats, :integer, allow_nil?: false, default: 1, constraints: [min: 1, max: @max_seats]
-    attribute :removed_seats, :integer, allow_nil?: false, default: 0, constraints: [min: 0]
+
+    attribute :seats, :integer do
+      description "Seats bought, as on the receipt. It never goes down: seats_held is this less removed_seats."
+      allow_nil? false
+      default 1
+      constraints min: 1, max: @max_seats
+    end
+
+    attribute :removed_seats, :integer do
+      description "Seats Jennie took off a confirmed booking when someone dropped out, which the course gets back."
+      allow_nil? false
+      default 0
+      constraints min: 0
+    end
+
     attribute :locale, :string, allow_nil?: false, default: "sv-FI"
 
     attribute :status, __MODULE__.Status, allow_nil?: false, default: :pending
 
-    # Receipt number, from the same sequence as order references.
-    attribute :reference, :string, allow_nil?: false
+    attribute :reference, :string do
+      description "The receipt number, from the same sequence as order references."
+      allow_nil? false
+    end
 
-    # Snapshotted by PriceBooking, so a later edit to the course can't change
-    # what was charged or what the receipt says.
-    attribute :tax_rate, :decimal, allow_nil?: false
-    attribute :amount, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
+    attribute :tax_rate, :decimal do
+      description "The VAT rate included in amount, as a fraction: 0.14 is 14%. Snapshotted from the course by " <>
+                    "PriceBooking, so a later edit to the course can't change what the receipt says."
 
-    attribute :payment_intent_id, :string
+      allow_nil? false
+    end
+
+    attribute :amount, :decimal do
+      description "What the seats bought cost in euros, VAT included: the course's price times seats, " <>
+                    "snapshotted by PriceBooking. Not what is owed now: that is total_due."
+
+      allow_nil? false
+      constraints min: 0, scale: 2
+    end
+
+    attribute :payment_intent_id, :string do
+      description "The Stripe PaymentIntent still waiting for the customer. Once it succeeds the money is a Payment."
+    end
 
     attribute :payment_terms, :atom do
       description "How Jennie agreed the booking is paid: a payment link or in person. :invoice (bank " <>
@@ -80,11 +106,18 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :payment_link_emailed_at, :utc_datetime
     attribute :confirmed_at, :utc_datetime
     attribute :confirmation_emailed_at, :utc_datetime
-    # Why Jennie cancelled, for her own record on the courses page.
-    attribute :cancellation_reason, :string
+
+    attribute :cancellation_reason, :string do
+      description "Why Jennie cancelled, for her own record on the courses page. Not sent to the customer."
+    end
+
     attribute :cancelled_at, :utc_datetime
-    # The customer's email can change later; this names who was told.
-    attribute :cancellation_emailed_to, :string
+
+    attribute :cancellation_emailed_to, :string do
+      description "The address the cancellation email went to, as the customer's email can change later. Nil if " <>
+                    "none was sent."
+    end
+
     attribute :receipt_emailed_at, :utc_datetime
     attribute :reminder_emailed_at, :utc_datetime
 

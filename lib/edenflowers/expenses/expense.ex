@@ -80,10 +80,20 @@ defmodule Edenflowers.Expenses.Expense do
   attributes do
     uuid_primary_key :id
 
-    attribute :document_id, :string, allow_nil?: false
+    attribute :document_id, :string do
+      description "The id of its receipt or invoice in Papra. One expense per document: re-processing the " <>
+                    "document updates this expense."
+
+      allow_nil? false
+    end
+
     attribute :vendor_name, :string
     attribute :vendor_vat_number, :string
-    attribute :date, :date
+
+    attribute :date, :date do
+      description "The date printed on the receipt or invoice, which is also its document date in Papra. Not " <>
+                    "when it was paid: that is paid_on."
+    end
 
     attribute :paid_on, :date do
       description "The day the money leaves: empty while unpaid, in the future once Jennie has scheduled the payment in her bank. Claude sets it from a document that shows it was already paid."
@@ -108,11 +118,29 @@ defmodule Edenflowers.Expenses.Expense do
     end
 
     attribute :currency, __MODULE__.Currency
-    attribute :category, __MODULE__.Category
-    attribute :description, :string
-    attribute :confidence, __MODULE__.Confidence, allow_nil?: false
-    attribute :processed_at, :utc_datetime, allow_nil?: false
-    attribute :reviewed_at, :utc_datetime
+
+    attribute :category, __MODULE__.Category do
+      description "The expense line on Vero's business tax return it belongs to. :unknown when the document " <>
+                    "doesn't show what was bought."
+    end
+
+    attribute :description, :string do
+      description "A short note of what was bought, in Finland Swedish, as Claude wrote it or Jennie corrected it."
+    end
+
+    attribute :confidence, __MODULE__.Confidence do
+      description "How sure Claude was of the extraction as a whole. Anything but :high asks for Jennie's review."
+      allow_nil? false
+    end
+
+    attribute :processed_at, :utc_datetime do
+      description "When Claude last extracted it from its document."
+      allow_nil? false
+    end
+
+    attribute :reviewed_at, :utc_datetime do
+      description "When Jennie last saved it with :correct, which settles needs_review. Nil while it is as Claude read it."
+    end
 
     timestamps()
   end
@@ -133,7 +161,9 @@ defmodule Edenflowers.Expenses.Expense do
       description "Scheduled in Jennie's bank for a future day; it counts as paid from then."
     end
 
-    calculate :overdue, :boolean, expr(is_nil(paid_on) and due_on < helsinki_today())
+    calculate :overdue, :boolean, expr(is_nil(paid_on) and due_on < helsinki_today()) do
+      description "Unpaid and unscheduled after its due date, counted in Helsinki days. Never for one with no due date."
+    end
 
     calculate :needs_review,
               :boolean,
@@ -228,7 +258,10 @@ defmodule Edenflowers.Expenses.Expense do
         :description
       ]
 
-      argument :paid_today, :boolean, default: false
+      argument :paid_today, :boolean do
+        default false
+        description "Jennie paid it today, so today in Helsinki becomes its paid date, whatever paid_on says."
+      end
 
       argument :scheduled_for_due_date, :boolean do
         default false
@@ -267,8 +300,11 @@ defmodule Edenflowers.Expenses.Expense do
     read :awaiting_bank_payment do
       description "The unpaid or scheduled expenses a bank payment with this reference, amount and currency would settle."
 
-      argument :reference_number, :string, allow_nil?: false
-      argument :amount, :decimal, allow_nil?: false
+      argument :reference_number, :string,
+        allow_nil?: false,
+        description: "The reference the payment quotes, as unspaced digits."
+
+      argument :amount, :decimal, allow_nil?: false, description: "The payment's amount, which must equal total_amount."
       argument :currency, __MODULE__.Currency, allow_nil?: false
 
       filter expr(
@@ -295,7 +331,7 @@ defmodule Edenflowers.Expenses.Expense do
     update :paid_from_bank do
       description "The bank booked this expense's payment, so its paid date becomes the booking date, replacing a scheduled one."
       accept []
-      argument :booked_on, :date, allow_nil?: false
+      argument :booked_on, :date, allow_nil?: false, description: "The day the bank booked the payment."
       change set_attribute(:paid_on, arg(:booked_on))
     end
 
@@ -304,10 +340,16 @@ defmodule Edenflowers.Expenses.Expense do
                     "Matches the reference number, amount and currency exactly; with no match or several, " <>
                     "nothing changes and Jennie marks it by hand. Returns whether one was settled."
 
-      argument :reference_number, :string, allow_nil?: false
-      argument :amount, :decimal, allow_nil?: false
+      argument :reference_number, :string,
+        allow_nil?: false,
+        description: "The reference the payment quotes, spaced or not."
+
+      argument :amount, :decimal,
+        allow_nil?: false,
+        description: "What left the account, as a positive amount in `currency`."
+
       argument :currency, __MODULE__.Currency, allow_nil?: false
-      argument :booked_on, :date, allow_nil?: false
+      argument :booked_on, :date, allow_nil?: false, description: "The day the bank booked the payment."
 
       run fn input, context ->
         %{reference_number: reference, amount: amount, currency: currency, booked_on: booked_on} = input.arguments

@@ -30,16 +30,52 @@ defmodule Edenflowers.Payments.Payment do
 
   attributes do
     uuid_primary_key :id
-    attribute :amount, :decimal, allow_nil?: false, constraints: [scale: 2]
+
+    attribute :amount, :decimal do
+      description "The money that moved in euros: positive when taken, negative when handed back as a refund or Undo."
+      allow_nil? false
+      constraints scale: 2
+    end
+
     attribute :method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
-    attribute :payment_intent_id, :string
-    attribute :stripe_refund_id, :string
-    attribute :payment_method_type, :string
+
+    attribute :payment_intent_id, :string do
+      description "The Stripe PaymentIntent that succeeded. Unique, so a redelivered webhook records it once. " <>
+                    "Nil on refunds and on anything not taken through Stripe."
+    end
+
+    attribute :stripe_refund_id, :string do
+      description "The Stripe refund this hands back. Unique together with goodwill, as one refund beyond what " <>
+                    "was owed back is recorded as two payments. Nil otherwise."
+    end
+
+    attribute :payment_method_type, :string do
+      description "What paid, for the receipt: Stripe's payment method type, such as \"card\" or \"mobilepay\", or " <>
+                    "the method Jennie recorded. Nil on payments from before it was kept."
+    end
+
     attribute :card_brand, :string
     attribute :card_last4, :string
-    attribute :goodwill, :boolean, allow_nil?: false, default: false
-    attribute :note, :string
-    attribute :paid_at, :utc_datetime, allow_nil?: false, default: &DateTime.utc_now/0
+
+    attribute :goodwill, :boolean do
+      description "On a refund, whether it was a gesture beyond what was owed back: it lowers neither what was " <>
+                    "sold nor the Balance."
+
+      allow_nil? false
+      default false
+    end
+
+    attribute :note, :string do
+      description "Jennie's own words on why she gave a goodwill refund. Optional."
+    end
+
+    attribute :paid_at, :utc_datetime do
+      description "When the money moved. The monthly report files it by its Helsinki day; one entered by day " <>
+                    "only, such as a bank transfer, is set to midday that day."
+
+      allow_nil? false
+      default &DateTime.utc_now/0
+    end
 
     attribute :bank_transaction_id, :string do
       description "The bank's id for the transfer the bank sync recorded this from, so it's recorded once. " <>

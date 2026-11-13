@@ -13,10 +13,25 @@ defmodule Edenflowers.Expenses.ExpenseImport do
 
   attributes do
     uuid_primary_key :id
-    attribute :document_id, :string, allow_nil?: false
-    attribute :organization_id, :string, allow_nil?: false
-    attribute :processed_at, :utc_datetime
-    attribute :failed_at, :utc_datetime
+
+    attribute :document_id, :string do
+      description "The document's id in Papra, which its Expense carries too."
+      allow_nil? false
+    end
+
+    attribute :organization_id, :string do
+      description "The Papra organization the document is in, needed to fetch it."
+      allow_nil? false
+    end
+
+    attribute :processed_at, :utc_datetime do
+      description "When its expense was extracted. Nil while it waits for the scheduler or has failed."
+    end
+
+    attribute :failed_at, :utc_datetime do
+      description "When it failed every attempt, so the scheduler stops retrying it."
+    end
+
     timestamps()
   end
 

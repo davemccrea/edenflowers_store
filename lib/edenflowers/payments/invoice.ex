@@ -125,7 +125,10 @@ defmodule Edenflowers.Payments.Invoice do
                     "and resend uses these immutable formatted string keys."
     end
 
-    attribute :issued_at, :utc_datetime_usec
+    attribute :issued_at, :utc_datetime_usec do
+      description "When Jennie issued it, which numbered and froze it. Nil on a draft: status, editable? and " <>
+                    "issued? all read it."
+    end
 
     attribute :supply_date, :date do
       description "The date of supply the VAT Act asks every invoice to state (AVL 209 e §): when the goods " <>
@@ -144,8 +147,17 @@ defmodule Edenflowers.Payments.Invoice do
       default []
     end
 
-    attribute :financial_snapshot, :map
-    attribute :seller_snapshot, :map
+    attribute :financial_snapshot, :map do
+      description "Its figures as issued, numbers as strings (InvoiceFinancials.build/1): each line with its " <>
+                    "gross, each VAT rate's gross, base and VAT under vat_breakdown, and the totals. The PDF and " <>
+                    "the monthly report read these, never the lines again. Nil on a draft."
+    end
+
+    attribute :seller_snapshot, :map do
+      description "The seller as it was when issued (Invoice.seller/0: name, business_id, address, iban) with " <>
+                    "the late_interest_rate stated, so a later change of address or bank doesn't alter an issued " <>
+                    "invoice. Nil on a draft."
+    end
 
     attribute :pdf, :binary do
       description "The PDF as issued, rendered once on issuance and kept for the books: every download and " <>
@@ -184,10 +196,18 @@ defmodule Edenflowers.Payments.Invoice do
       description "Whether it counts against its order's Balance: issued and not cancelled by a Credit note."
     end
 
-    calculate :buyer_email_key, :string, expr(string_downcase(buyer_email))
+    calculate :buyer_email_key, :string, expr(string_downcase(buyer_email)) do
+      description "The email in lower case, to tell one invoice customer from another whatever case it was typed in."
+    end
 
-    calculate :editable?, :boolean, expr(is_nil(issued_at))
-    calculate :issued?, :boolean, expr(not is_nil(issued_at))
+    calculate :editable?, :boolean, expr(is_nil(issued_at)) do
+      description "Whether Jennie can still change or delete it: only a draft. Changes.EditInvoiceDraft refuses " <>
+                    "update_draft and destroy_draft otherwise."
+    end
+
+    calculate :issued?, :boolean, expr(not is_nil(issued_at)) do
+      description "Whether it has been issued: numbered, frozen and no longer a draft, whatever became of it since."
+    end
 
     calculate :status,
               :atom,
@@ -362,6 +382,7 @@ defmodule Edenflowers.Payments.Invoice do
     defaults [:read]
 
     read :admin_list do
+      description "The admin Invoices table: every invoice, drafts included, newest first."
       pagination offset?: true, keyset?: true, countable: true, required?: false
       prepare build(sort: [inserted_at: :desc])
     end
@@ -481,6 +502,8 @@ defmodule Edenflowers.Payments.Invoice do
     end
 
     update :update_draft do
+      description "Saves Jennie's edits to a draft. An issued invoice is frozen and refuses them (editable?)."
+
       accept [
         :buyer_name,
         :buyer_email,
@@ -517,6 +540,11 @@ defmodule Edenflowers.Payments.Invoice do
     end
 
     update :issue do
+      description "Jennie issues a complete draft, once: it takes the next number in the series and its " <>
+                    "reference number, is dated today in Helsinki and due its payment term later, and its " <>
+                    "figures, seller, content and PDF are frozen. One for an order must bill exactly that order's " <>
+                    "Balance while it is invoiceable?. Nothing is emailed: that is :send."
+
       accept []
       require_atomic? false
       change Changes.IssueInvoice
@@ -526,7 +554,11 @@ defmodule Edenflowers.Payments.Invoice do
     update :record_payment do
       description "Records a bank transfer received for this issued invoice, without sending an email."
       accept []
-      argument :amount, Edenflowers.Types.Price, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
+
+      argument :amount, Edenflowers.Types.Price,
+        allow_nil?: false,
+        constraints: [greater_than: 0, scale: 2],
+        description: "What arrived in euros: part of what is owed or all of it, never more than amount_unpaid."
 
       argument :paid_on, :date,
         allow_nil?: false,
@@ -549,8 +581,11 @@ defmodule Edenflowers.Payments.Invoice do
                     "yet. This keeps a transfer whose Payment was deleted, such as a test invoice's, from " <>
                     "settling the next invoice that reuses its number."
 
-      argument :reference_number, :string, allow_nil?: false
-      argument :booked_on, :date, allow_nil?: false
+      argument :reference_number, :string,
+        allow_nil?: false,
+        description: "The reference the transfer quotes, as unspaced digits."
+
+      argument :booked_on, :date, allow_nil?: false, description: "The day the bank booked the transfer."
 
       filter expr(reference_number == ^arg(:reference_number) and status == :open and invoice_date <= ^arg(:booked_on))
     end
@@ -561,10 +596,19 @@ defmodule Edenflowers.Payments.Invoice do
                     "matching no open invoice, or one for more than is owed is left alone; an overpayment " <>
                     "needs Jennie. Returns whether it was recorded."
 
-      argument :reference_number, :string, allow_nil?: false
-      argument :amount, :decimal, allow_nil?: false
-      argument :booked_on, :date, allow_nil?: false
-      argument :bank_transaction_id, :string, allow_nil?: false
+      argument :reference_number, :string,
+        allow_nil?: false,
+        description: "The reference the transfer quotes, spaced or not."
+
+      argument :amount, :decimal, allow_nil?: false, description: "The transfer's amount in euros."
+
+      argument :booked_on, :date,
+        allow_nil?: false,
+        description: "The day the bank booked it, which the Payment is dated."
+
+      argument :bank_transaction_id, :string,
+        allow_nil?: false,
+        description: "The bank's id for the transfer, so the same one is never recorded twice."
 
       run Edenflowers.Payments.Actions.SettleInvoiceFromBank
     end
@@ -572,8 +616,16 @@ defmodule Edenflowers.Payments.Invoice do
     update :undo_payment do
       description "Reverses a bank transfer entered by mistake, keeping its original ledger row."
       accept []
-      argument :payment_id, :uuid, allow_nil?: false
-      argument :paid_at, :utc_datetime, allow_nil?: false, default: &DateTime.utc_now/0
+
+      argument :payment_id, :uuid,
+        allow_nil?: false,
+        description: "The Payment to take back, which must be one of this invoice's and undoable?."
+
+      argument :paid_at, :utc_datetime,
+        allow_nil?: false,
+        default: &DateTime.utc_now/0,
+        description: "When the Undo is dated, which decides the month the report takes it off in. Now by default."
+
       require_atomic? false
       change {Changes.RecordInvoicePayment, reversal?: true}
     end

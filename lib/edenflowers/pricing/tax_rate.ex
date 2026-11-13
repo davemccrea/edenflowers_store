@@ -19,7 +19,9 @@ defmodule Edenflowers.Pricing.TaxRate do
       constraints min: 0, max: 1
     end
 
-    attribute :retired_at, :utc_datetime_usec
+    attribute :retired_at, :utc_datetime_usec do
+      description "When Jennie retired it. Admin forms stop offering it, and what already charges it keeps it."
+    end
   end
 
   relationships do
