@@ -260,7 +260,8 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
   test "zips the month's expense sheet with every receipt it names" do
     create_expense("doc-adobe", "Adobe", ~D[2026-09-11], "SEK", "120.00", "24.00")
 
-    create_expense("doc-kukka", "Kukkatukku Oy", ~D[2026-09-03], "EUR", "125.50", "25.50")
+    kukka = create_expense("doc-kukka", "Kukkatukku Oy", ~D[2026-09-03], "EUR", "125.50", "25.50")
+    {:ok, _} = Expenses.link_expense_bank_payment(kukka, ~D[2026-09-03], "ARCHIVE-1", authorize?: false)
     create_expense("doc-unpaid", "Unpaid Oy", ~D[2026-09-04], "EUR", "9.00", "1.00", paid_on: nil)
 
     create_expense("doc-tools", "Työkalu Åb", ~D[2026-09-20], "EUR", "10.00", "2.00")
@@ -298,6 +299,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
              "Totalt",
              "Moms",
              "Exkl. moms",
+             "Arkiveringskod",
              "Kvittofil"
            ]
 
@@ -313,6 +315,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
                "125.5",
                "25.5",
                "100.0",
+               "ARCHIVE-1",
                "001_2026-09-03_Kukkatukku-Oy.pdf"
              ],
              ["2" | _] = adobe,
@@ -324,7 +327,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
 
     assert paid == excel_date(~D[2026-09-03])
     assert invoiced == paid
-    assert List.last(adobe) == "002_2026-09-11_Adobe.pdf"
+    assert Enum.take(adobe, -2) == [nil, "002_2026-09-11_Adobe.pdf"]
   end
 
   test "counts an invoice in the month it was paid, and sends it unpaid in the month it is dated" do

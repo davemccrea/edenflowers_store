@@ -429,6 +429,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
       ~t"Total",
       ~t"VAT",
       ~t"Net",
+      ~t"Archive ID",
       ~t"Receipt file"
     ]
 
@@ -450,6 +451,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
       amount_cell(expense.total_amount),
       amount_cell(expense.vat_amount),
       amount_cell(net(expense)),
+      expense.bank_transaction_id,
       receipt || ~t"Missing: couldn't be fetched from Papra"
     ]
   end
