@@ -3,6 +3,8 @@ defmodule Edenflowers.Orders.OrderCalendarTest do
 
   import Generator
 
+  alias Edenflowers.Orders.Subscription
+
   describe "Order Step 3 - Fulfillment and delivery" do
     test "save_step_3 rejects a date the shop has closed" do
       pickup_option =
@@ -63,8 +65,8 @@ defmodule Edenflowers.Orders.OrderCalendarTest do
           available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
         )
 
-      assert key_date in Edenflowers.Orders.Subscription.calendar_for(%{subscription?: true}, calendar).disabled_dates
-      assert Edenflowers.Orders.Subscription.calendar_for(%{subscription?: false}, calendar) == calendar
+      assert key_date in Subscription.calendar_for(%{subscription?: true}, calendar).disabled_dates
+      assert Subscription.calendar_for(%{subscription?: false}, calendar) == calendar
     end
 
     # It would repeat on a weekday the shop is closed.
