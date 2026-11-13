@@ -14,7 +14,7 @@ defmodule EdenflowersWeb.Layouts do
   attr :conn, Plug.Conn, required: true
   attr :alternates, :map, required: true
 
-  def hreflang_links(assigns) do
+  def alternate_links(assigns) do
     ~H"""
     <link
       :for={{code, path} <- @alternates}

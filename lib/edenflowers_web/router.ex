@@ -25,7 +25,7 @@ defmodule EdenflowersWeb.Router do
     plug Localize.Plug.PutLocale,
       from: [:route, :session, :accept_language],
       gettext: EdenflowersWeb.Gettext,
-      default: Edenflowers.Locales.default()
+      default: {EdenflowersWeb.Plugs.BrowserLocale, :fallback}
 
     plug EdenflowersWeb.Plugs.PutLocaleSession
     plug EdenflowersWeb.Plugs.CaptureReturnTo
@@ -50,20 +50,26 @@ defmodule EdenflowersWeb.Router do
     plug EdenflowersWeb.Plugs.RedirectOldLinks
   end
 
+  @store_hooks [
+    EdenflowersWeb.Hooks.Maintenance,
+    EdenflowersWeb.Hooks.TrackPresence,
+    EdenflowersWeb.Hooks.PutLocale,
+    EdenflowersWeb.Hooks.PutCurrentPath,
+    EdenflowersWeb.Hooks.PutOrder,
+    EdenflowersWeb.Hooks.PutNoticeBar,
+    EdenflowersWeb.Hooks.PutClientIp,
+    EdenflowersWeb.Hooks.HandleLineItemChanged
+  ]
+
   scope "/", EdenflowersWeb do
     pipe_through [:browser, :store]
 
-    ash_authentication_live_session :public,
-      on_mount: [
-        EdenflowersWeb.Hooks.Maintenance,
-        EdenflowersWeb.Hooks.TrackPresence,
-        EdenflowersWeb.Hooks.PutLocale,
-        EdenflowersWeb.Hooks.PutCurrentPath,
-        EdenflowersWeb.Hooks.PutOrder,
-        EdenflowersWeb.Hooks.PutNoticeBar,
-        EdenflowersWeb.Hooks.PutClientIp,
-        EdenflowersWeb.Hooks.HandleLineItemChanged
-      ] do
+    # localize_live_session/3 defines the session per locale itself, so the
+    # locale of the route is the locale the page mounts in. Ash's own hooks
+    # are named here because of that.
+    localize_live_session :store,
+      on_mount: [AshAuthentication.Phoenix.LiveSession | @store_hooks],
+      session: {AshAuthentication.Phoenix.LiveSession, :generate_session, []} do
       localize do
         live "/#{language}", Marketing.HomeLive
         live "/#{language}/weddings", Marketing.WeddingsLive
@@ -81,7 +87,9 @@ defmodule EdenflowersWeb.Router do
         live "/#{language}/courses", Courses.CoursesLive
         live "/#{language}/courses/:slug", Courses.CourseLive
       end
+    end
 
+    ash_authentication_live_session :public, on_mount: @store_hooks do
       scope "/", Courses do
         live "/courses/bookings/:id", CourseBookingLive
       end

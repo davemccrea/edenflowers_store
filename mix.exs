@@ -78,7 +78,7 @@ defmodule Edenflowers.MixProject do
       {:ash_phoenix, "~> 2.0"},
       {:ash_postgres, "~> 2.0"},
       {:ash_rate_limiter, "~> 2.0"},
-      {:ash_state_machine, "~> 0.2.12"},
+      {:ash_state_machine, "~> 0.3"},
       {:ash_translation, "~> 0.2.0"},
       {:cinder, "~> 0.14"},
       {:simple_sat, "~> 0.1"},
@@ -108,9 +108,8 @@ defmodule Edenflowers.MixProject do
       # Internationalisation
       {:gettext, "~> 1.0"},
       {:gettext_sigils, "~> 0.5"},
-      # 1.5.0 makes `:und` a supported locale, so "en" resolves to :und and English ~q routes crash
-      {:localize, "~> 1.4.3 and < 1.5.0"},
-      {:localize_web, "~> 1.1.0"},
+      {:localize, "~> 1.7.1"},
+      {:localize_web, "~> 1.3"},
       # Telemetry
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
