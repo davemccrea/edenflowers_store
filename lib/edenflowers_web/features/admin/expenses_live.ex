@@ -262,10 +262,11 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
         :if={@dismissed != []}
         id="dismissed-bank-payments"
         phx-mounted={JS.ignore_attributes(["open"])}
-        class="mt-2 text-sm"
+        class="group/dismissed mt-2 text-sm"
       >
-        <summary class="text-base-content/75 touch-target cursor-pointer py-2">
+        <summary class="text-base-content/75 touch-target flex w-fit cursor-pointer list-none items-center gap-1 py-2">
           {~t"#{count = length(@dismissed)} need no receipt"}
+          <.icon name="hero-chevron-down" class="h-4 w-4 group-open/dismissed:rotate-180" />
         </summary>
         <ul class="divide-base-content/12 divide-y">
           <li
