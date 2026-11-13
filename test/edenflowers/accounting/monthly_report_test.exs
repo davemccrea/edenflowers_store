@@ -328,6 +328,11 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     assert paid == excel_date(~D[2026-09-03])
     assert invoiced == paid
     assert Enum.take(adobe, -2) == [nil, "002_2026-09-11_Adobe.pdf"]
+
+    widths = column_widths(files["rapport-2026-09.xlsx"], 3)
+    assert widths[5] > String.length("Leverantörens momsnummer")
+    assert widths[12] > String.length("001_2026-09-03_Kukkatukku-Oy.pdf")
+    assert widths[1] < widths[12]
   end
 
   test "counts an invoice in the month it was paid, and sends it unpaid in the month it is dated" do
@@ -740,6 +745,12 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     ~r{<row[^>]*>(.*?)</row>}s
     |> Regex.scan(files["xl/worksheets/sheet#{number}.xml"], capture: :all_but_first)
     |> Enum.map(fn [cells] -> read_row(cells, strings) end)
+  end
+
+  defp column_widths(xlsx, number) do
+    ~r{<col min="(\d+)" max="\d+" width="([\d.]+)"}
+    |> Regex.scan(unzip(xlsx)["xl/worksheets/sheet#{number}.xml"], capture: :all_but_first)
+    |> Map.new(fn [column, width] -> {String.to_integer(column), width |> Float.parse() |> elem(0)} end)
   end
 
   defp read_row(cells, strings) do

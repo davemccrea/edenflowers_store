@@ -117,7 +117,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
            receivables_sheet(open_invoices),
            payables_sheet(payable_rows)
          ],
-         workbook = %Workbook{sheets: Enum.map(sheets, &with_basic_font/1)},
+         workbook = %Workbook{sheets: Enum.map(sheets, &(&1 |> with_basic_font() |> with_column_widths()))},
          {:ok, {_, xlsx}} <- Elixlsx.write_to_memory(workbook, spreadsheet),
          invoice_files =
            for(document <- invoice_documents, do: {~c"kundfakturor/#{InvoicePdf.filename(document)}", document.pdf}),
@@ -620,6 +620,23 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   defp with_basic_font(sheet) do
     %{sheet | rows: Enum.map(sheet.rows, fn row -> Enum.map(row, &basic_font_cell/1) end)}
   end
+
+  # An xlsx can't ask Excel to auto-fit on open, so each column is sized to its
+  # longest cell, capped so a long description doesn't push the rest off screen.
+  defp with_column_widths(sheet) do
+    widths =
+      for row <- sheet.rows, {[value | _], column} <- Enum.with_index(row, 1), reduce: %{} do
+        widths -> Map.update(widths, column, column_width(value), &max(&1, column_width(value)))
+      end
+
+    %{sheet | col_widths: widths}
+  end
+
+  defp column_width(value), do: min(String.length(cell_text(value)) + 3, 50)
+
+  defp cell_text({{_, _, _}, _}), do: "2026-01-01"
+  defp cell_text(value) when is_float(value), do: :erlang.float_to_binary(value, decimals: 2)
+  defp cell_text(value), do: to_string(value)
 
   defp basic_font_cell(nil), do: nil
   defp basic_font_cell([value | opts]), do: [value, font: "Arial", size: 11] ++ opts
