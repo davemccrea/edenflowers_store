@@ -1,11 +1,11 @@
 defmodule Edenflowers.Bank.Actions.SyncPayments do
   @moduledoc """
   Reads the booked transactions of every account on the current bank
-  connection and settles what they pay: a payment out marks its expense paid,
-  a transfer in is recorded on its invoice. Payments the matching can't place
-  are left for Jennie. Every payment out is kept, and linked to its receipt
-  when one paid by other means matches, so Jennie sees which have none. Then
-  stores the accounts' balance for the Overview.
+  connection: a transfer in is recorded on its invoice, and every payment out
+  is kept. Then the kept payments are matched to their expenses, settling the
+  unpaid one each pays or linking the receipt paid by other means, so Jennie
+  sees which have none. Payments the matching can't place are left for her.
+  Last it stores the accounts' balance for the Overview.
 
   Does nothing without Enable Banking configured (only production is), before
   the bank is first connected, or once the consent has ended.
@@ -16,8 +16,6 @@ defmodule Edenflowers.Bank.Actions.SyncPayments do
   import Edenflowers.Actors
 
   alias Edenflowers.Bank
-  alias Edenflowers.Expenses
-  alias Edenflowers.Expenses.Expense
   alias Edenflowers.External.EnableBankingAPI
   alias Edenflowers.Payments
 
@@ -83,11 +81,8 @@ defmodule Edenflowers.Bank.Actions.SyncPayments do
     end
   end
 
-  # Oldest first, so of two payments of one amount the earlier settles the earlier expense.
   defp settle_all(transactions) do
-    transactions
-    |> Enum.sort_by(& &1.booked_on, Date)
-    |> Enum.reduce_while(:ok, fn transaction, :ok ->
+    Enum.reduce_while(transactions, :ok, fn transaction, :ok ->
       case settle(transaction) do
         {:error, error} -> {:halt, {:error, error}}
         _settled_or_not -> {:cont, :ok}
@@ -95,18 +90,8 @@ defmodule Edenflowers.Bank.Actions.SyncPayments do
     end)
   end
 
-  defp settle(%{direction: :out} = transaction) do
-    with :ok <- record(transaction), true <- Expense.Currency.match?(transaction.currency) do
-      Expenses.settle_expense_from_bank(
-        transaction.reference_number,
-        transaction.amount,
-        transaction.currency,
-        transaction.booked_on,
-        %{bank_transaction_id: transaction.id},
-        actor: system_actor()
-      )
-    end
-  end
+  # Payments out are only kept here; matching them to expenses comes after.
+  defp settle(%{direction: :out} = transaction), do: record(transaction)
 
   defp settle(%{direction: :in, reference_number: reference, id: id, currency: "eur"} = transaction)
        when is_binary(reference) and is_binary(id) do

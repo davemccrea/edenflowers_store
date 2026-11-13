@@ -25,7 +25,7 @@ defmodule Edenflowers.Expenses.Actions.SettleExpenseFromBank do
   @impl true
   def run(input, _opts, context) do
     arguments = input.arguments
-    transaction_id = arguments[:bank_transaction_id]
+    transaction_id = arguments.bank_transaction_id
     opts = Ash.Context.to_opts(context)
 
     reference = ReferenceNumber.normalize(arguments[:reference_number])
@@ -49,7 +49,7 @@ defmodule Edenflowers.Expenses.Actions.SettleExpenseFromBank do
     Expenses.expenses_awaiting_bank_payment(reference, arguments.amount, arguments.currency, opts)
   end
 
-  defp candidates(nil, %{bank_transaction_id: transaction_id} = arguments, opts) when is_binary(transaction_id) do
+  defp candidates(nil, %{bank_transaction_id: transaction_id} = arguments, opts) do
     if settled_an_expense?(transaction_id, opts) or pays_an_expense_already_paid?(arguments, opts) do
       :settles_nothing
     else
@@ -61,8 +61,6 @@ defmodule Edenflowers.Expenses.Actions.SettleExpenseFromBank do
       )
     end
   end
-
-  defp candidates(nil, _arguments, _opts), do: :no_transaction_id
 
   defp settled_an_expense?(transaction_id, opts) do
     Expense

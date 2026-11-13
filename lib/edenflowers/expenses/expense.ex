@@ -549,8 +549,7 @@ defmodule Edenflowers.Expenses.Expense do
       argument :currency, __MODULE__.Currency, allow_nil?: false
       argument :booked_on, :date, allow_nil?: false, description: "The day the bank booked the payment."
 
-      argument :bank_transaction_id, :string,
-        description: "The bank's id for the payment. Without one, a payment quoting no reference settles nothing."
+      argument :bank_transaction_id, :string, allow_nil?: false, description: "The bank's id for the payment."
 
       run Edenflowers.Expenses.Actions.SettleExpenseFromBank
     end
