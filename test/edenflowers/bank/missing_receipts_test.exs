@@ -87,6 +87,17 @@ defmodule Edenflowers.Bank.MissingReceiptsTest do
       assert id == transaction.id
     end
 
+    test "include a recent one at once after Jennie unlinks it from its expense" do
+      transaction = seed_transaction("recent", Edenflowers.ShopTime.today())
+      expense = seed_expense(paid_on: Edenflowers.ShopTime.today(), bank_transaction_id: "recent")
+      assert Bank.bank_payments_missing_receipt!(actor: @admin) == []
+
+      Expenses.unlink_expense_bank_payment!(expense, actor: @admin)
+
+      assert [%{id: id}] = Bank.bank_payments_missing_receipt!(actor: @admin)
+      assert id == transaction.id
+    end
+
     test "lose the real payment once it pays the expense a wrong match left, and keep the wrong one" do
       wrong = seed_transaction("wrong", days_ago(10))
       seed_transaction("real", days_ago(9))

@@ -84,14 +84,24 @@ defmodule Edenflowers.Bank.Transaction do
     read :missing_receipt do
       description "Payments Jennie should find a receipt for: not dismissed, paying no expense, and booked over " <>
                     "three days ago or in a month that has ended. So a card receipt has three days to arrive, and on the " <>
-                    "1st the whole previous month is checked for the accountant's report. Newest first."
+                    "1st the whole previous month is checked for the accountant's report. One Jennie unlinked from an expense, " <>
+                    "or whose expense she marked unpaid, shows at once: its receipt was wrong, so there's nothing to wait for. " <>
+                    "Newest first."
 
       filter expr(is_nil(dismissed_at) and not exists(expense, paid))
 
       prepare fn query, _context ->
         today = Edenflowers.ShopTime.today()
         cutoff = Enum.max([Date.add(today, -3), Date.beginning_of_month(today)], Date)
-        Ash.Query.filter(query, booked_on < ^cutoff)
+
+        Ash.Query.filter(
+          query,
+          booked_on < ^cutoff or
+            exists(
+              Edenflowers.Expenses.Expense,
+              fragment("? = ANY(?)", parent(bank_id), unlinked_bank_transaction_ids)
+            )
+        )
       end
 
       prepare build(sort: [booked_on: :desc])
