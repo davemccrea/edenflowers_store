@@ -4569,3 +4569,18 @@ msgstr "Valmistujaisviikonloppu"
 #, elixir-autogen, elixir-format
 msgid "Dress:"
 msgstr "Mekko:"
+
+#: lib/edenflowers_web/customer_messages.ex:40
+#, elixir-autogen, elixir-format
+msgid "Hi %{name}, you can pay %{amount} for your Eden Flowers order %{reference} here: %{url}"
+msgstr "Hei %{name}, voit maksaa Eden Flowers -tilauksesi %{reference} (%{amount}) täällä: %{url}"
+
+#: lib/edenflowers_web/customer_messages.ex:23
+#, elixir-autogen, elixir-format
+msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up."
+msgstr "Hei %{name}, Eden Flowers -tilauksesi %{reference} on nyt noudettavissa."
+
+#: lib/edenflowers_web/customer_messages.ex:26
+#, elixir-autogen, elixir-format
+msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up. Minimossen is open from %{opening_time} to %{closing_time} today. If that doesn't suit, just let me know."
+msgstr "Hei %{name}, Eden Flowers -tilauksesi %{reference} on nyt noudettavissa. Minimossen on tänään avoinna klo %{opening_time}–%{closing_time}. Jos se ei sovi, ilmoita vain minulle."

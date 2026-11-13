@@ -1239,11 +1239,6 @@ msgstr "Present till %{order_recipient_name}"
 msgid "Gift order"
 msgstr "Presentbeställning"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:1023
-#, elixir-autogen, elixir-format
-msgid "Hi %{order_customer_first_name}, you can pay %{amount} for your Eden Flowers order %{order_order_reference} here: %{url}"
-msgstr "Hej %{order_customer_first_name}, du kan betala %{amount} för din beställning %{order_order_reference} från Eden Flowers här: %{url}"
-
 #: lib/edenflowers_web/features/admin/product_form_live.ex:333
 #, elixir-autogen, elixir-format
 msgid "Hide photo %{n} from the store's gallery"
@@ -4955,11 +4950,6 @@ msgstr "Maila presentkortet och kvittot"
 msgid "The gift voucher and receipt can be emailed once it's paid in full."
 msgstr "Presentkortet och kvittot kan mailas när det är betalt i sin helhet."
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:1008
-#, elixir-autogen, elixir-format
-msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up."
-msgstr "Hej %{name}, din beställning %{reference} från Eden Flowers är nu klar att hämtas."
-
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:293
 #, elixir-autogen, elixir-format
 msgid "Applies from the next order not yet made, even past the customer's change deadline."
@@ -5138,11 +5128,6 @@ msgstr "Ros"
 #, elixir-autogen, elixir-format
 msgid "Source gift not linked"
 msgstr "Den ursprungliga gåvan är inte kopplad"
-
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:1011
-#, elixir-autogen, elixir-format
-msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up. Minimossen is open from %{opening_time} to %{closing_time} today. If that doesn't suit, just let me know."
-msgstr "Hej %{name}, din beställning %{reference} från Eden Flowers är nu klar att hämtas. Minimossen har öppet kl. %{opening_time}–%{closing_time} i dag. Om det inte passar, hör bara av dig."
 
 # Counts of prepared orders and all orders still awaiting handover, respectively.
 #: lib/edenflowers_web/features/admin/overview_live.ex:839

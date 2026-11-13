@@ -964,14 +964,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   defp pickup_message_urls(%{pickup_message_sendable?: true} = order) do
-    message_urls(order.customer_phone_number, pickup_message(order))
+    message_urls(order.customer_phone_number, EdenflowersWeb.CustomerMessages.pickup(order))
   end
 
   defp pickup_message_urls(_order), do: nil
 
   defp payment_message_urls(order) do
     if order.payment_link_open?,
-      do: message_urls(order.customer_phone_number, payment_message(order)),
+      do: message_urls(order.customer_phone_number, EdenflowersWeb.CustomerMessages.payment(order)),
       else: nil
   end
 
@@ -990,37 +990,5 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       :error ->
         nil
     end
-  end
-
-  # Written in the customer's language, not the admin's.
-  # Sent the day Jennie finishes it, so "today" is the day she sends it. On a
-  # Sunday the shop is shut, so there are no opening hours to give.
-  defp pickup_message(order) do
-    today = Edenflowers.ShopTime.today()
-
-    message =
-      EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-        name = order.customer_first_name
-        reference = order.order_reference
-
-        case EdenflowersWeb.Business.opening_hours(today) do
-          nil ->
-            ~t"Hi #{name}, your Eden Flowers order #{reference} is now ready for pick up."
-
-          {opens, closes} ->
-            ~t"Hi #{name}, your Eden Flowers order #{reference} is now ready for pick up. Minimossen is open from #{opening_time = Format.time(opens, order.locale)} to #{closing_time = Format.time(closes, order.locale)} today. If that doesn't suit, just let me know."
-        end
-      end)
-
-    message <> "\nJennie / Eden Flowers"
-  end
-
-  defp payment_message(order) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      amount = Format.currency(order.balance, order.locale)
-      url = EdenflowersWeb.PaymentLink.url_for(order)
-
-      ~t"Hi #{order.customer_first_name}, you can pay #{amount} for your Eden Flowers order #{order.order_reference} here: #{url}"
-    end)
   end
 end

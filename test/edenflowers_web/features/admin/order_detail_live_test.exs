@@ -1060,6 +1060,22 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|#order-ready-messages a[href^="https://wa.me/358401234567?text=#{body}"]|)
   end
 
+  # Finnish has no admin catalogue, so this guards against the message using the admin domain.
+  test "offers ready-for-pickup message links in Finnish", %{conn: conn} do
+    order =
+      placed_order(
+        order_reference: "DETAIL",
+        customer_phone_number: "040 123 4567",
+        locale: "fi",
+        fulfillment_status: :ready
+      )
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    body = "Hei%20Ada%2C%20Eden%20Flowers%20-tilauksesi%20DETAIL"
+    assert has_element?(view, ~s|#order-ready-messages a[href^="sms:+358401234567?&body=#{body}"]|)
+  end
+
   test "omits ready-for-pickup links for deliveries, unprepared and fulfilled pickups", %{conn: conn} do
     delivery =
       placed_order(

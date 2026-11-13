@@ -4565,3 +4565,18 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "Dress:"
 msgstr ""
+
+#: lib/edenflowers_web/customer_messages.ex:40
+#, elixir-autogen, elixir-format
+msgid "Hi %{name}, you can pay %{amount} for your Eden Flowers order %{reference} here: %{url}"
+msgstr ""
+
+#: lib/edenflowers_web/customer_messages.ex:23
+#, elixir-autogen, elixir-format
+msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up."
+msgstr ""
+
+#: lib/edenflowers_web/customer_messages.ex:26
+#, elixir-autogen, elixir-format
+msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up. Minimossen is open from %{opening_time} to %{closing_time} today. If that doesn't suit, just let me know."
+msgstr ""
