@@ -286,6 +286,17 @@ end
 
 Edenflowers.Pricing.create_newsletter_promotion!(authorize?: false)
 
+# Records created "now" would all share the seed's minute, which no shop has.
+# This gives a moment `days_before` the date, during opening hours and varied by
+# `key`. One that would be in the future moves to yesterday or the day before.
+seeded_at = fn date, days_before, key ->
+  n = :erlang.phash2(key, 1000)
+  time = Time.new!(8 + rem(n, 12), rem(n * 7, 60), 0)
+  helsinki_today = Edenflowers.ShopTime.today()
+  date = Enum.min([Date.add(date, -days_before), Date.add(helsinki_today, -1 - rem(n, 2))], Date)
+  date |> DateTime.new!(time, "Europe/Helsinki") |> DateTime.shift_zone!("Etc/UTC")
+end
+
 # These expenses cover each extraction confidence level and the unpaid, overdue
 # and paid states. The last expense is from a vendor without a VAT number.
 for {document_id, vendor, vat, date, total, vat_amount, currency, category, description, confidence, paid_on, due_on} <-
@@ -313,7 +324,37 @@ for {document_id, vendor, vat, date, total, vat_amount, currency, category, desc
     confidence: confidence
   })
   |> Ash.create!(authorize?: false)
+  # Papra imports a receipt the day after it is dated.
+  |> Ash.Seed.update!(%{
+    processed_at: seeded_at.(date, -1, document_id),
+    inserted_at: seeded_at.(date, -1, document_id)
+  })
 end
+
+# Bank payments the sync would have kept. The supplier payment misses its
+# invoice, which the picker offers; the fuel one has no expense near it; the
+# bank fee is dismissed; and the pizza is linked to its till receipt.
+for {bank_id, payee, booked_on, amount, message} <- [
+      {"seed-tx-1", "Pohjanmaan Kukkutukku", ~D[2026-04-07], "875.00", "Lasku 1043"},
+      {"seed-tx-2", "Neste Vaasa", Date.add(Date.utc_today(), -9), "54.20", nil},
+      {"seed-tx-3", "S-Pankki", Date.add(Date.utc_today(), -20), "6.00", "Palvelumaksu"},
+      {"seed-tx-4", "Kotipizza", ~D[2026-03-20], "31.50", nil}
+    ] do
+  Ash.Seed.seed!(Edenflowers.Bank.Transaction, %{
+    bank_id: bank_id,
+    counterparty: payee,
+    booked_on: booked_on,
+    amount: Decimal.new(amount),
+    currency: "eur",
+    message: message,
+    dismissed_at: if(payee == "S-Pankki", do: DateTime.utc_now(:second))
+  })
+end
+
+Expense
+|> Ash.Query.filter(document_id == "doc-003")
+|> Ash.read_one!(authorize?: false)
+|> Ash.Seed.update!(%{bank_transaction_id: "seed-tx-4"})
 
 # Dates are relative to today so a fresh seed always has one course filled by
 # the bookings below, one open, one already held, and a draft.
@@ -428,9 +469,10 @@ jennie = Ash.get!(User, %{email: "info@edenflowers.fi"}, authorize?: false)
       reference: next_reference.(),
       tax_rate: tax_rate.percentage,
       amount: Decimal.mult(course.price, seats),
-      confirmed_at: if(status != :pending, do: DateTime.utc_now()),
-      confirmation_emailed_at: if(status != :pending, do: DateTime.utc_now()),
-      cancelled_at: if(status == :cancelled, do: DateTime.utc_now())
+      confirmed_at: if(status != :pending, do: seeded_at.(course.date, 12, email)),
+      confirmation_emailed_at: if(status != :pending, do: seeded_at.(course.date, 12, email)),
+      cancelled_at: if(status == :cancelled, do: seeded_at.(course.date, 5, email)),
+      inserted_at: seeded_at.(course.date, 12, email)
     })
 
   if status != :pending do
@@ -557,21 +599,28 @@ seed_placed_order = fn attrs ->
   {fulfillment_status, attrs} = Map.pop(attrs, :fulfillment_status)
   fulfillment_status = fulfillment_status || :pending
   %{error: nil} = fee = Fee.calculate(option, attrs[:distance] || 0)
+  {reference, attrs} = Map.pop_lazy(attrs, :order_reference, next_reference)
+  # Ordered a few days before it's fulfilled, as most are.
+  {ordered_at, attrs} =
+    Map.pop_lazy(attrs, :ordered_at, fn ->
+      seeded_at.(attrs[:fulfillment_date] || today, 1 + rem(:erlang.phash2(reference), 6), reference)
+    end)
 
   order =
     Ash.Seed.seed!(
       Order,
       Map.merge(
         %{
-          order_reference: next_reference.(),
+          order_reference: reference,
           state: :placed,
           # Stored once the line items exist, below.
           stored_grand_total: 0,
           fulfillment_status: fulfillment_status,
           # Mark the receipt as already emailed so the admin menu offers to resend it.
-          receipt_emailed_at: DateTime.utc_now(),
+          receipt_emailed_at: ordered_at,
           fulfillment_emailed_at: if(fulfillment_status == :fulfilled, do: DateTime.utc_now()),
-          ordered_at: DateTime.utc_now(),
+          ordered_at: ordered_at,
+          inserted_at: ordered_at,
           locale: "sv-FI",
           fulfillment_option_id: option.id,
           fulfillment_option_name: option.name,
