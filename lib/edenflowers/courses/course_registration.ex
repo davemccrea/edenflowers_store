@@ -46,120 +46,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
   def max_seats, do: @max_seats
 
-  postgres do
-    repo Edenflowers.Repo
-    table "course_registrations"
-    migration_types amount: :decimal, kept_amount: :decimal
-
-    check_constraints do
-      check_constraint :amount, "course_registrations_valid_amount",
-        check: "amount >= 0 AND amount = round(amount, 2)",
-        message: "must be a non-negative amount in whole cents"
-    end
-  end
-
-  state_machine do
-    state_attribute(:status)
-    initial_states([:pending, :confirmed])
-    default_initial_state(:pending)
-
-    transitions do
-      transition(:confirm_payment, from: :pending, to: :confirmed)
-      transition(:confirm_paid_by_voucher, from: :pending, to: :confirmed)
-      transition(:cancel, from: :confirmed, to: :cancelled)
-    end
-  end
-
-  # The course page's History. Money isn't here: each Payment is its own record.
-  paper_trail do
-    change_tracking_mode :changes_only
-    create_version_on_destroy? false
-    store_action_name? true
-    ignore_attributes [:inserted_at, :updated_at]
-    sensitive_attributes :redact
-
-    # The subject and text Jennie sent in place of the template's, if she rewrote the email.
-    metadata :email_subject, :string
-    metadata :email_body, :string
-
-    # on_actions only filters updates; an unfinished website checkout isn't a booking yet.
-    ignore_actions [:register]
-
-    on_actions [
-      :confirm_payment,
-      :confirm_paid_by_voucher,
-      :open_payment_link,
-      :email_payment_link,
-      :send_payment_reminder,
-      :send_payment_received_email,
-      :send_confirmation_email,
-      :email_receipt,
-      :send_reminder_email,
-      :remove_seat,
-      :cancel
-    ]
-  end
-
-  actions do
-    defaults [:read]
-  end
-
-  policies do
-    bypass actor_attribute_equals(:system, true) do
-      authorize_if action([
-                     :add_payment_intent_id,
-                     :mark_payment_cancelled,
-                     :confirm_payment,
-                     :confirm_paid_by_voucher,
-                     :record_link_payment,
-                     :record_stripe_refund,
-                     :send_confirmation_email,
-                     :email_payment_link,
-                     :send_payment_received_email,
-                     :send_reminder_email,
-                     :reconcile_payment,
-                     :checkout
-                   ])
-
-      authorize_if action_type(:read)
-    end
-
-    bypass actor_attribute_equals(:admin, true) do
-      authorize_if always()
-    end
-
-    # A checkout is reached by its unguessable id, as the bookings page is,
-    # and the updates only touch one still unpaid.
-    policy action([:register, :revise, :add_gift_voucher_with_code, :clear_gift_voucher]) do
-      authorize_if always()
-    end
-
-    # Each reads the registration with the access it needs itself: a checkout
-    # by its id, a link by its token.
-    policy action([:prepare_checkout_payment, :prepare_link_payment]) do
-      authorize_if always()
-    end
-
-    # Every registration is linked to the user with its email, so a customer
-    # sees their bookings, guest or not, once that email signs in. Past
-    # checkout, payment confirms it and only Jennie changes it.
-    policy action_type(:read) do
-      authorize_if expr(user_id == ^actor(:id))
-    end
-  end
-
-  pub_sub do
-    module EdenflowersWeb.Endpoint
-
-    publish :confirm_payment, Events.course_registration_paid(:id)
-    publish :confirm_paid_by_voucher, Events.course_registration_paid(:id)
-    publish :record_link_payment, Events.course_registration_paid(:id)
-    # Refreshes the admin's Courses and Overview pages, which have no pull to refresh.
-    publish_all :create, Events.admin_bookings()
-    publish_all :update, Events.admin_bookings()
-    publish_all :destroy, Events.admin_bookings()
-  end
-
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
@@ -373,5 +259,119 @@ defmodule Edenflowers.Courses.CourseRegistration do
   identities do
     identity :unique_reference, [:reference]
     identity :unique_payment_link_token, [:payment_link_token]
+  end
+
+  state_machine do
+    state_attribute(:status)
+    initial_states([:pending, :confirmed])
+    default_initial_state(:pending)
+
+    transitions do
+      transition(:confirm_payment, from: :pending, to: :confirmed)
+      transition(:confirm_paid_by_voucher, from: :pending, to: :confirmed)
+      transition(:cancel, from: :confirmed, to: :cancelled)
+    end
+  end
+
+  actions do
+    defaults [:read]
+  end
+
+  policies do
+    bypass actor_attribute_equals(:system, true) do
+      authorize_if action([
+                     :add_payment_intent_id,
+                     :mark_payment_cancelled,
+                     :confirm_payment,
+                     :confirm_paid_by_voucher,
+                     :record_link_payment,
+                     :record_stripe_refund,
+                     :send_confirmation_email,
+                     :email_payment_link,
+                     :send_payment_received_email,
+                     :send_reminder_email,
+                     :reconcile_payment,
+                     :checkout
+                   ])
+
+      authorize_if action_type(:read)
+    end
+
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    # A checkout is reached by its unguessable id, as the bookings page is,
+    # and the updates only touch one still unpaid.
+    policy action([:register, :revise, :add_gift_voucher_with_code, :clear_gift_voucher]) do
+      authorize_if always()
+    end
+
+    # Each reads the registration with the access it needs itself: a checkout
+    # by its id, a link by its token.
+    policy action([:prepare_checkout_payment, :prepare_link_payment]) do
+      authorize_if always()
+    end
+
+    # Every registration is linked to the user with its email, so a customer
+    # sees their bookings, guest or not, once that email signs in. Past
+    # checkout, payment confirms it and only Jennie changes it.
+    policy action_type(:read) do
+      authorize_if expr(user_id == ^actor(:id))
+    end
+  end
+
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish :confirm_payment, Events.course_registration_paid(:id)
+    publish :confirm_paid_by_voucher, Events.course_registration_paid(:id)
+    publish :record_link_payment, Events.course_registration_paid(:id)
+    # Refreshes the admin's Courses and Overview pages, which have no pull to refresh.
+    publish_all :create, Events.admin_bookings()
+    publish_all :update, Events.admin_bookings()
+    publish_all :destroy, Events.admin_bookings()
+  end
+
+  # The course page's History. Money isn't here: each Payment is its own record.
+  paper_trail do
+    change_tracking_mode :changes_only
+    create_version_on_destroy? false
+    store_action_name? true
+    ignore_attributes [:inserted_at, :updated_at]
+    sensitive_attributes :redact
+
+    # The subject and text Jennie sent in place of the template's, if she rewrote the email.
+    metadata :email_subject, :string
+    metadata :email_body, :string
+
+    # on_actions only filters updates; an unfinished website checkout isn't a booking yet.
+    ignore_actions [:register]
+
+    on_actions [
+      :confirm_payment,
+      :confirm_paid_by_voucher,
+      :open_payment_link,
+      :email_payment_link,
+      :send_payment_reminder,
+      :send_payment_received_email,
+      :send_confirmation_email,
+      :email_receipt,
+      :send_reminder_email,
+      :remove_seat,
+      :cancel
+    ]
+  end
+
+  postgres do
+    repo Edenflowers.Repo
+    table "course_registrations"
+    migration_types amount: :decimal, kept_amount: :decimal
+
+    check_constraints do
+      check_constraint :amount, "course_registrations_valid_amount",
+        check: "amount >= 0 AND amount = round(amount, 2)",
+        message: "must be a non-negative amount in whole cents"
+    end
   end
 end

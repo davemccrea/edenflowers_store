@@ -77,20 +77,77 @@ defmodule Edenflowers.Expenses.Expense do
   alias Edenflowers.Expenses.Changes
   alias Edenflowers.Payments.ReferenceNumber
 
-  postgres do
-    table "expenses"
-    repo Edenflowers.Repo
-    migration_types total_amount: :decimal, vat_amount: :decimal
+  attributes do
+    uuid_primary_key :id
 
-    check_constraints do
-      check_constraint :total_amount, "expenses_valid_total_amount",
-        check: "total_amount = round(total_amount, 2)",
-        message: "must be an amount in whole cents"
+    attribute :document_id, :string, allow_nil?: false
+    attribute :vendor_name, :string
+    attribute :vendor_vat_number, :string
+    attribute :date, :date
 
-      check_constraint :vat_amount, "expenses_valid_vat_amount",
-        check: "vat_amount = round(vat_amount, 2)",
-        message: "must be an amount in whole cents"
+    attribute :paid_on, :date do
+      description "The day the money leaves: empty while unpaid, in the future once Jennie has scheduled the payment in her bank. Claude sets it from a document that shows it was already paid."
     end
+
+    attribute :due_on, :date do
+      description "When an unpaid invoice falls due, if the document says."
+    end
+
+    attribute :reference_number, :string do
+      description "The payment reference printed on an invoice, without spaces. The bank sync matches the payment by it."
+    end
+
+    attribute :total_amount, :decimal do
+      description "The document's total, VAT included, in its `currency`."
+      constraints scale: 2
+    end
+
+    attribute :vat_amount, :decimal do
+      description "The VAT part of `total_amount`, in the same currency."
+      constraints scale: 2
+    end
+
+    attribute :currency, __MODULE__.Currency
+    attribute :category, __MODULE__.Category
+    attribute :description, :string
+    attribute :confidence, __MODULE__.Confidence, allow_nil?: false
+    attribute :processed_at, :utc_datetime, allow_nil?: false
+    attribute :reviewed_at, :utc_datetime
+
+    timestamps()
+  end
+
+  calculations do
+    calculate :matches?,
+              :boolean,
+              expr(contains(vendor_name, ^arg(:term)) or contains(description, ^arg(:term))) do
+      description "The admin expenses search, case-insensitive: whether the term appears in the vendor or description."
+      argument :term, :ci_string, allow_nil?: false
+    end
+
+    calculate :paid, :boolean, expr(not is_nil(paid_on)) do
+      description "Paid or scheduled: Jennie has nothing left to do about the payment."
+    end
+
+    calculate :scheduled, :boolean, expr(paid_on > helsinki_today()) do
+      description "Scheduled in Jennie's bank for a future day; it counts as paid from then."
+    end
+
+    calculate :overdue, :boolean, expr(is_nil(paid_on) and due_on < helsinki_today())
+
+    calculate :needs_review,
+              :boolean,
+              expr(
+                is_nil(reviewed_at) and
+                  (confidence != :high or is_nil(date) or is_nil(vendor_name) or is_nil(total_amount) or
+                     is_nil(currency))
+              ) do
+      description "Claude was unsure or left a required field empty, and Jennie hasn't saved it since."
+    end
+  end
+
+  identities do
+    identity :unique_document_id, [:document_id]
   end
 
   actions do
@@ -269,6 +326,20 @@ defmodule Edenflowers.Expenses.Expense do
     end
   end
 
+  # Claude's draft may lack these, so ingest takes it as it is; Jennie fills
+  # them in before she can save or review it. One each, so the form marks each
+  # missing field. Marking unpaid doesn't need them.
+  validations do
+    validate present(:date), where: action_is(:correct)
+    validate present(:vendor_name), where: action_is(:correct)
+    validate present(:total_amount), where: action_is(:correct)
+    validate present(:currency), where: action_is(:correct)
+
+    validate present(:due_on),
+      where: [action_is(:correct), argument_equals(:scheduled_for_due_date, true)],
+      message: "is needed to schedule the payment"
+  end
+
   policies do
     bypass actor_attribute_equals(:system, true) do
       authorize_if action(:ingest)
@@ -302,90 +373,19 @@ defmodule Edenflowers.Expenses.Expense do
     publish_all :destroy, Events.admin_expense(:id)
   end
 
-  # Claude's draft may lack these, so ingest takes it as it is; Jennie fills
-  # them in before she can save or review it. One each, so the form marks each
-  # missing field. Marking unpaid doesn't need them.
-  validations do
-    validate present(:date), where: action_is(:correct)
-    validate present(:vendor_name), where: action_is(:correct)
-    validate present(:total_amount), where: action_is(:correct)
-    validate present(:currency), where: action_is(:correct)
+  postgres do
+    table "expenses"
+    repo Edenflowers.Repo
+    migration_types total_amount: :decimal, vat_amount: :decimal
 
-    validate present(:due_on),
-      where: [action_is(:correct), argument_equals(:scheduled_for_due_date, true)],
-      message: "is needed to schedule the payment"
-  end
+    check_constraints do
+      check_constraint :total_amount, "expenses_valid_total_amount",
+        check: "total_amount = round(total_amount, 2)",
+        message: "must be an amount in whole cents"
 
-  attributes do
-    uuid_primary_key :id
-
-    attribute :document_id, :string, allow_nil?: false
-    attribute :vendor_name, :string
-    attribute :vendor_vat_number, :string
-    attribute :date, :date
-
-    attribute :paid_on, :date do
-      description "The day the money leaves: empty while unpaid, in the future once Jennie has scheduled the payment in her bank. Claude sets it from a document that shows it was already paid."
+      check_constraint :vat_amount, "expenses_valid_vat_amount",
+        check: "vat_amount = round(vat_amount, 2)",
+        message: "must be an amount in whole cents"
     end
-
-    attribute :due_on, :date do
-      description "When an unpaid invoice falls due, if the document says."
-    end
-
-    attribute :reference_number, :string do
-      description "The payment reference printed on an invoice, without spaces. The bank sync matches the payment by it."
-    end
-
-    attribute :total_amount, :decimal do
-      description "The document's total, VAT included, in its `currency`."
-      constraints scale: 2
-    end
-
-    attribute :vat_amount, :decimal do
-      description "The VAT part of `total_amount`, in the same currency."
-      constraints scale: 2
-    end
-
-    attribute :currency, __MODULE__.Currency
-    attribute :category, __MODULE__.Category
-    attribute :description, :string
-    attribute :confidence, __MODULE__.Confidence, allow_nil?: false
-    attribute :processed_at, :utc_datetime, allow_nil?: false
-    attribute :reviewed_at, :utc_datetime
-
-    timestamps()
-  end
-
-  calculations do
-    calculate :matches?,
-              :boolean,
-              expr(contains(vendor_name, ^arg(:term)) or contains(description, ^arg(:term))) do
-      description "The admin expenses search, case-insensitive: whether the term appears in the vendor or description."
-      argument :term, :ci_string, allow_nil?: false
-    end
-
-    calculate :paid, :boolean, expr(not is_nil(paid_on)) do
-      description "Paid or scheduled: Jennie has nothing left to do about the payment."
-    end
-
-    calculate :scheduled, :boolean, expr(paid_on > helsinki_today()) do
-      description "Scheduled in Jennie's bank for a future day; it counts as paid from then."
-    end
-
-    calculate :overdue, :boolean, expr(is_nil(paid_on) and due_on < helsinki_today())
-
-    calculate :needs_review,
-              :boolean,
-              expr(
-                is_nil(reviewed_at) and
-                  (confidence != :high or is_nil(date) or is_nil(vendor_name) or is_nil(total_amount) or
-                     is_nil(currency))
-              ) do
-      description "Claude was unsure or left a required field empty, and Jennie hasn't saved it since."
-    end
-  end
-
-  identities do
-    identity :unique_document_id, [:document_id]
   end
 end

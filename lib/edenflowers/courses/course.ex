@@ -16,21 +16,146 @@ defmodule Edenflowers.Courses.Course do
 
   @slug_options [former_slugs: Edenflowers.Courses.FormerCourseSlug, owner_key: :course_id, fallback: "course"]
 
-  postgres do
-    repo Edenflowers.Repo
-    table "courses"
-    migration_types price: :decimal
+  attributes do
+    uuid_primary_key :id
+    attribute :name, :string, allow_nil?: false
 
-    check_constraints do
-      check_constraint :price, "courses_valid_price",
-        check: "price >= 0 AND price = round(price, 2)",
-        message: "must be a non-negative amount in whole cents"
+    attribute :draft, :boolean do
+      description "Hidden from the public courses list and sitemap while Jennie prepares it."
+      allow_nil? false
+      default true
+    end
+
+    attribute :slug, :string do
+      description "Where the course's page lives, as in /courses/spring-wreath-workshop. Made from the English " <>
+                    "name when the course is created and kept when it is renamed; Jennie can edit it in the " <>
+                    "course form."
+
+      allow_nil? false
+      public? true
+    end
+
+    attribute :description, :string, allow_nil?: false
+    attribute :location_name, :string, allow_nil?: false
+    attribute :location_address, :string, allow_nil?: false
+    attribute :image_slug, :string, allow_nil?: false
+
+    attribute :photo_credit_name, :string do
+      description "Optional photographer credit shown with the course photo."
+    end
+
+    attribute :photo_credit_url, :string do
+      description "Optional photographer website linked from the photo credit."
+    end
+
+    attribute :date, :date, allow_nil?: false
+    attribute :start_time, :time, allow_nil?: false
+    attribute :end_time, :time, allow_nil?: false
+    attribute :register_before, :date, allow_nil?: false
+    attribute :total_places, :integer, allow_nil?: false
+    attribute :price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
+
+    # A booking cancelled at least this many days before the course is refunded in full.
+    attribute :cancellation_days, :integer, allow_nil?: false, default: 7, constraints: [min: 0]
+    # What's kept of the price after that; 100 means no refund.
+    attribute :cancellation_fee_percent, :integer, allow_nil?: false, default: 0, constraints: [min: 0, max: 100]
+
+    # The language the course is taught in, not the language of its page.
+    attribute :language, :atom, allow_nil?: false, default: :sv, constraints: [one_of: [:sv, :fi, :en]]
+
+    timestamps()
+  end
+
+  relationships do
+    has_many :former_slugs, Edenflowers.Courses.FormerCourseSlug do
+      description "Slugs the course used to have. Links with them redirect to its current slug."
+    end
+
+    has_many :course_registrations, Edenflowers.Courses.CourseRegistration do
+      description "Every retained registration in any status: unfinished checkouts, accepted bookings and " <>
+                    "cancelled ones."
+    end
+
+    has_many :bookings, Edenflowers.Courses.CourseRegistration do
+      description "Course bookings, oldest first. Cancelled ones stay so Jennie can see who dropped out."
+      filter expr(status in [:confirmed, :cancelled])
+      sort inserted_at: :asc
+    end
+
+    belongs_to :tax_rate, Edenflowers.Pricing.TaxRate do
+      description "The VAT rate included in the course price."
+      allow_nil? false
     end
   end
 
-  translations do
-    locales Edenflowers.Locales.translatable_atoms()
-    fields [:name, :description]
+  calculations do
+    calculate :match_rank,
+              :integer,
+              expr(
+                fragment(
+                  "least(?, ?, ?)",
+                  match_rank(name, ^arg(:term)),
+                  match_rank(translations[:"sv-FI"][:name], ^arg(:term)),
+                  match_rank(translations[:fi][:name], ^arg(:term))
+                )
+              ) do
+      description "How closely the admin search term matches what a result row shows (see `match_rank`): " <>
+                    "0 exact, 1 at the start of a word, 2 elsewhere, 3 for a match in a field the row " <>
+                    "doesn't show. The search sorts by it."
+
+      argument :term, :ci_string, allow_nil?: false
+    end
+
+    calculate :ended?,
+              :boolean,
+              expr(fragment("(? + ?) AT TIME ZONE 'Europe/Helsinki'", date, end_time) <= ^arg(:now)) do
+      description "Whether the course's end time, in Helsinki time, has passed by `now` (default: the present)."
+      argument :now, :utc_datetime_usec, allow_nil?: false, default: &DateTime.utc_now/0
+    end
+
+    calculate :seats_left, :integer, expr(total_places - seats_booked) do
+      description "Places not yet committed to confirmed bookings, paid or unpaid. Pending checkouts hold none."
+    end
+
+    # Helsinki's date, not the database's UTC `today()`, so the page and the
+    # cutoff in PriceBooking agree around midnight.
+    calculate :booking_open?,
+              :boolean,
+              expr(
+                register_before >= helsinki_today() and
+                  seats_left > 0
+              ) do
+      description "Whether customers can book online: on or before register_before, counted in Helsinki days, " <>
+                    "with places left."
+    end
+
+    calculate :to_settle?, :boolean, expr(exists(bookings, committed? and not settled?)) do
+      description "Whether any confirmed or cancelled booking still has a Balance to collect or refund."
+    end
+
+    calculate :period,
+              :atom,
+              expr(if date >= helsinki_today() or to_settle?, do: :current, else: :past) do
+      description "Which admin list tab it shows under. A past course stays :current until every booking on it " <>
+                    "is settled."
+
+      constraints one_of: [:current, :past]
+    end
+  end
+
+  aggregates do
+    # Unauthorized on purpose: a visitor may not read other people's bookings,
+    # but everyone needs the count to see how many seats are left.
+    sum :seats_booked, :course_registrations, :seats_held do
+      description "Places committed to confirmed bookings, paid or unpaid, less seats Jennie removed."
+      filter expr(status == :confirmed)
+      default 0
+      authorize? false
+    end
+  end
+
+  identities do
+    identity :unique_slug, [:slug]
   end
 
   actions do
@@ -153,6 +278,44 @@ defmodule Edenflowers.Courses.Course do
     end
   end
 
+  validations do
+    validate match(:photo_credit_url, ~r{\Ahttps?://[^\s/?#]+(?:[/?#][^\s]*)?\z}i),
+      where: present(:photo_credit_url),
+      message: "Must be a website address starting with http:// or https://"
+
+    validate present(:photo_credit_name), where: present(:photo_credit_url)
+  end
+
+  @doc """
+  The course's cancellation terms, as the course page, the FAQ and the
+  booking emails all state them, in the current Gettext locale.
+  """
+  def cancellation_terms(course) do
+    full_refund = ~t"Cancel at least #{days = course.cancellation_days} days before the course for a full refund."
+
+    case course.cancellation_fee_percent do
+      0 -> full_refund
+      100 -> full_refund <> " " <> ~t"After that, the booking can't be refunded."
+      fee -> full_refund <> " " <> ~t"After that, #{fee = fee}% of the price is kept."
+    end
+  end
+
+  @doc """
+  The same terms for a booking with nothing paid yet, which the booking
+  emails state: a late cancel charges the cancellation fee
+  (`CourseRegistration.default_cancellation_charge`), as nothing is there to
+  refund or keep.
+  """
+  def unpaid_cancellation_terms(course) do
+    free = ~t"Cancel at least #{days = course.cancellation_days} days before the course at no cost."
+
+    case course.cancellation_fee_percent do
+      0 -> free
+      100 -> free <> " " <> ~t"After that, the full price is charged."
+      fee -> free <> " " <> ~t"After that, #{fee = fee}% of the price is charged."
+    end
+  end
+
   policies do
     bypass actor_attribute_equals(:admin, true) do
       authorize_if always()
@@ -186,184 +349,21 @@ defmodule Edenflowers.Courses.Course do
     publish_all :destroy, Events.admin_course(:id)
   end
 
-  validations do
-    validate match(:photo_credit_url, ~r{\Ahttps?://[^\s/?#]+(?:[/?#][^\s]*)?\z}i),
-      where: present(:photo_credit_url),
-      message: "Must be a website address starting with http:// or https://"
-
-    validate present(:photo_credit_name), where: present(:photo_credit_url)
+  translations do
+    locales Edenflowers.Locales.translatable_atoms()
+    fields [:name, :description]
   end
 
-  attributes do
-    uuid_primary_key :id
-    attribute :name, :string, allow_nil?: false
+  postgres do
+    repo Edenflowers.Repo
+    table "courses"
+    migration_types price: :decimal
 
-    attribute :draft, :boolean do
-      description "Hidden from the public courses list and sitemap while Jennie prepares it."
-      allow_nil? false
-      default true
+    check_constraints do
+      check_constraint :price, "courses_valid_price",
+        check: "price >= 0 AND price = round(price, 2)",
+        message: "must be a non-negative amount in whole cents"
     end
-
-    attribute :slug, :string do
-      description "Where the course's page lives, as in /courses/spring-wreath-workshop. Made from the English " <>
-                    "name when the course is created and kept when it is renamed; Jennie can edit it in the " <>
-                    "course form."
-
-      allow_nil? false
-      public? true
-    end
-
-    attribute :description, :string, allow_nil?: false
-    attribute :location_name, :string, allow_nil?: false
-    attribute :location_address, :string, allow_nil?: false
-    attribute :image_slug, :string, allow_nil?: false
-
-    attribute :photo_credit_name, :string do
-      description "Optional photographer credit shown with the course photo."
-    end
-
-    attribute :photo_credit_url, :string do
-      description "Optional photographer website linked from the photo credit."
-    end
-
-    attribute :date, :date, allow_nil?: false
-    attribute :start_time, :time, allow_nil?: false
-    attribute :end_time, :time, allow_nil?: false
-    attribute :register_before, :date, allow_nil?: false
-    attribute :total_places, :integer, allow_nil?: false
-    attribute :price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
-
-    # A booking cancelled at least this many days before the course is refunded in full.
-    attribute :cancellation_days, :integer, allow_nil?: false, default: 7, constraints: [min: 0]
-    # What's kept of the price after that; 100 means no refund.
-    attribute :cancellation_fee_percent, :integer, allow_nil?: false, default: 0, constraints: [min: 0, max: 100]
-
-    # The language the course is taught in, not the language of its page.
-    attribute :language, :atom, allow_nil?: false, default: :sv, constraints: [one_of: [:sv, :fi, :en]]
-
-    timestamps()
-  end
-
-  @doc """
-  The course's cancellation terms, as the course page, the FAQ and the
-  booking emails all state them, in the current Gettext locale.
-  """
-  def cancellation_terms(course) do
-    full_refund = ~t"Cancel at least #{days = course.cancellation_days} days before the course for a full refund."
-
-    case course.cancellation_fee_percent do
-      0 -> full_refund
-      100 -> full_refund <> " " <> ~t"After that, the booking can't be refunded."
-      fee -> full_refund <> " " <> ~t"After that, #{fee = fee}% of the price is kept."
-    end
-  end
-
-  @doc """
-  The same terms for a booking with nothing paid yet, which the booking
-  emails state: a late cancel charges the cancellation fee
-  (`CourseRegistration.default_cancellation_charge`), as nothing is there to
-  refund or keep.
-  """
-  def unpaid_cancellation_terms(course) do
-    free = ~t"Cancel at least #{days = course.cancellation_days} days before the course at no cost."
-
-    case course.cancellation_fee_percent do
-      0 -> free
-      100 -> free <> " " <> ~t"After that, the full price is charged."
-      fee -> free <> " " <> ~t"After that, #{fee = fee}% of the price is charged."
-    end
-  end
-
-  relationships do
-    has_many :former_slugs, Edenflowers.Courses.FormerCourseSlug do
-      description "Slugs the course used to have. Links with them redirect to its current slug."
-    end
-
-    has_many :course_registrations, Edenflowers.Courses.CourseRegistration do
-      description "Every retained registration in any status: unfinished checkouts, accepted bookings and " <>
-                    "cancelled ones."
-    end
-
-    has_many :bookings, Edenflowers.Courses.CourseRegistration do
-      description "Course bookings, oldest first. Cancelled ones stay so Jennie can see who dropped out."
-      filter expr(status in [:confirmed, :cancelled])
-      sort inserted_at: :asc
-    end
-
-    belongs_to :tax_rate, Edenflowers.Pricing.TaxRate do
-      description "The VAT rate included in the course price."
-      allow_nil? false
-    end
-  end
-
-  calculations do
-    calculate :match_rank,
-              :integer,
-              expr(
-                fragment(
-                  "least(?, ?, ?)",
-                  match_rank(name, ^arg(:term)),
-                  match_rank(translations[:"sv-FI"][:name], ^arg(:term)),
-                  match_rank(translations[:fi][:name], ^arg(:term))
-                )
-              ) do
-      description "How closely the admin search term matches what a result row shows (see `match_rank`): " <>
-                    "0 exact, 1 at the start of a word, 2 elsewhere, 3 for a match in a field the row " <>
-                    "doesn't show. The search sorts by it."
-
-      argument :term, :ci_string, allow_nil?: false
-    end
-
-    calculate :ended?,
-              :boolean,
-              expr(fragment("(? + ?) AT TIME ZONE 'Europe/Helsinki'", date, end_time) <= ^arg(:now)) do
-      description "Whether the course's end time, in Helsinki time, has passed by `now` (default: the present)."
-      argument :now, :utc_datetime_usec, allow_nil?: false, default: &DateTime.utc_now/0
-    end
-
-    calculate :seats_left, :integer, expr(total_places - seats_booked) do
-      description "Places not yet committed to confirmed bookings, paid or unpaid. Pending checkouts hold none."
-    end
-
-    # Helsinki's date, not the database's UTC `today()`, so the page and the
-    # cutoff in PriceBooking agree around midnight.
-    calculate :booking_open?,
-              :boolean,
-              expr(
-                register_before >= helsinki_today() and
-                  seats_left > 0
-              ) do
-      description "Whether customers can book online: on or before register_before, counted in Helsinki days, " <>
-                    "with places left."
-    end
-
-    calculate :to_settle?, :boolean, expr(exists(bookings, committed? and not settled?)) do
-      description "Whether any confirmed or cancelled booking still has a Balance to collect or refund."
-    end
-
-    calculate :period,
-              :atom,
-              expr(if date >= helsinki_today() or to_settle?, do: :current, else: :past) do
-      description "Which admin list tab it shows under. A past course stays :current until every booking on it " <>
-                    "is settled."
-
-      constraints one_of: [:current, :past]
-    end
-  end
-
-  aggregates do
-    # Unauthorized on purpose: a visitor may not read other people's bookings,
-    # but everyone needs the count to see how many seats are left.
-    sum :seats_booked, :course_registrations, :seats_held do
-      description "Places committed to confirmed bookings, paid or unpaid, less seats Jennie removed."
-      filter expr(status == :confirmed)
-      default 0
-      authorize? false
-    end
-  end
-
-  identities do
-    identity :unique_slug, [:slug]
   end
 end
 

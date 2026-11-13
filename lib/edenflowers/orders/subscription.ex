@@ -101,19 +101,251 @@ defmodule Edenflowers.Orders.Subscription do
 
   def reactivate_if_held(subscription), do: {:ok, subscription}
 
-  postgres do
-    repo Edenflowers.Repo
-    table "subscriptions"
+  attributes do
+    uuid_primary_key :id
 
-    references do
-      reference :gift_voucher, on_delete: :restrict
+    attribute :interval_weeks, :integer, allow_nil?: false
+
+    attribute :delivery_day, Edenflowers.Fulfillment.Weekday do
+      allow_nil? false
+
+      description "The weekday every delivery is on, from the first order's date until the customer or Jennie " <>
+                    "changes it. next_fulfillment_date always falls on it."
     end
 
-    # Every way the next date moves must keep it on the delivery day.
-    check_constraints do
-      check_constraint :next_fulfillment_date, "subscriptions_next_date_on_delivery_day",
-        check: "delivery_day = lower(to_char(next_fulfillment_date, 'FMDay'))",
-        message: "must fall on the delivery day"
+    attribute :next_fulfillment_date, :date, allow_nil?: false
+
+    # Copied from the first order. Each occurrence prices its fee afresh from
+    # the address, so no fee or geocode is kept here.
+    attribute :customer_phone_number, :string
+    attribute :recipient_name, :string
+    # Only a gift's Recipient's number, as on Order.
+    attribute :recipient_phone_number, :string
+    attribute :delivery_address, :string
+    attribute :delivery_instructions, :string
+    attribute :card_message, :string
+    attribute :locale, :string, allow_nil?: false
+
+    attribute :stripe_customer_id, :string, allow_nil?: false
+    attribute :stripe_payment_method_id, :string, allow_nil?: false
+
+    # Shown to the customer only; Stripe holds the card.
+    attribute :card_brand, :string
+    attribute :card_last4, :string
+    attribute :card_exp_month, :integer
+    attribute :card_exp_year, :integer
+
+    attribute :setup_emailed_at, :utc_datetime
+    # The delivery the last heads-up was about.
+    attribute :heads_up_emailed_for, :date
+
+    timestamps()
+  end
+
+  relationships do
+    belongs_to :user, Edenflowers.Accounts.User do
+      description "The customer who subscribed and manages it from their account."
+      allow_nil? false
+    end
+
+    belongs_to :product_variant, Edenflowers.Catalog.ProductVariant do
+      description "The size each Occurrence is made in; the customer can change it until the Change deadline."
+      allow_nil? false
+    end
+
+    belongs_to :fulfillment_option, Edenflowers.Fulfillment.FulfillmentOption do
+      description "Delivery or pickup for every Occurrence, copied from the first order."
+      allow_nil? false
+    end
+
+    belongs_to :gift_voucher, Edenflowers.Payments.GiftVoucher do
+      description "The Gift voucher the first order was paid with. Each Occurrence draws from it before the " <>
+                    "card, until it runs out or expires."
+    end
+
+    has_many :orders, Edenflowers.Orders.Order do
+      description "The first order that started it (origin :online) and every Occurrence it has created."
+    end
+
+    has_one :unpaid_occurrence, Edenflowers.Orders.Order do
+      description "The Occurrence whose card was refused, still waiting on its Payment Link, or nil."
+      from_many? true
+      filter expr(payment_link_open?)
+      sort fulfillment_date: :asc
+    end
+
+    has_one :booked_occurrence, Edenflowers.Orders.Order do
+      description "The next placed order still awaiting fulfillment from today on (Helsinki time). The " <>
+                    "occurrence job books each delivery ahead of its date, after which next_fulfillment_date " <>
+                    "has already moved on to the one after."
+
+      from_many? true
+      filter expr(fulfillable? and fulfillment_date >= helsinki_today())
+      sort fulfillment_date: :asc
+    end
+  end
+
+  calculations do
+    calculate :cancelled?, :boolean, expr(state == :cancelled) do
+      description "Whether the customer or Jennie has ended it."
+    end
+
+    calculate :match_rank,
+              :integer,
+              expr(fragment("least(?, ?)", match_rank(user.name, ^arg(:term)), match_rank(user.email, ^arg(:term)))) do
+      description "How closely the admin search term matches what a result row shows (see `match_rank`): " <>
+                    "0 exact, 1 at the start of a word, 2 elsewhere, 3 for a match in a field the row " <>
+                    "doesn't show. The search sorts by it."
+
+      argument :term, :ci_string, allow_nil?: false
+    end
+
+    calculate :matches?,
+              :boolean,
+              expr(contains(user.name, ^arg(:term)) or contains(user.email, ^arg(:term))) do
+      description "The admin subscriptions search, case-insensitive: whether the term appears in the subscriber's name or email."
+      argument :term, :ci_string, allow_nil?: false
+    end
+
+    calculate :next_delivery_date, :date, expr(if(state == :active, do: next_fulfillment_date, else: nil)) do
+      description "The next Occurrence's delivery or pickup date, or nil unless active: only an active " <>
+                    "subscription has an Occurrence coming."
+    end
+
+    calculate :next_pending_delivery_date,
+              :date,
+              expr(booked_occurrence.fulfillment_date || next_delivery_date) do
+      description "The next delivery still awaiting fulfillment: an already booked order first, otherwise the " <>
+                    "active schedule's next date. Completed deliveries never take precedence over the schedule."
+    end
+
+    calculate :plan_changes_from, :date, Edenflowers.Orders.Subscription.Calculations.PlanChangesFrom do
+      description "The first delivery a changed plan applies to: the next unbooked date while active, or the " <>
+                    "date it would resume on if paused. Orders already booked keep their original plan."
+    end
+
+    calculate :charged_on, :date, expr(date_add(next_fulfillment_date, ^(-@lead_days), :day)) do
+      description "The Charge day for the next delivery, 2 days before it: when the occurrence job creates its " <>
+                    "order and charges the saved card."
+    end
+
+    calculate :change_deadline, :date, expr(date_add(next_fulfillment_date, ^(-@change_deadline_days), :day)) do
+      description "The Change deadline for the next delivery, 3 days before it: the last day the customer can " <>
+                    "pause, change or cancel it."
+    end
+
+    calculate :changes_reopen_on, :date, expr(charged_on) do
+      description "When a subscription closed to changes opens again: the Charge day, when the occurrence job " <>
+                    "creates the next Occurrence and moves on to the following date."
+    end
+
+    calculate :resume_date,
+              :date,
+              {Edenflowers.Orders.Subscription.Calculations.ScheduledDate, days_from_today: @change_deadline_days} do
+      description "The next delivery date a paused subscription would get if it resumed today: the first " <>
+                    "scheduled date still open to changes."
+    end
+
+    calculate :delivery_days,
+              {:array, Edenflowers.Fulfillment.Weekday},
+              Edenflowers.Orders.Subscription.Calculations.DeliveryDays do
+      description "The weekdays it can move to, Monday first: those the shop calendar opens, plus its own " <>
+                    "delivery_day, so closing that weekday never forces a subscriber off it. The account " <>
+                    "and admin day pickers offer these, and the change action accepts only these."
+    end
+
+    calculate :closed_delivery_dates,
+              {:array, :date},
+              Edenflowers.Orders.Subscription.Calculations.ClosedDeliveryDates do
+      description "Its scheduled delivery dates in the next 8 weeks that the shop calendar closes. Each is " <>
+                    "delivered on its date all the same unless Jennie moves its order to another day once it's booked."
+    end
+
+    calculate :fee_per_order,
+              :decimal,
+              {Edenflowers.Orders.Subscription.Calculations.PricePerOrder, fee_only?: true} do
+      description "The delivery or pickup fee in each Occurrence's price_per_order, in euros, so a size " <>
+                    "picker can quote each size per delivery."
+    end
+
+    calculate :price_per_order, :decimal, Edenflowers.Orders.Subscription.Calculations.PricePerOrder do
+      description "What each Occurrence costs before any Gift voucher, in euros: the variant's current price " <>
+                    "plus the fee priced as an Occurrence prices it, from the option's current rates. For the " <>
+                    "set-up and heads-up emails."
+    end
+
+    calculate :pausable?, :boolean, expr(state == :active) do
+      description "Whether its state allows pausing. Ignores the Change deadline, so it also governs Jennie, " <>
+                    "who may act inside it."
+    end
+
+    calculate :resumable?, :boolean, expr(state == :paused) do
+      description "Whether its state allows resuming. Ignores the Change deadline, so it also governs Jennie, " <>
+                    "who may act inside it."
+    end
+
+    calculate :cancellable?, :boolean, expr(state in [:active, :paused, :payment_failed]) do
+      description "Whether it isn't cancelled yet. Ignores the Change deadline, so it also governs Jennie, " <>
+                    "who may act inside it."
+    end
+
+    calculate :plan_changeable?, :boolean, expr(state != :cancelled) do
+      description "Whether its state allows changing the size, interval or delivery day. Ignores the Change " <>
+                    "deadline, so it also governs Jennie, who may act inside it."
+    end
+
+    calculate :changeable?, :boolean, expr(state in [:active, :paused] and not changes_closed?) do
+      description "Whether the customer can pause, resume or change it from their account now."
+    end
+
+    calculate :changes_closed?,
+              :boolean,
+              expr(state == :active and next_fulfillment_date <= date_add(helsinki_today(), ^@cutoff_days, :day)) do
+      description "Whether the next delivery is past its Change deadline, from the day after it in Helsinki time. " <>
+                    "Only an active subscription has an Occurrence coming, so otherwise false."
+    end
+
+    calculate :first_order_discounted?, :boolean, expr(exists(orders, origin == :online and promotion_applied?)) do
+      description "Whether the order that started it had a promotion, for the set-up email. Occurrences carry " <>
+                    "no promotion, so only that order can have been discounted."
+    end
+  end
+
+  aggregates do
+    first :final_delivery_date, :orders, :fulfillment_date do
+      description "The next delivery cancelling would leave in place: still awaiting fulfillment today or " <>
+                    "later, and past its change deadline. Shared by the account warning and cancellation email."
+
+      filter expr(fulfillable? and fulfillment_date >= helsinki_today() and not changes_open?)
+      sort fulfillment_date: :asc
+    end
+
+    count :fulfilled_count, :orders do
+      description "How many of its orders Jennie has delivered or had collected, counting the first. The " <>
+                    "account page shows it as a quiet thank-you for staying."
+
+      filter expr(state == :placed and fulfillment_status == :fulfilled)
+    end
+
+    max :last_delivery_date, :orders, :fulfillment_date do
+      description "The latest delivery date of its placed, uncancelled orders, booked or done. The schedule " <>
+                    "runs on from it when the interval or delivery day changes."
+
+      filter expr(state == :placed and fulfillment_status != :cancelled)
+    end
+
+    min :first_delivery_date, :orders, :fulfillment_date do
+      description "The delivery date of the order that started it, for the set-up email."
+      filter expr(origin == :online)
+    end
+
+    first :first_order_distance, :orders, :distance do
+      description "The first order's delivery distance in metres, or nil for pickup. The address never " <>
+                    "changes, so price_per_order prices each Occurrence's fee from it."
+
+      # The price is the same whoever reads it.
+      authorize? false
+      filter expr(origin == :online)
     end
   end
 
@@ -131,90 +363,6 @@ defmodule Edenflowers.Orders.Subscription do
       transition(:resume, from: :paused, to: :active)
       transition(:cancel, from: [:active, :paused, :payment_failed], to: :cancelled)
     end
-  end
-
-  oban do
-    triggers do
-      trigger :create_occurrence do
-        action :create_occurrence
-        queue :default
-        max_attempts 20
-        lock_for_update? false
-        scheduler_cron "0 * * * *"
-        worker_module_name Edenflowers.Orders.Workers.CreateOccurrence
-        scheduler_module_name Edenflowers.Orders.Schedulers.CreateOccurrence
-        default_actor system_actor()
-        where expr(state == :active and next_fulfillment_date <= date_add(helsinki_today(), ^@lead_days, :day))
-      end
-
-      # Only two- and four-week subscriptions get a heads-up; weekly deliveries need no extra reminder.
-      # Check daily from @heads_up_days before delivery until changes close, and send once per delivery.
-      trigger :send_heads_up_email do
-        action :send_heads_up_email
-        queue :default
-        max_attempts 3
-        lock_for_update? false
-        scheduler_cron "0 7 * * *"
-        worker_module_name Edenflowers.Orders.Workers.SendSubscriptionHeadsUpEmail
-        scheduler_module_name Edenflowers.Orders.Schedulers.SendSubscriptionHeadsUpEmail
-        default_actor system_actor()
-
-        where expr(
-                state == :active and interval_weeks in [2, 4] and
-                  next_fulfillment_date > date_add(helsinki_today(), ^@cutoff_days, :day) and
-                  next_fulfillment_date <= date_add(helsinki_today(), ^@heads_up_days, :day) and
-                  (is_nil(heads_up_emailed_for) or heads_up_emailed_for != next_fulfillment_date)
-              )
-      end
-
-      # Queued only by :activate, so subscriptions started before this email
-      # existed are never sent one.
-      trigger :send_setup_email do
-        action :send_setup_email
-        queue :default
-        max_attempts 3
-        lock_for_update? false
-        scheduler_cron false
-        worker_module_name Edenflowers.Orders.Workers.SendSubscriptionSetupEmail
-        scheduler_module_name Edenflowers.Orders.Schedulers.SendSubscriptionSetupEmail
-        default_actor system_actor()
-        where expr(is_nil(setup_emailed_at))
-      end
-
-      # Queued by :cancel when the customer cancels in their account.
-      trigger :send_cancellation_confirmed_email do
-        action :send_cancellation_confirmed_email
-        queue :default
-        max_attempts 3
-        lock_for_update? false
-        scheduler_cron false
-        worker_module_name Edenflowers.Orders.Workers.SendSubscriptionCancellationConfirmedEmail
-        scheduler_module_name Edenflowers.Orders.Schedulers.SendSubscriptionCancellationConfirmedEmail
-        default_actor system_actor()
-      end
-
-      # Queued by :cancel when Jennie cancels and ticks "email the customer".
-      trigger :send_cancelled_email do
-        action :send_cancelled_email
-        queue :default
-        max_attempts 3
-        lock_for_update? false
-        scheduler_cron false
-        worker_module_name Edenflowers.Orders.Workers.SendSubscriptionCancelledEmail
-        scheduler_module_name Edenflowers.Orders.Schedulers.SendSubscriptionCancelledEmail
-        default_actor system_actor()
-      end
-    end
-  end
-
-  paper_trail do
-    change_tracking_mode :changes_only
-    store_action_name? true
-    ignore_attributes [:inserted_at, :updated_at]
-
-    # Customers change their own subscriptions, so the log says whose change it
-    # was. The system actor isn't a user, so automatic changes are left unnamed.
-    belongs_to_actor :user, Edenflowers.Accounts.User, domain: Edenflowers.Accounts
   end
 
   actions do
@@ -522,251 +670,103 @@ defmodule Edenflowers.Orders.Subscription do
     publish_all :destroy, Events.admin_subscription(:id)
   end
 
-  attributes do
-    uuid_primary_key :id
+  paper_trail do
+    change_tracking_mode :changes_only
+    store_action_name? true
+    ignore_attributes [:inserted_at, :updated_at]
 
-    attribute :interval_weeks, :integer, allow_nil?: false
-
-    attribute :delivery_day, Edenflowers.Fulfillment.Weekday do
-      allow_nil? false
-
-      description "The weekday every delivery is on, from the first order's date until the customer or Jennie " <>
-                    "changes it. next_fulfillment_date always falls on it."
-    end
-
-    attribute :next_fulfillment_date, :date, allow_nil?: false
-
-    # Copied from the first order. Each occurrence prices its fee afresh from
-    # the address, so no fee or geocode is kept here.
-    attribute :customer_phone_number, :string
-    attribute :recipient_name, :string
-    # Only a gift's Recipient's number, as on Order.
-    attribute :recipient_phone_number, :string
-    attribute :delivery_address, :string
-    attribute :delivery_instructions, :string
-    attribute :card_message, :string
-    attribute :locale, :string, allow_nil?: false
-
-    attribute :stripe_customer_id, :string, allow_nil?: false
-    attribute :stripe_payment_method_id, :string, allow_nil?: false
-
-    # Shown to the customer only; Stripe holds the card.
-    attribute :card_brand, :string
-    attribute :card_last4, :string
-    attribute :card_exp_month, :integer
-    attribute :card_exp_year, :integer
-
-    attribute :setup_emailed_at, :utc_datetime
-    # The delivery the last heads-up was about.
-    attribute :heads_up_emailed_for, :date
-
-    timestamps()
+    # Customers change their own subscriptions, so the log says whose change it
+    # was. The system actor isn't a user, so automatic changes are left unnamed.
+    belongs_to_actor :user, Edenflowers.Accounts.User, domain: Edenflowers.Accounts
   end
 
-  relationships do
-    belongs_to :user, Edenflowers.Accounts.User do
-      description "The customer who subscribed and manages it from their account."
-      allow_nil? false
-    end
+  oban do
+    triggers do
+      trigger :create_occurrence do
+        action :create_occurrence
+        queue :default
+        max_attempts 20
+        lock_for_update? false
+        scheduler_cron "0 * * * *"
+        worker_module_name Edenflowers.Orders.Workers.CreateOccurrence
+        scheduler_module_name Edenflowers.Orders.Schedulers.CreateOccurrence
+        default_actor system_actor()
+        where expr(state == :active and next_fulfillment_date <= date_add(helsinki_today(), ^@lead_days, :day))
+      end
 
-    belongs_to :product_variant, Edenflowers.Catalog.ProductVariant do
-      description "The size each Occurrence is made in; the customer can change it until the Change deadline."
-      allow_nil? false
-    end
+      # Only two- and four-week subscriptions get a heads-up; weekly deliveries need no extra reminder.
+      # Check daily from @heads_up_days before delivery until changes close, and send once per delivery.
+      trigger :send_heads_up_email do
+        action :send_heads_up_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron "0 7 * * *"
+        worker_module_name Edenflowers.Orders.Workers.SendSubscriptionHeadsUpEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendSubscriptionHeadsUpEmail
+        default_actor system_actor()
 
-    belongs_to :fulfillment_option, Edenflowers.Fulfillment.FulfillmentOption do
-      description "Delivery or pickup for every Occurrence, copied from the first order."
-      allow_nil? false
-    end
+        where expr(
+                state == :active and interval_weeks in [2, 4] and
+                  next_fulfillment_date > date_add(helsinki_today(), ^@cutoff_days, :day) and
+                  next_fulfillment_date <= date_add(helsinki_today(), ^@heads_up_days, :day) and
+                  (is_nil(heads_up_emailed_for) or heads_up_emailed_for != next_fulfillment_date)
+              )
+      end
 
-    belongs_to :gift_voucher, Edenflowers.Payments.GiftVoucher do
-      description "The Gift voucher the first order was paid with. Each Occurrence draws from it before the " <>
-                    "card, until it runs out or expires."
-    end
+      # Queued only by :activate, so subscriptions started before this email
+      # existed are never sent one.
+      trigger :send_setup_email do
+        action :send_setup_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendSubscriptionSetupEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendSubscriptionSetupEmail
+        default_actor system_actor()
+        where expr(is_nil(setup_emailed_at))
+      end
 
-    has_many :orders, Edenflowers.Orders.Order do
-      description "The first order that started it (origin :online) and every Occurrence it has created."
-    end
+      # Queued by :cancel when the customer cancels in their account.
+      trigger :send_cancellation_confirmed_email do
+        action :send_cancellation_confirmed_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendSubscriptionCancellationConfirmedEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendSubscriptionCancellationConfirmedEmail
+        default_actor system_actor()
+      end
 
-    has_one :unpaid_occurrence, Edenflowers.Orders.Order do
-      description "The Occurrence whose card was refused, still waiting on its Payment Link, or nil."
-      from_many? true
-      filter expr(payment_link_open?)
-      sort fulfillment_date: :asc
-    end
-
-    has_one :booked_occurrence, Edenflowers.Orders.Order do
-      description "The next placed order still awaiting fulfillment from today on (Helsinki time). The " <>
-                    "occurrence job books each delivery ahead of its date, after which next_fulfillment_date " <>
-                    "has already moved on to the one after."
-
-      from_many? true
-      filter expr(fulfillable? and fulfillment_date >= helsinki_today())
-      sort fulfillment_date: :asc
-    end
-  end
-
-  calculations do
-    calculate :cancelled?, :boolean, expr(state == :cancelled) do
-      description "Whether the customer or Jennie has ended it."
-    end
-
-    calculate :match_rank,
-              :integer,
-              expr(fragment("least(?, ?)", match_rank(user.name, ^arg(:term)), match_rank(user.email, ^arg(:term)))) do
-      description "How closely the admin search term matches what a result row shows (see `match_rank`): " <>
-                    "0 exact, 1 at the start of a word, 2 elsewhere, 3 for a match in a field the row " <>
-                    "doesn't show. The search sorts by it."
-
-      argument :term, :ci_string, allow_nil?: false
-    end
-
-    calculate :matches?,
-              :boolean,
-              expr(contains(user.name, ^arg(:term)) or contains(user.email, ^arg(:term))) do
-      description "The admin subscriptions search, case-insensitive: whether the term appears in the subscriber's name or email."
-      argument :term, :ci_string, allow_nil?: false
-    end
-
-    calculate :next_delivery_date, :date, expr(if(state == :active, do: next_fulfillment_date, else: nil)) do
-      description "The next Occurrence's delivery or pickup date, or nil unless active: only an active " <>
-                    "subscription has an Occurrence coming."
-    end
-
-    calculate :next_pending_delivery_date,
-              :date,
-              expr(booked_occurrence.fulfillment_date || next_delivery_date) do
-      description "The next delivery still awaiting fulfillment: an already booked order first, otherwise the " <>
-                    "active schedule's next date. Completed deliveries never take precedence over the schedule."
-    end
-
-    calculate :plan_changes_from, :date, Edenflowers.Orders.Subscription.Calculations.PlanChangesFrom do
-      description "The first delivery a changed plan applies to: the next unbooked date while active, or the " <>
-                    "date it would resume on if paused. Orders already booked keep their original plan."
-    end
-
-    calculate :charged_on, :date, expr(date_add(next_fulfillment_date, ^(-@lead_days), :day)) do
-      description "The Charge day for the next delivery, 2 days before it: when the occurrence job creates its " <>
-                    "order and charges the saved card."
-    end
-
-    calculate :change_deadline, :date, expr(date_add(next_fulfillment_date, ^(-@change_deadline_days), :day)) do
-      description "The Change deadline for the next delivery, 3 days before it: the last day the customer can " <>
-                    "pause, change or cancel it."
-    end
-
-    calculate :changes_reopen_on, :date, expr(charged_on) do
-      description "When a subscription closed to changes opens again: the Charge day, when the occurrence job " <>
-                    "creates the next Occurrence and moves on to the following date."
-    end
-
-    calculate :resume_date,
-              :date,
-              {Edenflowers.Orders.Subscription.Calculations.ScheduledDate, days_from_today: @change_deadline_days} do
-      description "The next delivery date a paused subscription would get if it resumed today: the first " <>
-                    "scheduled date still open to changes."
-    end
-
-    calculate :delivery_days,
-              {:array, Edenflowers.Fulfillment.Weekday},
-              Edenflowers.Orders.Subscription.Calculations.DeliveryDays do
-      description "The weekdays it can move to, Monday first: those the shop calendar opens, plus its own " <>
-                    "delivery_day, so closing that weekday never forces a subscriber off it. The account " <>
-                    "and admin day pickers offer these, and the change action accepts only these."
-    end
-
-    calculate :closed_delivery_dates,
-              {:array, :date},
-              Edenflowers.Orders.Subscription.Calculations.ClosedDeliveryDates do
-      description "Its scheduled delivery dates in the next 8 weeks that the shop calendar closes. Each is " <>
-                    "delivered on its date all the same unless Jennie moves its order to another day once it's booked."
-    end
-
-    calculate :fee_per_order,
-              :decimal,
-              {Edenflowers.Orders.Subscription.Calculations.PricePerOrder, fee_only?: true} do
-      description "The delivery or pickup fee in each Occurrence's price_per_order, in euros, so a size " <>
-                    "picker can quote each size per delivery."
-    end
-
-    calculate :price_per_order, :decimal, Edenflowers.Orders.Subscription.Calculations.PricePerOrder do
-      description "What each Occurrence costs before any Gift voucher, in euros: the variant's current price " <>
-                    "plus the fee priced as an Occurrence prices it, from the option's current rates. For the " <>
-                    "set-up and heads-up emails."
-    end
-
-    calculate :pausable?, :boolean, expr(state == :active) do
-      description "Whether its state allows pausing. Ignores the Change deadline, so it also governs Jennie, " <>
-                    "who may act inside it."
-    end
-
-    calculate :resumable?, :boolean, expr(state == :paused) do
-      description "Whether its state allows resuming. Ignores the Change deadline, so it also governs Jennie, " <>
-                    "who may act inside it."
-    end
-
-    calculate :cancellable?, :boolean, expr(state in [:active, :paused, :payment_failed]) do
-      description "Whether it isn't cancelled yet. Ignores the Change deadline, so it also governs Jennie, " <>
-                    "who may act inside it."
-    end
-
-    calculate :plan_changeable?, :boolean, expr(state != :cancelled) do
-      description "Whether its state allows changing the size, interval or delivery day. Ignores the Change " <>
-                    "deadline, so it also governs Jennie, who may act inside it."
-    end
-
-    calculate :changeable?, :boolean, expr(state in [:active, :paused] and not changes_closed?) do
-      description "Whether the customer can pause, resume or change it from their account now."
-    end
-
-    calculate :changes_closed?,
-              :boolean,
-              expr(state == :active and next_fulfillment_date <= date_add(helsinki_today(), ^@cutoff_days, :day)) do
-      description "Whether the next delivery is past its Change deadline, from the day after it in Helsinki time. " <>
-                    "Only an active subscription has an Occurrence coming, so otherwise false."
-    end
-
-    calculate :first_order_discounted?, :boolean, expr(exists(orders, origin == :online and promotion_applied?)) do
-      description "Whether the order that started it had a promotion, for the set-up email. Occurrences carry " <>
-                    "no promotion, so only that order can have been discounted."
+      # Queued by :cancel when Jennie cancels and ticks "email the customer".
+      trigger :send_cancelled_email do
+        action :send_cancelled_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendSubscriptionCancelledEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendSubscriptionCancelledEmail
+        default_actor system_actor()
+      end
     end
   end
 
-  aggregates do
-    first :final_delivery_date, :orders, :fulfillment_date do
-      description "The next delivery cancelling would leave in place: still awaiting fulfillment today or " <>
-                    "later, and past its change deadline. Shared by the account warning and cancellation email."
+  postgres do
+    repo Edenflowers.Repo
+    table "subscriptions"
 
-      filter expr(fulfillable? and fulfillment_date >= helsinki_today() and not changes_open?)
-      sort fulfillment_date: :asc
+    references do
+      reference :gift_voucher, on_delete: :restrict
     end
 
-    count :fulfilled_count, :orders do
-      description "How many of its orders Jennie has delivered or had collected, counting the first. The " <>
-                    "account page shows it as a quiet thank-you for staying."
-
-      filter expr(state == :placed and fulfillment_status == :fulfilled)
-    end
-
-    max :last_delivery_date, :orders, :fulfillment_date do
-      description "The latest delivery date of its placed, uncancelled orders, booked or done. The schedule " <>
-                    "runs on from it when the interval or delivery day changes."
-
-      filter expr(state == :placed and fulfillment_status != :cancelled)
-    end
-
-    min :first_delivery_date, :orders, :fulfillment_date do
-      description "The delivery date of the order that started it, for the set-up email."
-      filter expr(origin == :online)
-    end
-
-    first :first_order_distance, :orders, :distance do
-      description "The first order's delivery distance in metres, or nil for pickup. The address never " <>
-                    "changes, so price_per_order prices each Occurrence's fee from it."
-
-      # The price is the same whoever reads it.
-      authorize? false
-      filter expr(origin == :online)
+    # Every way the next date moves must keep it on the delivery day.
+    check_constraints do
+      check_constraint :next_fulfillment_date, "subscriptions_next_date_on_delivery_day",
+        check: "delivery_day = lower(to_char(next_fulfillment_date, 'FMDay'))",
+        message: "must fall on the delivery day"
     end
   end
 end

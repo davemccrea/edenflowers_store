@@ -11,41 +11,23 @@ defmodule Edenflowers.Expenses.ExpenseImport do
 
   alias Edenflowers.Expenses.Changes
 
-  postgres do
-    table "expense_imports"
-    repo Edenflowers.Repo
+  attributes do
+    uuid_primary_key :id
+    attribute :document_id, :string, allow_nil?: false
+    attribute :organization_id, :string, allow_nil?: false
+    attribute :processed_at, :utc_datetime
+    attribute :failed_at, :utc_datetime
+    timestamps()
+  end
 
-    # Removing the import with its expense lets a document restored from Papra's trash be imported again.
-    references do
-      reference :expense, on_delete: :delete
+  relationships do
+    belongs_to :expense, Edenflowers.Expenses.Expense do
+      description "The expense extracted from the document. Nil until processed."
     end
   end
 
-  oban do
-    triggers do
-      trigger :process do
-        action :process
-        queue :default
-        max_attempts 20
-        lock_for_update? false
-        scheduler_cron "*/10 * * * *"
-        worker_module_name Edenflowers.Expenses.Workers.Process
-        scheduler_module_name Edenflowers.Expenses.Schedulers.Process
-        default_actor Edenflowers.Actors.system_actor()
-        on_error :mark_failed
-        where expr(is_nil(processed_at) and is_nil(failed_at))
-      end
-    end
-
-    # Each run retries whatever the last one left in the folder, so a failed job isn't retried.
-    scheduled_actions do
-      schedule :import_invoice_emails, "*/15 * * * *" do
-        action :import_invoice_emails
-        queue :default
-        worker_module_name Edenflowers.Expenses.Workers.ImportInvoiceEmails
-        default_actor Edenflowers.Actors.system_actor()
-      end
-    end
+  identities do
+    identity :unique_document_id, [:document_id]
   end
 
   actions do
@@ -111,22 +93,40 @@ defmodule Edenflowers.Expenses.ExpenseImport do
     end
   end
 
-  attributes do
-    uuid_primary_key :id
-    attribute :document_id, :string, allow_nil?: false
-    attribute :organization_id, :string, allow_nil?: false
-    attribute :processed_at, :utc_datetime
-    attribute :failed_at, :utc_datetime
-    timestamps()
-  end
+  oban do
+    triggers do
+      trigger :process do
+        action :process
+        queue :default
+        max_attempts 20
+        lock_for_update? false
+        scheduler_cron "*/10 * * * *"
+        worker_module_name Edenflowers.Expenses.Workers.Process
+        scheduler_module_name Edenflowers.Expenses.Schedulers.Process
+        default_actor Edenflowers.Actors.system_actor()
+        on_error :mark_failed
+        where expr(is_nil(processed_at) and is_nil(failed_at))
+      end
+    end
 
-  relationships do
-    belongs_to :expense, Edenflowers.Expenses.Expense do
-      description "The expense extracted from the document. Nil until processed."
+    # Each run retries whatever the last one left in the folder, so a failed job isn't retried.
+    scheduled_actions do
+      schedule :import_invoice_emails, "*/15 * * * *" do
+        action :import_invoice_emails
+        queue :default
+        worker_module_name Edenflowers.Expenses.Workers.ImportInvoiceEmails
+        default_actor Edenflowers.Actors.system_actor()
+      end
     end
   end
 
-  identities do
-    identity :unique_document_id, [:document_id]
+  postgres do
+    table "expense_imports"
+    repo Edenflowers.Repo
+
+    # Removing the import with its expense lets a document restored from Papra's trash be imported again.
+    references do
+      reference :expense, on_delete: :delete
+    end
   end
 end

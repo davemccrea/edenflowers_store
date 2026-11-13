@@ -26,27 +26,59 @@ defmodule Edenflowers.Payments.CreditNote do
   alias Edenflowers.Payments.Changes
   alias Edenflowers.Payments.Validations
 
-  postgres do
-    repo Edenflowers.Repo
-    table "credit_notes"
+  attributes do
+    uuid_primary_key :id
 
-    references do
-      reference :invoice, on_delete: :restrict
+    attribute :number, :integer do
+      description "The credit note's own number, from the gapless series it shares with Invoices."
+      allow_nil? false
+    end
+
+    attribute :credit_date, :date do
+      description "The day it was made, in Helsinki: from then on the Invoice it names is cancelled."
+      allow_nil? false
+    end
+
+    attribute :reason, :string do
+      description "Why Jennie cancelled the Invoice, in its language, printed on the credit note. Optional."
+    end
+
+    attribute :pdf, :binary do
+      description "The PDF as made, rendered once when it is created and kept for the books: every download " <>
+                    "and email sends these bytes. Not selected by default; load it."
+
+      allow_nil? false
+      select_by_default? false
+    end
+
+    attribute :sent_at, :utc_datetime do
+      description "When it was last emailed to the customer. Nil until it has been: Jennie may not email one " <>
+                    "for an Invoice that never went out, or its email may have failed."
+    end
+
+    timestamps()
+  end
+
+  relationships do
+    belongs_to :invoice, Edenflowers.Payments.Invoice do
+      description "The Invoice it cancels and credits in full. Each Invoice has at most one."
+      allow_nil? false
     end
   end
 
-  paper_trail do
-    change_tracking_mode :changes_only
-    store_action_name? true
-    ignore_attributes [:inserted_at, :updated_at]
-    ignore_actions [:create]
-    on_actions [:send]
-    only_when_changed? false
-    # Jennie's note in the email, from before she could rewrite the whole of it.
-    metadata :email_message, :string
-    # The subject and text she sent in place of the template's, if she rewrote it.
-    metadata :email_subject, :string
-    metadata :email_body, :string
+  calculations do
+    calculate :order_id, :uuid, expr(invoice.order_id) do
+      description "The order whose invoice this credit note cancels, for the order page's topic."
+      allow_nil? true
+    end
+  end
+
+  identities do
+    identity :unique_number, [:number]
+
+    identity :one_per_invoice, [:invoice_id] do
+      message "is already cancelled"
+    end
   end
 
   actions do
@@ -135,58 +167,26 @@ defmodule Edenflowers.Payments.CreditNote do
     publish_all :update, Events.admin_order(:order_id)
   end
 
-  attributes do
-    uuid_primary_key :id
-
-    attribute :number, :integer do
-      description "The credit note's own number, from the gapless series it shares with Invoices."
-      allow_nil? false
-    end
-
-    attribute :credit_date, :date do
-      description "The day it was made, in Helsinki: from then on the Invoice it names is cancelled."
-      allow_nil? false
-    end
-
-    attribute :reason, :string do
-      description "Why Jennie cancelled the Invoice, in its language, printed on the credit note. Optional."
-    end
-
-    attribute :pdf, :binary do
-      description "The PDF as made, rendered once when it is created and kept for the books: every download " <>
-                    "and email sends these bytes. Not selected by default; load it."
-
-      allow_nil? false
-      select_by_default? false
-    end
-
-    attribute :sent_at, :utc_datetime do
-      description "When it was last emailed to the customer. Nil until it has been: Jennie may not email one " <>
-                    "for an Invoice that never went out, or its email may have failed."
-    end
-
-    timestamps()
+  paper_trail do
+    change_tracking_mode :changes_only
+    store_action_name? true
+    ignore_attributes [:inserted_at, :updated_at]
+    ignore_actions [:create]
+    on_actions [:send]
+    only_when_changed? false
+    # Jennie's note in the email, from before she could rewrite the whole of it.
+    metadata :email_message, :string
+    # The subject and text she sent in place of the template's, if she rewrote it.
+    metadata :email_subject, :string
+    metadata :email_body, :string
   end
 
-  relationships do
-    belongs_to :invoice, Edenflowers.Payments.Invoice do
-      description "The Invoice it cancels and credits in full. Each Invoice has at most one."
-      allow_nil? false
-    end
-  end
+  postgres do
+    repo Edenflowers.Repo
+    table "credit_notes"
 
-  calculations do
-    calculate :order_id, :uuid, expr(invoice.order_id) do
-      description "The order whose invoice this credit note cancels, for the order page's topic."
-      allow_nil? true
-    end
-  end
-
-  identities do
-    identity :unique_number, [:number]
-
-    identity :one_per_invoice, [:invoice_id] do
-      message "is already cancelled"
+    references do
+      reference :invoice, on_delete: :restrict
     end
   end
 end

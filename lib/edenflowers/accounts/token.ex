@@ -10,9 +10,35 @@ defmodule Edenflowers.Accounts.Token do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshAuthentication.TokenResource]
 
-  postgres do
-    table "tokens"
-    repo Edenflowers.Repo
+  attributes do
+    attribute :jti, :string do
+      primary_key? true
+      public? true
+      allow_nil? false
+      sensitive? true
+    end
+
+    attribute :subject, :string do
+      allow_nil? false
+      public? true
+    end
+
+    attribute :expires_at, :utc_datetime do
+      allow_nil? false
+      public? true
+    end
+
+    attribute :purpose, :string do
+      allow_nil? false
+      public? true
+    end
+
+    attribute :extra_data, :map do
+      public? true
+    end
+
+    create_timestamp :created_at
+    update_timestamp :updated_at
   end
 
   actions do
@@ -81,34 +107,8 @@ defmodule Edenflowers.Accounts.Token do
     end
   end
 
-  attributes do
-    attribute :jti, :string do
-      primary_key? true
-      public? true
-      allow_nil? false
-      sensitive? true
-    end
-
-    attribute :subject, :string do
-      allow_nil? false
-      public? true
-    end
-
-    attribute :expires_at, :utc_datetime do
-      allow_nil? false
-      public? true
-    end
-
-    attribute :purpose, :string do
-      allow_nil? false
-      public? true
-    end
-
-    attribute :extra_data, :map do
-      public? true
-    end
-
-    create_timestamp :created_at
-    update_timestamp :updated_at
+  postgres do
+    table "tokens"
+    repo Edenflowers.Repo
   end
 end

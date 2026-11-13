@@ -18,10 +18,81 @@ defmodule Edenflowers.Fulfillment.ShopCalendar do
   alias Edenflowers.Fulfillment.Changes
   alias Edenflowers.Fulfillment.Weekday
 
-  postgres do
-    table "shop_calendar"
-    repo Edenflowers.Repo
-    migration_defaults available_days: "nil"
+  attributes do
+    uuid_primary_key :id
+
+    attribute :singleton, :boolean do
+      description "Always true, so the unique identity on it allows one row."
+      allow_nil? false
+      default true
+      writable? false
+    end
+
+    attribute :same_day, :boolean do
+      description "Whether customers can order for today, up to `order_deadline`."
+      allow_nil? false
+      default false
+      public? true
+    end
+
+    attribute :order_deadline, :time do
+      description "The time of day, Helsinki local time, after which today can no longer be chosen. " <>
+                    "Required while `same_day` is on."
+
+      public? true
+    end
+
+    attribute :christmas_vouchers_online, :boolean do
+      description "Whether customers can choose the Christmas style for a Gift voucher they buy online. Not a " <>
+                    "calendar rule, but the calendar is the shop's one settings row."
+
+      allow_nil? false
+      default false
+      public? true
+    end
+
+    attribute :available_days, {:array, Weekday} do
+      description "The weekdays the shop is open, unless a date is overridden in `enabled_dates` or `disabled_dates`. " <>
+                    "Florist key dates are open on any weekday unless they are in `disabled_dates`."
+
+      allow_nil? false
+      default Weekday.all()
+      public? true
+    end
+
+    attribute :enabled_dates, {:array, :date} do
+      description "Dates open even though their weekday is closed, like an extra Sunday before Mother's Day."
+      allow_nil? false
+      default []
+      public? true
+    end
+
+    attribute :disabled_dates, {:array, :date} do
+      description "Dates closed even though their weekday is open, like holidays. They win over everything else."
+      allow_nil? false
+      default []
+      public? true
+    end
+  end
+
+  calculations do
+    calculate :online_voucher_styles,
+              {:array, Edenflowers.Payments.GiftVoucherStyle},
+              fn calendars, _context ->
+                Enum.map(calendars, fn
+                  %{christmas_vouchers_online: true} -> Edenflowers.Payments.GiftVoucherStyle.values()
+                  _ -> [:cream]
+                end)
+              end,
+              load: [:christmas_vouchers_online],
+              description:
+                "The Gift voucher styles customers can choose online: Signature always, and the " <>
+                  "Christmas ones while `christmas_vouchers_online` is on. The voucher page offers these, and " <>
+                  "the online checkout refuses any other."
+  end
+
+  identities do
+    identity :singleton, [:singleton]
   end
 
   actions do
@@ -106,6 +177,12 @@ defmodule Edenflowers.Fulfillment.ShopCalendar do
     end
   end
 
+  validations do
+    validate present(:order_deadline) do
+      where attribute_equals(:same_day, true)
+    end
+  end
+
   policies do
     bypass actor_attribute_equals(:admin, true) do
       authorize_if always()
@@ -126,86 +203,9 @@ defmodule Edenflowers.Fulfillment.ShopCalendar do
     publish_all :update, Events.shop_calendar_changed()
   end
 
-  validations do
-    validate present(:order_deadline) do
-      where attribute_equals(:same_day, true)
-    end
-  end
-
-  attributes do
-    uuid_primary_key :id
-
-    attribute :singleton, :boolean do
-      description "Always true, so the unique identity on it allows one row."
-      allow_nil? false
-      default true
-      writable? false
-    end
-
-    attribute :same_day, :boolean do
-      description "Whether customers can order for today, up to `order_deadline`."
-      allow_nil? false
-      default false
-      public? true
-    end
-
-    attribute :order_deadline, :time do
-      description "The time of day, Helsinki local time, after which today can no longer be chosen. " <>
-                    "Required while `same_day` is on."
-
-      public? true
-    end
-
-    attribute :christmas_vouchers_online, :boolean do
-      description "Whether customers can choose the Christmas style for a Gift voucher they buy online. Not a " <>
-                    "calendar rule, but the calendar is the shop's one settings row."
-
-      allow_nil? false
-      default false
-      public? true
-    end
-
-    attribute :available_days, {:array, Weekday} do
-      description "The weekdays the shop is open, unless a date is overridden in `enabled_dates` or `disabled_dates`. " <>
-                    "Florist key dates are open on any weekday unless they are in `disabled_dates`."
-
-      allow_nil? false
-      default Weekday.all()
-      public? true
-    end
-
-    attribute :enabled_dates, {:array, :date} do
-      description "Dates open even though their weekday is closed, like an extra Sunday before Mother's Day."
-      allow_nil? false
-      default []
-      public? true
-    end
-
-    attribute :disabled_dates, {:array, :date} do
-      description "Dates closed even though their weekday is open, like holidays. They win over everything else."
-      allow_nil? false
-      default []
-      public? true
-    end
-  end
-
-  calculations do
-    calculate :online_voucher_styles,
-              {:array, Edenflowers.Payments.GiftVoucherStyle},
-              fn calendars, _context ->
-                Enum.map(calendars, fn
-                  %{christmas_vouchers_online: true} -> Edenflowers.Payments.GiftVoucherStyle.values()
-                  _ -> [:cream]
-                end)
-              end,
-              load: [:christmas_vouchers_online],
-              description:
-                "The Gift voucher styles customers can choose online: Signature always, and the " <>
-                  "Christmas ones while `christmas_vouchers_online` is on. The voucher page offers these, and " <>
-                  "the online checkout refuses any other."
-  end
-
-  identities do
-    identity :singleton, [:singleton]
+  postgres do
+    table "shop_calendar"
+    repo Edenflowers.Repo
+    migration_defaults available_days: "nil"
   end
 end

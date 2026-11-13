@@ -15,20 +15,55 @@ defmodule Edenflowers.Bank.Connection do
   alias Edenflowers.Events
   alias Edenflowers.External.EnableBankingAPI
 
-  postgres do
-    table "bank_connections"
-    repo Edenflowers.Repo
+  attributes do
+    uuid_primary_key :id
+
+    attribute :session_id, :string do
+      description "Enable Banking's session, which every account read names."
+      allow_nil? false
+    end
+
+    attribute :account_ids, {:array, :string} do
+      description "Enable Banking's ids for the accounts Jennie approved."
+      allow_nil? false
+    end
+
+    attribute :valid_until, :utc_datetime do
+      description "When the bank's consent ends and Jennie has to connect again."
+      allow_nil? false
+    end
+
+    attribute :available_balance, :decimal do
+      description "Euros Jennie can spend: the booked balance less what's reserved, such as card payments. " <>
+                    "Nil until the first read, or when the bank doesn't say."
+    end
+
+    attribute :booked_balance, :decimal do
+      description "Euros on the statement. Nil until the first read, or when the bank doesn't say."
+    end
+
+    attribute :balance_read_at, :utc_datetime do
+      description "When the balances were last read from the bank."
+    end
+
+    create_timestamp :inserted_at
   end
 
-  # Four runs a day, the most PSD2 allows without Jennie at the bank.
-  oban do
-    scheduled_actions do
-      schedule :sync_payments, "0 */6 * * *" do
-        action :sync_payments
-        queue :default
-        worker_module_name Edenflowers.Bank.Workers.SyncPayments
-        default_actor Edenflowers.Actors.system_actor()
-      end
+  calculations do
+    calculate :balance, :decimal, expr(available_balance || booked_balance) do
+      description "The one figure to show as the account's balance: what can be spent, else what's booked."
+    end
+
+    calculate :reserved, :boolean, expr(available_balance != booked_balance) do
+      description "Money is reserved but not booked yet, so the available and booked balances differ."
+    end
+
+    calculate :expired, :boolean, expr(valid_until <= now()) do
+      description "The consent has ended, so nothing is read until Jennie connects again."
+    end
+
+    calculate :renewal_due, :boolean, expr(valid_until <= datetime_add(now(), 14, :day)) do
+      description "Ends within two weeks or already has: time to ask Jennie to connect again."
     end
   end
 
@@ -133,55 +168,20 @@ defmodule Edenflowers.Bank.Connection do
     publish_all :destroy, Events.admin_bank()
   end
 
-  attributes do
-    uuid_primary_key :id
-
-    attribute :session_id, :string do
-      description "Enable Banking's session, which every account read names."
-      allow_nil? false
+  # Four runs a day, the most PSD2 allows without Jennie at the bank.
+  oban do
+    scheduled_actions do
+      schedule :sync_payments, "0 */6 * * *" do
+        action :sync_payments
+        queue :default
+        worker_module_name Edenflowers.Bank.Workers.SyncPayments
+        default_actor Edenflowers.Actors.system_actor()
+      end
     end
-
-    attribute :account_ids, {:array, :string} do
-      description "Enable Banking's ids for the accounts Jennie approved."
-      allow_nil? false
-    end
-
-    attribute :valid_until, :utc_datetime do
-      description "When the bank's consent ends and Jennie has to connect again."
-      allow_nil? false
-    end
-
-    attribute :available_balance, :decimal do
-      description "Euros Jennie can spend: the booked balance less what's reserved, such as card payments. " <>
-                    "Nil until the first read, or when the bank doesn't say."
-    end
-
-    attribute :booked_balance, :decimal do
-      description "Euros on the statement. Nil until the first read, or when the bank doesn't say."
-    end
-
-    attribute :balance_read_at, :utc_datetime do
-      description "When the balances were last read from the bank."
-    end
-
-    create_timestamp :inserted_at
   end
 
-  calculations do
-    calculate :balance, :decimal, expr(available_balance || booked_balance) do
-      description "The one figure to show as the account's balance: what can be spent, else what's booked."
-    end
-
-    calculate :reserved, :boolean, expr(available_balance != booked_balance) do
-      description "Money is reserved but not booked yet, so the available and booked balances differ."
-    end
-
-    calculate :expired, :boolean, expr(valid_until <= now()) do
-      description "The consent has ended, so nothing is read until Jennie connects again."
-    end
-
-    calculate :renewal_due, :boolean, expr(valid_until <= datetime_add(now(), 14, :day)) do
-      description "Ends within two weeks or already has: time to ask Jennie to connect again."
-    end
+  postgres do
+    table "bank_connections"
+    repo Edenflowers.Repo
   end
 end

@@ -21,14 +21,60 @@ defmodule Edenflowers.Catalog.ProductCategory do
 
   alias Edenflowers.Events
 
-  postgres do
-    table "product_categories"
-    repo Edenflowers.Repo
+  attributes do
+    uuid_primary_key :id
+    attribute :name, :string, allow_nil?: false
+    attribute :description, :string, allow_nil?: true
+    attribute :slug, :string, allow_nil?: false
+
+    attribute :position, :integer do
+      description "Store order: 0 first, unset after all positioned categories."
+      constraints min: 0
+    end
+
+    attribute :visibility, __MODULE__.Visibility do
+      description ":public is browsable in the store ribbon and at /store/:slug. :draft is work in progress, " <>
+                    "not yet ready to publish. :hidden is kept out of the storefront, but its products are still " <>
+                    "reachable elsewhere, like the card drawer at checkout."
+
+      allow_nil? false
+      default :draft
+    end
+
+    attribute :add_on, :boolean do
+      description "Its products are Add-ons, like cards and chocolate, that go with flowers: a cart of only " <>
+                    "Add-ons can't be checked out, as delivering one alone isn't worth it."
+
+      allow_nil? false
+      default false
+    end
+
+    attribute :product_type, Edenflowers.Catalog.ProductType, allow_nil?: false, default: :flowers
   end
 
-  translations do
-    locales Edenflowers.Locales.translatable_atoms()
-    fields [:name, :description]
+  relationships do
+    has_many :products, Edenflowers.Catalog.Product do
+      description "Every product in it, drafts included."
+    end
+  end
+
+  calculations do
+    calculate :offers_bows, :boolean, expr(product_type == :wreath) do
+      description "Its products can offer customers a choice of bow colour. Only wreaths do."
+    end
+  end
+
+  aggregates do
+    count :published_product_count, :products do
+      description "How many of its products are published: the ones that leave the store and checkout if it " <>
+                    "becomes a draft."
+
+      filter expr(draft == false)
+    end
+  end
+
+  identities do
+    identity :unique_slug, [:slug]
   end
 
   actions do
@@ -104,59 +150,13 @@ defmodule Edenflowers.Catalog.ProductCategory do
     publish_all :destroy, Events.admin_product_categories()
   end
 
-  attributes do
-    uuid_primary_key :id
-    attribute :name, :string, allow_nil?: false
-    attribute :description, :string, allow_nil?: true
-    attribute :slug, :string, allow_nil?: false
-
-    attribute :position, :integer do
-      description "Store order: 0 first, unset after all positioned categories."
-      constraints min: 0
-    end
-
-    attribute :visibility, __MODULE__.Visibility do
-      description ":public is browsable in the store ribbon and at /store/:slug. :draft is work in progress, " <>
-                    "not yet ready to publish. :hidden is kept out of the storefront, but its products are still " <>
-                    "reachable elsewhere, like the card drawer at checkout."
-
-      allow_nil? false
-      default :draft
-    end
-
-    attribute :add_on, :boolean do
-      description "Its products are Add-ons, like cards and chocolate, that go with flowers: a cart of only " <>
-                    "Add-ons can't be checked out, as delivering one alone isn't worth it."
-
-      allow_nil? false
-      default false
-    end
-
-    attribute :product_type, Edenflowers.Catalog.ProductType, allow_nil?: false, default: :flowers
+  translations do
+    locales Edenflowers.Locales.translatable_atoms()
+    fields [:name, :description]
   end
 
-  relationships do
-    has_many :products, Edenflowers.Catalog.Product do
-      description "Every product in it, drafts included."
-    end
-  end
-
-  calculations do
-    calculate :offers_bows, :boolean, expr(product_type == :wreath) do
-      description "Its products can offer customers a choice of bow colour. Only wreaths do."
-    end
-  end
-
-  aggregates do
-    count :published_product_count, :products do
-      description "How many of its products are published: the ones that leave the store and checkout if it " <>
-                    "becomes a draft."
-
-      filter expr(draft == false)
-    end
-  end
-
-  identities do
-    identity :unique_slug, [:slug]
+  postgres do
+    table "product_categories"
+    repo Edenflowers.Repo
   end
 end

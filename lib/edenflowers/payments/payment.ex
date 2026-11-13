@@ -28,84 +28,6 @@ defmodule Edenflowers.Payments.Payment do
 
   def overdue_after_days, do: @overdue_after_days
 
-  postgres do
-    repo Edenflowers.Repo
-    table "payments"
-    migration_types amount: :decimal
-
-    custom_indexes do
-      index [:order_id], concurrently: true
-      index [:course_registration_id], concurrently: true
-    end
-
-    check_constraints do
-      check_constraint :amount, "payments_valid_amount",
-        check: "amount = round(amount, 2)",
-        message: "must be an amount in whole cents"
-
-      check_constraint :order_id, "payments_one_parent",
-        check: "num_nonnulls(order_id, course_registration_id, invoice_id) = 1",
-        message: "must belong to exactly one order, course registration or invoice"
-
-      check_constraint :gift_voucher_id, "payments_voucher_names_its_voucher",
-        check: "(method = 'voucher') = (gift_voucher_id IS NOT NULL)",
-        message: "must name its gift voucher, and only a voucher payment can"
-    end
-
-    references do
-      reference :gift_voucher, on_delete: :restrict
-      reference :order, on_delete: :restrict
-      reference :course_registration, on_delete: :restrict
-      reference :reverses_payment, on_delete: :delete
-      reference :invoice, on_delete: :restrict
-    end
-  end
-
-  actions do
-    defaults [:read]
-
-    create :record do
-      description "Records money that moved, positive taken or negative handed back. Created by the order and " <>
-                    "registration or standalone invoice actions that take or return money, never on its own."
-
-      accept [
-        :order_id,
-        :course_registration_id,
-        :amount,
-        :method,
-        :payment_intent_id,
-        :stripe_refund_id,
-        :payment_method_type,
-        :card_brand,
-        :card_last4,
-        :reverses_payment_id,
-        :goodwill,
-        :note,
-        :invoice_id,
-        :paid_at,
-        :bank_transaction_id,
-        :gift_voucher_id
-      ]
-
-      validate Edenflowers.Payments.Validations.InvoicePayment, before_action?: true
-    end
-  end
-
-  policies do
-    bypass actor_attribute_equals(:system, true) do
-      authorize_if action_type(:read)
-    end
-
-    bypass actor_attribute_equals(:admin, true) do
-      authorize_if action_type(:read)
-    end
-
-    policy action_type(:read) do
-      authorize_if expr(order.user_id == ^actor(:id))
-      authorize_if expr(course_registration.user_id == ^actor(:id))
-    end
-  end
-
   attributes do
     uuid_primary_key :id
     attribute :amount, :decimal, allow_nil?: false, constraints: [scale: 2]
@@ -169,5 +91,83 @@ defmodule Edenflowers.Payments.Payment do
     identity :unique_stripe_refund, [:stripe_refund_id, :goodwill]
     identity :unique_reversal, [:reverses_payment_id]
     identity :unique_bank_transaction, [:bank_transaction_id]
+  end
+
+  actions do
+    defaults [:read]
+
+    create :record do
+      description "Records money that moved, positive taken or negative handed back. Created by the order and " <>
+                    "registration or standalone invoice actions that take or return money, never on its own."
+
+      accept [
+        :order_id,
+        :course_registration_id,
+        :amount,
+        :method,
+        :payment_intent_id,
+        :stripe_refund_id,
+        :payment_method_type,
+        :card_brand,
+        :card_last4,
+        :reverses_payment_id,
+        :goodwill,
+        :note,
+        :invoice_id,
+        :paid_at,
+        :bank_transaction_id,
+        :gift_voucher_id
+      ]
+
+      validate Edenflowers.Payments.Validations.InvoicePayment, before_action?: true
+    end
+  end
+
+  policies do
+    bypass actor_attribute_equals(:system, true) do
+      authorize_if action_type(:read)
+    end
+
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if action_type(:read)
+    end
+
+    policy action_type(:read) do
+      authorize_if expr(order.user_id == ^actor(:id))
+      authorize_if expr(course_registration.user_id == ^actor(:id))
+    end
+  end
+
+  postgres do
+    repo Edenflowers.Repo
+    table "payments"
+    migration_types amount: :decimal
+
+    custom_indexes do
+      index [:order_id], concurrently: true
+      index [:course_registration_id], concurrently: true
+    end
+
+    check_constraints do
+      check_constraint :amount, "payments_valid_amount",
+        check: "amount = round(amount, 2)",
+        message: "must be an amount in whole cents"
+
+      check_constraint :order_id, "payments_one_parent",
+        check: "num_nonnulls(order_id, course_registration_id, invoice_id) = 1",
+        message: "must belong to exactly one order, course registration or invoice"
+
+      check_constraint :gift_voucher_id, "payments_voucher_names_its_voucher",
+        check: "(method = 'voucher') = (gift_voucher_id IS NOT NULL)",
+        message: "must name its gift voucher, and only a voucher payment can"
+    end
+
+    references do
+      reference :gift_voucher, on_delete: :restrict
+      reference :order, on_delete: :restrict
+      reference :course_registration, on_delete: :restrict
+      reference :reverses_payment, on_delete: :delete
+      reference :invoice, on_delete: :restrict
+    end
   end
 end

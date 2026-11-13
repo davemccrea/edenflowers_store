@@ -9,9 +9,27 @@ defmodule Edenflowers.Pricing.TaxRate do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
-  postgres do
-    table "tax_rates"
-    repo Edenflowers.Repo
+  attributes do
+    uuid_primary_key :id
+    attribute :name, :string, allow_nil?: false
+
+    attribute :percentage, :decimal do
+      description "The VAT rate as a fraction, so 0.14 is 14%."
+      allow_nil? false
+      constraints min: 0, max: 1
+    end
+
+    attribute :retired_at, :utc_datetime_usec
+  end
+
+  relationships do
+    has_many :products, Edenflowers.Catalog.Product do
+      description "Products whose prices include this rate. Courses and fulfillment options use rates too."
+    end
+  end
+
+  identities do
+    identity :unique_name, [:name]
   end
 
   actions do
@@ -54,26 +72,8 @@ defmodule Edenflowers.Pricing.TaxRate do
     end
   end
 
-  attributes do
-    uuid_primary_key :id
-    attribute :name, :string, allow_nil?: false
-
-    attribute :percentage, :decimal do
-      description "The VAT rate as a fraction, so 0.14 is 14%."
-      allow_nil? false
-      constraints min: 0, max: 1
-    end
-
-    attribute :retired_at, :utc_datetime_usec
-  end
-
-  relationships do
-    has_many :products, Edenflowers.Catalog.Product do
-      description "Products whose prices include this rate. Courses and fulfillment options use rates too."
-    end
-  end
-
-  identities do
-    identity :unique_name, [:name]
+  postgres do
+    table "tax_rates"
+    repo Edenflowers.Repo
   end
 end

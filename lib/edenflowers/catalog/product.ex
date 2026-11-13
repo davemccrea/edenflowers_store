@@ -24,14 +24,144 @@ defmodule Edenflowers.Catalog.Product do
   @max_fan_cards 7
   def max_fan_cards, do: @max_fan_cards
 
-  postgres do
-    table "products"
-    repo Edenflowers.Repo
+  attributes do
+    uuid_primary_key :id
+    attribute :name, :string, allow_nil?: false
+
+    attribute :slug, :string do
+      description "Where the product's page lives, as in /product/red-rose-bouquet. Made from the English name " <>
+                    "when the product is created and kept when it is renamed; Jennie can edit it in the product " <>
+                    "form."
+
+      allow_nil? false
+      public? true
+    end
+
+    attribute :photo_slugs, {:array, :string} do
+      description "In display order; the first is the main photo, see `main_photo_slug`."
+      allow_nil? false
+      constraints min_length: 1, max_length: 8
+    end
+
+    attribute :hidden_photo_slugs, {:array, :string} do
+      description "Left out of the store's gallery but still pickable by a size. Never the main photo."
+      allow_nil? false
+      default []
+    end
+
+    attribute :description, :string, allow_nil?: false
+    attribute :draft, :boolean, allow_nil?: false, default: true
+    attribute :featured, :boolean, allow_nil?: false, default: false
+
+    attribute :position, :integer do
+      description "Store order within a category: 0 first, unset after all positioned products."
+      constraints min: 0
+    end
+
+    attribute :free_delivery, :boolean, allow_nil?: false, default: false
+
+    attribute :subscribable, :boolean do
+      description "Can also be bought as a Subscription, which the customer opts into on the product page. " <>
+                    "Bought once, it is like any other product."
+
+      allow_nil? false
+      default false
+    end
+
+    attribute :bow_colours, {:array, Edenflowers.Catalog.BowColour} do
+      description "The bows a customer can choose from on its page. Empty when it asks for none, as most " <>
+                    "products do."
+
+      allow_nil? false
+      default []
+      # The admin form posts a blank entry so unticking every colour still sends the field.
+      constraints remove_nil_items?: true
+    end
+
+    attribute :available_from, :date do
+      description "Its Available from: the first day Jennie can make it again once she has run out of its " <>
+                    "flowers, after the next flower delivery. Nil, or a day already past, when it can be made now. " <>
+                    "Customers can still order it, for that day or later."
+    end
   end
 
-  translations do
-    locales Edenflowers.Locales.translatable_atoms()
-    fields [:name, :description]
+  relationships do
+    belongs_to :tax_rate, Edenflowers.Pricing.TaxRate do
+      description "The VAT rate its prices include. Orders snapshot the percentage, so changing it only affects " <>
+                    "what is sold from now on."
+
+      allow_nil? false
+    end
+
+    belongs_to :product_category, Edenflowers.Catalog.ProductCategory do
+      description "Its category, whose visibility decides whether the store shows it and whose `add_on` flag " <>
+                    "decides whether it's an Add-on."
+
+      allow_nil? false
+    end
+
+    has_many :former_slugs, Edenflowers.Catalog.FormerProductSlug do
+      description "Slugs the product used to have. Links with them redirect to its current slug."
+    end
+
+    has_many :product_variants, Edenflowers.Catalog.ProductVariant do
+      description "Its sizes, each with its own price and Stock, cheapest first. Archived sizes are left out."
+    end
+  end
+
+  calculations do
+    calculate :matches?,
+              :boolean,
+              expr(
+                contains(name, ^arg(:term)) or contains(translations[:"sv-FI"][:name], ^arg(:term)) or
+                  contains(translations[:fi][:name], ^arg(:term))
+              ) do
+      description "The admin products search, case-insensitive: whether the term appears in the name in any language."
+      argument :term, :ci_string, allow_nil?: false
+    end
+
+    calculate :main_photo_slug, :string, expr(at(photo_slugs, 0)) do
+      description "The first of `photo_slugs`, shown on store cards and for sizes without their own photo."
+    end
+
+    calculate :pictured_sizes, :map, Edenflowers.Catalog.Calculations.PicturedSizes do
+      description "Which size each photo shows, keyed by photo slug: a size's own photo shows that size, and the " <>
+                    "main photo shows Medium when the product has one. Photos of unknown size are left out. The " <>
+                    "product page uses it to say when the photo isn't the chosen size."
+    end
+
+    calculate :sold_out?,
+              :boolean,
+              expr(
+                exists(product_variants) and
+                  not exists(product_variants, is_nil(stock_quantity) or stock_quantity > 0)
+              ) do
+      description "Every size has run out of Stock. Never true for a product with a made-to-order size, " <>
+                    "or with no sizes at all."
+    end
+
+    calculate :waiting_until, :date, expr(if(available_from > helsinki_today(), do: available_from, else: nil)) do
+      description "Its Available from while that day is still ahead, else nil. The store shows it as " <>
+                    "\"Available from\" in place of Sold out."
+    end
+
+    calculate :first_open_day,
+              :date,
+              {Edenflowers.Fulfillment.Calculations.FirstOpenDay, from: :waiting_until} do
+      description "The first day on or after its Available from that the shop calendar is open, else nil. " <>
+                    "The store names this day as \"Available from\", so it never names a day Jennie has closed."
+    end
+  end
+
+  aggregates do
+    min :cheapest_price, :product_variants, :price do
+      description "The lowest size price in euros, VAT included, shown as \"from\". Nil for a product without sizes."
+    end
+  end
+
+  identities do
+    identity :unique_name, [:name]
+    identity :unique_slug, [:slug]
   end
 
   actions do
@@ -247,144 +377,14 @@ defmodule Edenflowers.Catalog.Product do
     publish_all :destroy, Events.admin_product(:id)
   end
 
-  attributes do
-    uuid_primary_key :id
-    attribute :name, :string, allow_nil?: false
-
-    attribute :slug, :string do
-      description "Where the product's page lives, as in /product/red-rose-bouquet. Made from the English name " <>
-                    "when the product is created and kept when it is renamed; Jennie can edit it in the product " <>
-                    "form."
-
-      allow_nil? false
-      public? true
-    end
-
-    attribute :photo_slugs, {:array, :string} do
-      description "In display order; the first is the main photo, see `main_photo_slug`."
-      allow_nil? false
-      constraints min_length: 1, max_length: 8
-    end
-
-    attribute :hidden_photo_slugs, {:array, :string} do
-      description "Left out of the store's gallery but still pickable by a size. Never the main photo."
-      allow_nil? false
-      default []
-    end
-
-    attribute :description, :string, allow_nil?: false
-    attribute :draft, :boolean, allow_nil?: false, default: true
-    attribute :featured, :boolean, allow_nil?: false, default: false
-
-    attribute :position, :integer do
-      description "Store order within a category: 0 first, unset after all positioned products."
-      constraints min: 0
-    end
-
-    attribute :free_delivery, :boolean, allow_nil?: false, default: false
-
-    attribute :subscribable, :boolean do
-      description "Can also be bought as a Subscription, which the customer opts into on the product page. " <>
-                    "Bought once, it is like any other product."
-
-      allow_nil? false
-      default false
-    end
-
-    attribute :bow_colours, {:array, Edenflowers.Catalog.BowColour} do
-      description "The bows a customer can choose from on its page. Empty when it asks for none, as most " <>
-                    "products do."
-
-      allow_nil? false
-      default []
-      # The admin form posts a blank entry so unticking every colour still sends the field.
-      constraints remove_nil_items?: true
-    end
-
-    attribute :available_from, :date do
-      description "Its Available from: the first day Jennie can make it again once she has run out of its " <>
-                    "flowers, after the next flower delivery. Nil, or a day already past, when it can be made now. " <>
-                    "Customers can still order it, for that day or later."
-    end
+  translations do
+    locales Edenflowers.Locales.translatable_atoms()
+    fields [:name, :description]
   end
 
-  relationships do
-    belongs_to :tax_rate, Edenflowers.Pricing.TaxRate do
-      description "The VAT rate its prices include. Orders snapshot the percentage, so changing it only affects " <>
-                    "what is sold from now on."
-
-      allow_nil? false
-    end
-
-    belongs_to :product_category, Edenflowers.Catalog.ProductCategory do
-      description "Its category, whose visibility decides whether the store shows it and whose `add_on` flag " <>
-                    "decides whether it's an Add-on."
-
-      allow_nil? false
-    end
-
-    has_many :former_slugs, Edenflowers.Catalog.FormerProductSlug do
-      description "Slugs the product used to have. Links with them redirect to its current slug."
-    end
-
-    has_many :product_variants, Edenflowers.Catalog.ProductVariant do
-      description "Its sizes, each with its own price and Stock, cheapest first. Archived sizes are left out."
-    end
-  end
-
-  calculations do
-    calculate :matches?,
-              :boolean,
-              expr(
-                contains(name, ^arg(:term)) or contains(translations[:"sv-FI"][:name], ^arg(:term)) or
-                  contains(translations[:fi][:name], ^arg(:term))
-              ) do
-      description "The admin products search, case-insensitive: whether the term appears in the name in any language."
-      argument :term, :ci_string, allow_nil?: false
-    end
-
-    calculate :main_photo_slug, :string, expr(at(photo_slugs, 0)) do
-      description "The first of `photo_slugs`, shown on store cards and for sizes without their own photo."
-    end
-
-    calculate :pictured_sizes, :map, Edenflowers.Catalog.Calculations.PicturedSizes do
-      description "Which size each photo shows, keyed by photo slug: a size's own photo shows that size, and the " <>
-                    "main photo shows Medium when the product has one. Photos of unknown size are left out. The " <>
-                    "product page uses it to say when the photo isn't the chosen size."
-    end
-
-    calculate :sold_out?,
-              :boolean,
-              expr(
-                exists(product_variants) and
-                  not exists(product_variants, is_nil(stock_quantity) or stock_quantity > 0)
-              ) do
-      description "Every size has run out of Stock. Never true for a product with a made-to-order size, " <>
-                    "or with no sizes at all."
-    end
-
-    calculate :waiting_until, :date, expr(if(available_from > helsinki_today(), do: available_from, else: nil)) do
-      description "Its Available from while that day is still ahead, else nil. The store shows it as " <>
-                    "\"Available from\" in place of Sold out."
-    end
-
-    calculate :first_open_day,
-              :date,
-              {Edenflowers.Fulfillment.Calculations.FirstOpenDay, from: :waiting_until} do
-      description "The first day on or after its Available from that the shop calendar is open, else nil. " <>
-                    "The store names this day as \"Available from\", so it never names a day Jennie has closed."
-    end
-  end
-
-  aggregates do
-    min :cheapest_price, :product_variants, :price do
-      description "The lowest size price in euros, VAT included, shown as \"from\". Nil for a product without sizes."
-    end
-  end
-
-  identities do
-    identity :unique_name, [:name]
-    identity :unique_slug, [:slug]
+  postgres do
+    table "products"
+    repo Edenflowers.Repo
   end
 end
 

@@ -9,10 +9,6 @@ defmodule Edenflowers.Payments.InvoiceLine do
 
   alias Edenflowers.Types.DecimalComma
 
-  actions do
-    defaults [:read, :destroy, create: :*, update: :*]
-  end
-
   attributes do
     attribute :description, :string do
       description "What was supplied, as printed on the invoice."
@@ -36,5 +32,9 @@ defmodule Edenflowers.Payments.InvoiceLine do
       public? true
       constraints min: 0, max: 100
     end
+  end
+
+  actions do
+    defaults [:read, :destroy, create: :*, update: :*]
   end
 end

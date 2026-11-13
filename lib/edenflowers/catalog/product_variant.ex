@@ -16,33 +16,49 @@ defmodule Edenflowers.Catalog.ProductVariant do
   alias Edenflowers.Events
   alias Edenflowers.Orders.Validations
 
-  postgres do
-    table "product_variants"
-    repo Edenflowers.Repo
-    base_filter_sql "(archived_at IS NULL)"
+  attributes do
+    uuid_primary_key :id
 
-    # The generator would carry `scale: 2` into the migration, which Ecto
-    # rejects without a precision. Ash still validates the scale; the check
-    # constraint enforces cents at the database.
-    migration_types price: :decimal
+    attribute :price, :decimal do
+      description "In euros, VAT included."
+      allow_nil? false
+      constraints min: 0, scale: 2
+    end
 
-    check_constraints do
-      check_constraint :price, "product_variants_valid_price",
-        check: "price >= 0 AND price = round(price, 2)",
-        message: "must be a non-negative amount in whole cents"
+    attribute :size, Edenflowers.Catalog.ProductVariantSize
+    # Display text such as "30–40", so a range or a single value both fit. The category's
+    # product type says which of these its sizes have; see ProductType.
+    attribute :height_cm, :string
+    attribute :stem_count, :string
+    attribute :diameter_cm, :string
+    attribute :dimensions_cm, :string
+    attribute :pot_cm, :string
+    attribute :weight_g, :string
+    attribute :pieces, :string
+
+    attribute :own_photo_slug, :string do
+      description "One of the product's photos, or nil to show its main photo; see `photo_slug`."
+    end
+
+    attribute :stock_quantity, :integer do
+      description "The size's Stock. Nil for a size made to order, which never runs out."
+      constraints min: 0
+    end
+
+    attribute :draft, :boolean, allow_nil?: false, default: true
+  end
+
+  relationships do
+    belongs_to :product, Edenflowers.Catalog.Product do
+      description "The product this is a size of."
+      allow_nil? false
     end
   end
 
-  # Removing a size archives it: past orders still reference it. The base
-  # filter (rather than a read-action filter) also hides archived sizes from
-  # relationship expressions like the store's `exists(product_variants)` and
-  # the `cheapest_price` aggregate.
-  resource do
-    base_filter expr(is_nil(archived_at))
-  end
-
-  archive do
-    base_filter? true
+  calculations do
+    calculate :photo_slug, :string, expr(own_photo_slug || product.main_photo_slug) do
+      description "The photo to show for this size: its own, else the product's main photo."
+    end
   end
 
   actions do
@@ -144,6 +160,10 @@ defmodule Edenflowers.Catalog.ProductVariant do
     end
   end
 
+  preparations do
+    prepare build(sort: [price: :asc])
+  end
+
   policies do
     bypass actor_attribute_equals(:admin, true) do
       authorize_if always()
@@ -177,52 +197,32 @@ defmodule Edenflowers.Catalog.ProductVariant do
     publish_all :destroy, Events.admin_product(:product_id), previous_values?: true
   end
 
-  preparations do
-    prepare build(sort: [price: :asc])
+  # Removing a size archives it: past orders still reference it. The base
+  # filter (rather than a read-action filter) also hides archived sizes from
+  # relationship expressions like the store's `exists(product_variants)` and
+  # the `cheapest_price` aggregate.
+  resource do
+    base_filter expr(is_nil(archived_at))
   end
 
-  attributes do
-    uuid_primary_key :id
-
-    attribute :price, :decimal do
-      description "In euros, VAT included."
-      allow_nil? false
-      constraints min: 0, scale: 2
-    end
-
-    attribute :size, Edenflowers.Catalog.ProductVariantSize
-    # Display text such as "30–40", so a range or a single value both fit. The category's
-    # product type says which of these its sizes have; see ProductType.
-    attribute :height_cm, :string
-    attribute :stem_count, :string
-    attribute :diameter_cm, :string
-    attribute :dimensions_cm, :string
-    attribute :pot_cm, :string
-    attribute :weight_g, :string
-    attribute :pieces, :string
-
-    attribute :own_photo_slug, :string do
-      description "One of the product's photos, or nil to show its main photo; see `photo_slug`."
-    end
-
-    attribute :stock_quantity, :integer do
-      description "The size's Stock. Nil for a size made to order, which never runs out."
-      constraints min: 0
-    end
-
-    attribute :draft, :boolean, allow_nil?: false, default: true
+  archive do
+    base_filter? true
   end
 
-  relationships do
-    belongs_to :product, Edenflowers.Catalog.Product do
-      description "The product this is a size of."
-      allow_nil? false
-    end
-  end
+  postgres do
+    table "product_variants"
+    repo Edenflowers.Repo
+    base_filter_sql "(archived_at IS NULL)"
 
-  calculations do
-    calculate :photo_slug, :string, expr(own_photo_slug || product.main_photo_slug) do
-      description "The photo to show for this size: its own, else the product's main photo."
+    # The generator would carry `scale: 2` into the migration, which Ecto
+    # rejects without a precision. Ash still validates the scale; the check
+    # constraint enforces cents at the database.
+    migration_types price: :decimal
+
+    check_constraints do
+      check_constraint :price, "product_variants_valid_price",
+        check: "price >= 0 AND price = round(price, 2)",
+        message: "must be a non-negative amount in whole cents"
     end
   end
 end

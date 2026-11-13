@@ -9,9 +9,96 @@ defmodule Edenflowers.Feedback.Note do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
-  postgres do
-    table "feedback_notes"
-    repo Edenflowers.Repo
+  attributes do
+    uuid_primary_key :id
+
+    attribute :number, :integer do
+      description "A short, stable number for the note, so you can tell an agent to work on comment 12 and " <>
+                    "run `just resolve-feedback 12`. Postgres assigns it from a sequence."
+
+      generated? true
+      writable? false
+    end
+
+    attribute :body, :string do
+      description "What the reviewer wrote."
+      allow_nil? false
+    end
+
+    attribute :path, :string do
+      description "The page's path and query string, e.g. /sv/store?sort=price."
+      allow_nil? false
+      constraints max_length: 2000
+    end
+
+    attribute :locale, :string do
+      description "The page's language, from its <html lang>."
+    end
+
+    attribute :viewport, :string do
+      description "The browser window's size as WIDTHxHEIGHT, since many notes are about layout."
+    end
+
+    attribute :selector, :string do
+      description "A CSS selector path to the element, from the nearest id down. Brittle across releases, " <>
+                    "so read it with `element_text` and `element_html`."
+
+      allow_nil? false
+      constraints max_length: 2000
+    end
+
+    attribute :element_text, :string do
+      description "The element's visible text, cut to 500 characters by the picker."
+      constraints max_length: 500
+    end
+
+    attribute :element_html, :string do
+      description "The element's own tag and attributes, without its children, cut to 2000 characters by the picker. " <>
+                    "It gives classes and ids to grep for when a production note has no `source`."
+
+      constraints max_length: 2000
+    end
+
+    attribute :source, :string do
+      description "The HEEx file:line that rendered the element. Only dev has the annotations, so production notes " <>
+                    "have none."
+    end
+
+    attribute :strings, {:array, :map} do
+      description "The Gettext messages the element seemed to render when the note was left, as " <>
+                    "`find_strings` returned them: domain, msgctxt, msgid and their text in every locale. " <>
+                    "Empty for text from the database."
+
+      default []
+    end
+
+    attribute :app_version, :string do
+      description "The release the reviewer was looking at, e.g. v1.14.4."
+      allow_nil? false
+    end
+
+    attribute :resolved_at, :utc_datetime do
+      description "When the note was dealt with. Nil while it is open."
+    end
+
+    timestamps()
+  end
+
+  relationships do
+    belongs_to :author, Edenflowers.Accounts.User do
+      description "The reviewer who left the note."
+      allow_nil? false
+    end
+  end
+
+  calculations do
+    calculate :mine?, :boolean, expr(author_id == ^actor(:id)) do
+      description "Whether the actor wrote the note, so Option+Clicking its element opens it for editing."
+    end
+  end
+
+  identities do
+    identity :unique_number, [:number]
   end
 
   actions do
@@ -103,96 +190,9 @@ defmodule Edenflowers.Feedback.Note do
     end
   end
 
-  attributes do
-    uuid_primary_key :id
-
-    attribute :number, :integer do
-      description "A short, stable number for the note, so you can tell an agent to work on comment 12 and " <>
-                    "run `just resolve-feedback 12`. Postgres assigns it from a sequence."
-
-      generated? true
-      writable? false
-    end
-
-    attribute :body, :string do
-      description "What the reviewer wrote."
-      allow_nil? false
-    end
-
-    attribute :path, :string do
-      description "The page's path and query string, e.g. /sv/store?sort=price."
-      allow_nil? false
-      constraints max_length: 2000
-    end
-
-    attribute :locale, :string do
-      description "The page's language, from its <html lang>."
-    end
-
-    attribute :viewport, :string do
-      description "The browser window's size as WIDTHxHEIGHT, since many notes are about layout."
-    end
-
-    attribute :selector, :string do
-      description "A CSS selector path to the element, from the nearest id down. Brittle across releases, " <>
-                    "so read it with `element_text` and `element_html`."
-
-      allow_nil? false
-      constraints max_length: 2000
-    end
-
-    attribute :element_text, :string do
-      description "The element's visible text, cut to 500 characters by the picker."
-      constraints max_length: 500
-    end
-
-    attribute :element_html, :string do
-      description "The element's own tag and attributes, without its children, cut to 2000 characters by the picker. " <>
-                    "It gives classes and ids to grep for when a production note has no `source`."
-
-      constraints max_length: 2000
-    end
-
-    attribute :source, :string do
-      description "The HEEx file:line that rendered the element. Only dev has the annotations, so production notes " <>
-                    "have none."
-    end
-
-    attribute :strings, {:array, :map} do
-      description "The Gettext messages the element seemed to render when the note was left, as " <>
-                    "`find_strings` returned them: domain, msgctxt, msgid and their text in every locale. " <>
-                    "Empty for text from the database."
-
-      default []
-    end
-
-    attribute :app_version, :string do
-      description "The release the reviewer was looking at, e.g. v1.14.4."
-      allow_nil? false
-    end
-
-    attribute :resolved_at, :utc_datetime do
-      description "When the note was dealt with. Nil while it is open."
-    end
-
-    timestamps()
-  end
-
-  relationships do
-    belongs_to :author, Edenflowers.Accounts.User do
-      description "The reviewer who left the note."
-      allow_nil? false
-    end
-  end
-
-  calculations do
-    calculate :mine?, :boolean, expr(author_id == ^actor(:id)) do
-      description "Whether the actor wrote the note, so Option+Clicking its element opens it for editing."
-    end
-  end
-
-  identities do
-    identity :unique_number, [:number]
+  postgres do
+    table "feedback_notes"
+    repo Edenflowers.Repo
   end
 
   def app_version, do: "v#{Application.spec(:edenflowers, :vsn)}"

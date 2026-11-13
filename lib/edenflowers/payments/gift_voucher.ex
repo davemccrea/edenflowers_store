@@ -21,74 +21,6 @@ defmodule Edenflowers.Payments.GiftVoucher do
   @valid_for_years 1
   @code_digits 16
 
-  postgres do
-    repo Edenflowers.Repo
-    table "gift_vouchers"
-    migration_types amount: :decimal
-
-    check_constraints do
-      check_constraint :amount, "gift_vouchers_valid_amount",
-        check: "amount > 0 AND amount = round(amount, 2)",
-        message: "must be a positive amount in whole cents"
-    end
-
-    references do
-      reference :line_item, on_delete: :restrict
-    end
-  end
-
-  actions do
-    defaults [:read]
-
-    create :create do
-      description "Issues a voucher for the line that sold it, with a new random code, valid for one year from " <>
-                    "today in Helsinki."
-
-      accept [:amount, :line_item_id]
-      change set_attribute(:code, &__MODULE__.generate_code/0)
-      change set_attribute(:expires_on, &__MODULE__.default_expiry/0)
-    end
-
-    update :change_last_day do
-      description "Gives a voucher more time: Jennie moves its last day later, say for a customer who missed it. " <>
-                    "Only while it isn't cancelled or used up, and never earlier. No history is kept; the order " <>
-                    "page shows the current date."
-
-      accept [:expires_on]
-      require_atomic? false
-      validate __MODULE__.LaterLastDay
-    end
-
-    read :by_code do
-      description "The voucher with this code, however the customer typed it: spaces and dashes are " <>
-                    "ignored. Found whether or not it can still pay, so the customer is told why not."
-
-      argument :code, :string, allow_nil?: false
-      get? true
-      prepare build(load: [:remaining, :expired?, :cancelled?, :spendable?])
-
-      prepare fn query, _context ->
-        code = normalize_code(Ash.Query.get_argument(query, :code))
-        Ash.Query.filter(query, code == ^code)
-      end
-    end
-  end
-
-  policies do
-    bypass actor_attribute_equals(:system, true) do
-      authorize_if always()
-    end
-
-    bypass actor_attribute_equals(:admin, true) do
-      authorize_if always()
-    end
-
-    # Holding the code is the access, as with a Payment Link's token.
-    policy action(:by_code) do
-      authorize_if always()
-    end
-  end
-
   attributes do
     uuid_primary_key :id
 
@@ -159,6 +91,74 @@ defmodule Edenflowers.Payments.GiftVoucher do
   identities do
     identity :unique_code, [:code]
     identity :one_per_line, [:line_item_id]
+  end
+
+  actions do
+    defaults [:read]
+
+    create :create do
+      description "Issues a voucher for the line that sold it, with a new random code, valid for one year from " <>
+                    "today in Helsinki."
+
+      accept [:amount, :line_item_id]
+      change set_attribute(:code, &__MODULE__.generate_code/0)
+      change set_attribute(:expires_on, &__MODULE__.default_expiry/0)
+    end
+
+    update :change_last_day do
+      description "Gives a voucher more time: Jennie moves its last day later, say for a customer who missed it. " <>
+                    "Only while it isn't cancelled or used up, and never earlier. No history is kept; the order " <>
+                    "page shows the current date."
+
+      accept [:expires_on]
+      require_atomic? false
+      validate __MODULE__.LaterLastDay
+    end
+
+    read :by_code do
+      description "The voucher with this code, however the customer typed it: spaces and dashes are " <>
+                    "ignored. Found whether or not it can still pay, so the customer is told why not."
+
+      argument :code, :string, allow_nil?: false
+      get? true
+      prepare build(load: [:remaining, :expired?, :cancelled?, :spendable?])
+
+      prepare fn query, _context ->
+        code = normalize_code(Ash.Query.get_argument(query, :code))
+        Ash.Query.filter(query, code == ^code)
+      end
+    end
+  end
+
+  policies do
+    bypass actor_attribute_equals(:system, true) do
+      authorize_if always()
+    end
+
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    # Holding the code is the access, as with a Payment Link's token.
+    policy action(:by_code) do
+      authorize_if always()
+    end
+  end
+
+  postgres do
+    repo Edenflowers.Repo
+    table "gift_vouchers"
+    migration_types amount: :decimal
+
+    check_constraints do
+      check_constraint :amount, "gift_vouchers_valid_amount",
+        check: "amount > 0 AND amount = round(amount, 2)",
+        message: "must be a positive amount in whole cents"
+    end
+
+    references do
+      reference :line_item, on_delete: :restrict
+    end
   end
 
   @doc """

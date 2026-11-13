@@ -10,13 +10,46 @@ defmodule Edenflowers.Accounts.PushSubscription do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
-  postgres do
-    table "push_subscriptions"
-    repo Edenflowers.Repo
+  attributes do
+    uuid_primary_key :id
 
-    references do
-      reference :user, on_delete: :delete
+    attribute :endpoint, :string do
+      description "The push service URL for this device. Unique, so it identifies the device."
+      allow_nil? false
+      public? true
     end
+
+    attribute :p256dh, :string do
+      description "The browser's public encryption key, base64url, that notifications are encrypted to."
+      allow_nil? false
+      public? true
+    end
+
+    attribute :auth, :string do
+      description "The browser's auth secret, base64url, used with `p256dh` to encrypt notifications."
+      allow_nil? false
+      public? true
+      sensitive? true
+    end
+
+    attribute :locale, :string do
+      description "The admin's language when they subscribed, which the notifications use."
+      allow_nil? false
+      public? true
+    end
+
+    timestamps()
+  end
+
+  relationships do
+    belongs_to :user, Edenflowers.Accounts.User do
+      description "The admin who turned notifications on. Deleting them deletes their devices."
+      allow_nil? false
+    end
+  end
+
+  identities do
+    identity :unique_endpoint, [:endpoint]
   end
 
   actions do
@@ -61,45 +94,12 @@ defmodule Edenflowers.Accounts.PushSubscription do
     end
   end
 
-  attributes do
-    uuid_primary_key :id
+  postgres do
+    table "push_subscriptions"
+    repo Edenflowers.Repo
 
-    attribute :endpoint, :string do
-      description "The push service URL for this device. Unique, so it identifies the device."
-      allow_nil? false
-      public? true
+    references do
+      reference :user, on_delete: :delete
     end
-
-    attribute :p256dh, :string do
-      description "The browser's public encryption key, base64url, that notifications are encrypted to."
-      allow_nil? false
-      public? true
-    end
-
-    attribute :auth, :string do
-      description "The browser's auth secret, base64url, used with `p256dh` to encrypt notifications."
-      allow_nil? false
-      public? true
-      sensitive? true
-    end
-
-    attribute :locale, :string do
-      description "The admin's language when they subscribed, which the notifications use."
-      allow_nil? false
-      public? true
-    end
-
-    timestamps()
-  end
-
-  relationships do
-    belongs_to :user, Edenflowers.Accounts.User do
-      description "The admin who turned notifications on. Deleting them deletes their devices."
-      allow_nil? false
-    end
-  end
-
-  identities do
-    identity :unique_endpoint, [:endpoint]
   end
 end

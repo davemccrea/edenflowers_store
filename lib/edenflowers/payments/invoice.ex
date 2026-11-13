@@ -46,327 +46,6 @@ defmodule Edenflowers.Payments.Invoice do
     |> then(&(&1 && Ash.load!(&1, load, authorize?: false)))
   end
 
-  postgres do
-    repo Edenflowers.Repo
-    table "invoices"
-    migration_types amount: :decimal
-
-    custom_indexes do
-      index [:order_id], concurrently: true
-    end
-
-    references do
-      reference :order, on_delete: :restrict
-    end
-  end
-
-  # Each send, for the invoice history: sent_at keeps only the latest, and Jennie
-  # needs to see when a reminder went out after the first email.
-  paper_trail do
-    change_tracking_mode :changes_only
-    store_action_name? true
-    ignore_attributes [:inserted_at, :updated_at]
-    # Creating one is logged from the invoice itself; only sends are versioned.
-    ignore_actions [:create, :create_for_order, :destroy_draft]
-    on_actions [:send]
-    # sent_at is to the second, so a resend within the same second changes nothing but still went out.
-    only_when_changed? false
-
-    # Jennie's note in the email, from before she could rewrite the whole of it.
-    metadata :email_message, :string
-    # The subject and text she sent in place of the template's, if she rewrote it.
-    metadata :email_subject, :string
-    metadata :email_body, :string
-    # Whether it went as an overdue reminder.
-    metadata :reminder, :boolean
-  end
-
-  actions do
-    defaults [:read]
-
-    read :admin_list do
-      pagination offset?: true, keyset?: true, countable: true, required?: false
-      prepare build(sort: [inserted_at: :desc])
-    end
-
-    read :search do
-      description "Admin search for invoices, drafts included, by customer or company name, email or reference " <>
-                    "number, newest first."
-
-      argument :term, :ci_string, allow_nil?: false
-
-      filter expr(matches?(term: ^arg(:term)))
-
-      prepare Edenflowers.Preparations.RankByMatch
-      prepare build(sort: [inserted_at: :desc], load: [:buyer, :status, :overdue?])
-    end
-
-    read :previous_customers do
-      description "Each invoice customer's latest issued invoice, newest first. A customer is one email (any " <>
-                    "case) as a private customer, or that email for one business and Y-tunnus. The term is " <>
-                    "matched on that latest invoice only, so an outdated name or company finds nothing rather " <>
-                    "than prefilling stale details. Without a term, the most recent customers."
-
-      argument :term, :ci_string do
-        description "Part of the name, company name or email, any case. Nil for every customer."
-      end
-
-      filter expr(
-               not is_nil(issued_at) and
-                 not exists(
-                   Edenflowers.Payments.Invoice,
-                   not is_nil(issued_at) and number > parent(number) and
-                     buyer_email_key == parent(buyer_email_key) and
-                     business_customer == parent(business_customer) and
-                     (business_id == parent(business_id) or (is_nil(business_id) and is_nil(parent(business_id))))
-                 ) and
-                 (is_nil(^arg(:term)) or contains(buyer_name, ^arg(:term)) or contains(buyer_email, ^arg(:term)) or
-                    contains(company_name, ^arg(:term)))
-             )
-
-      prepare build(sort: [number: :desc], load: [:buyer])
-    end
-
-    action :find_customers, {:array, :map} do
-      description "The customer picker on an invoice draft: invoice customers (previous_customers) and shop " <>
-                    "customers with a placed order, most recently billed or ordered first, at most 10. A shop " <>
-                    "customer whose email already has an invoice is left out, as the invoice knows more. Each is " <>
-                    "a map of id, buyer (who it bills), buyer_email, and details: the customer fields a draft " <>
-                    "takes from it, every one present so picking someone else replaces them all."
-
-      argument :term, :ci_string do
-        description "Part of the name, company name or email, any case. Nil for the most recent customers."
-      end
-
-      run Edenflowers.Payments.Actions.FindInvoiceCustomers
-    end
-
-    read :open_at do
-      description "The invoices still owed at the end of a day, for the receivables list in the accountant's " <>
-                    "monthly report: issued by then (in Helsinki) and dated by then, not cancelled by a Credit note dated by then, and not covered " <>
-                    "by the Payments dated by then (in Helsinki), refunds and Undos taken off. An invoice paid " <>
-                    "or cancelled later still counts, so the list reads the same whenever the report is built. " <>
-                    "Sorted by number. Load amount_open_at with the same date for what was owed on each."
-
-      argument :date, :date do
-        description "The last day counted, such as the reported month's last day."
-        allow_nil? false
-      end
-
-      filter expr(
-               not is_nil(issued_at) and
-                 fragment("(? AT TIME ZONE 'UTC' AT TIME ZONE ?)::date", issued_at, ^Edenflowers.ShopTime.timezone()) <=
-                   ^arg(:date) and
-                 invoice_date <= ^arg(:date) and
-                 not exists(credit_note, credit_date <= ^arg(:date)) and
-                 amount_open_at(date: ^arg(:date)) > 0
-             )
-
-      prepare build(sort: [number: :asc])
-    end
-
-    create :create do
-      description "Create an unnumbered standalone invoice draft."
-
-      accept [
-        :buyer_name,
-        :buyer_email,
-        :business_customer,
-        :company_name,
-        :business_id,
-        :billing_address,
-        :customer_reference,
-        :payment_term_days,
-        :locale,
-        :lines,
-        :supply_date,
-        :supply_description
-      ]
-
-      argument :check_issue?, :boolean,
-        default: false,
-        description:
-          "Also refuse the blank fields that would stop it being issued. The editor validates with it " <>
-            "after a failed issue, to mark those fields as Jennie corrects them, but saves without it."
-
-      validate Validations.Issuable, where: argument_equals(:check_issue?, true)
-    end
-
-    create :create_for_order do
-      description "Starts a draft invoice for an invoiceable? order, prefilled from it: its buyer, language and " <>
-                    "lines, a Delivery or Pickup fee line, the fulfillment date as the date of supply and the order " <>
-                    "number in its place. A cancelled order's draft bills its cancellation charge instead, split " <>
-                    "per VAT rate. Jennie adds the company details and edits the rest before issuing it."
-
-      accept [:order_id]
-      validate present(:order_id)
-      change Changes.PrefillFromOrder
-    end
-
-    update :update_draft do
-      accept [
-        :buyer_name,
-        :buyer_email,
-        :business_customer,
-        :company_name,
-        :business_id,
-        :billing_address,
-        :customer_reference,
-        :payment_term_days,
-        :locale,
-        :lines,
-        :supply_date,
-        :supply_description
-      ]
-
-      require_atomic? false
-      change Changes.EditInvoiceDraft
-
-      argument :check_issue?, :boolean,
-        default: false,
-        description:
-          "Also refuse the blank fields that would stop it being issued. The editor validates with it " <>
-            "after a failed issue, to mark those fields as Jennie corrects them, but saves without it."
-
-      validate Validations.Issuable, where: argument_equals(:check_issue?, true)
-    end
-
-    destroy :destroy_draft do
-      description "Deletes a draft Jennie no longer needs. Only a draft: it has no number yet, so the " <>
-                    "invoice series keeps no gap. An issued invoice is cancelled with a Credit note instead."
-
-      require_atomic? false
-      change Changes.EditInvoiceDraft
-    end
-
-    update :issue do
-      accept []
-      require_atomic? false
-      change Changes.IssueInvoice
-      change Changes.FreezeInvoiceContent
-    end
-
-    update :record_payment do
-      description "Records a bank transfer received for this issued invoice, without sending an email."
-      accept []
-      argument :amount, Edenflowers.Types.Price, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
-
-      argument :paid_on, :date,
-        allow_nil?: false,
-        default: &Edenflowers.ShopTime.today/0,
-        description:
-          "The Helsinki day the money arrived. Recorded at midday that day, as Jennie and the bank " <>
-            "only know the day, and the monthly report files a payment by its Helsinki day."
-
-      argument :bank_transaction_id, :string do
-        description "Set when the bank sync records the transfer, so the same transfer is never recorded twice."
-      end
-
-      require_atomic? false
-      change Changes.RecordInvoicePayment
-    end
-
-    read :awaiting_bank_payment do
-      description "The open invoice a transfer booked on booked_on pays with this reference number. One " <>
-                    "issued after the booking day can't be what it pays: the customer had no reference number " <>
-                    "yet. This keeps a transfer whose Payment was deleted, such as a test invoice's, from " <>
-                    "settling the next invoice that reuses its number."
-
-      argument :reference_number, :string, allow_nil?: false
-      argument :booked_on, :date, allow_nil?: false
-
-      filter expr(reference_number == ^arg(:reference_number) and status == :open and invoice_date <= ^arg(:booked_on))
-    end
-
-    action :settle_from_bank, :boolean do
-      description "Records a booked bank transfer on the open invoice whose reference number it quotes, with " <>
-                    "its amount and booking date, like Jennie entering it. A transfer already recorded, one " <>
-                    "matching no open invoice, or one for more than is owed is left alone; an overpayment " <>
-                    "needs Jennie. Returns whether it was recorded."
-
-      argument :reference_number, :string, allow_nil?: false
-      argument :amount, :decimal, allow_nil?: false
-      argument :booked_on, :date, allow_nil?: false
-      argument :bank_transaction_id, :string, allow_nil?: false
-
-      run Edenflowers.Payments.Actions.SettleInvoiceFromBank
-    end
-
-    update :undo_payment do
-      description "Reverses a bank transfer entered by mistake, keeping its original ledger row."
-      accept []
-      argument :payment_id, :uuid, allow_nil?: false
-      argument :paid_at, :utc_datetime, allow_nil?: false, default: &DateTime.utc_now/0
-      require_atomic? false
-      change {Changes.RecordInvoicePayment, reversal?: true}
-    end
-
-    update :send do
-      description "Jennie emails the invoice to its buyer's email, in its own language, with its PDF attached and " <>
-                    "as she rewrote it if she did, and sent_at is stamped. Nothing else about the invoice changes. Sent " <>
-                    "by hand only, and only while it is open (sendable?), as often as she likes. Sent while it " <>
-                    "is overdue?, the email becomes a friendly reminder with a gentler subject and the same PDF. " <>
-                    "Each send is recorded as a version, with her rewrite of the email, if any, and whether it was a reminder."
-
-      accept []
-
-      argument :subject, :string,
-        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
-
-      argument :body, :string,
-        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
-
-      transaction? false
-      require_atomic? false
-      validate Validations.Sendable
-      change Changes.SendInvoice
-    end
-  end
-
-  policies do
-    bypass actor_attribute_equals(:system, true) do
-      authorize_if action_type(:read)
-      # The bank sync records the transfers that quote an invoice's reference number.
-      authorize_if action([:settle_from_bank, :record_payment])
-    end
-
-    bypass actor_attribute_equals(:admin, true) do
-      authorize_if action_type([:read, :create])
-
-      authorize_if action([
-                     :send,
-                     :update_draft,
-                     :destroy_draft,
-                     :issue,
-                     :record_payment,
-                     :undo_payment,
-                     :find_customers
-                   ])
-    end
-  end
-
-  # The invoice register, one invoice's page, and the order whose payment
-  # section lists it all follow the same change.
-  pub_sub do
-    module EdenflowersWeb.Endpoint
-
-    publish_all :create, Events.admin_invoices()
-    publish_all :update, Events.admin_invoices()
-    publish_all :destroy, Events.admin_invoices()
-
-    publish_all :create, Events.admin_invoice(:id)
-    publish_all :update, Events.admin_invoice(:id)
-    publish_all :destroy, Events.admin_invoice(:id)
-
-    publish_all :create, Events.admin_order(:order_id)
-    publish_all :update, Events.admin_order(:order_id)
-    publish_all :destroy, Events.admin_order(:order_id)
-  end
-
-  validations do
-    validate attribute_in(:locale, @locales)
-  end
-
   attributes do
     uuid_primary_key :id
 
@@ -677,5 +356,326 @@ defmodule Edenflowers.Payments.Invoice do
 
   identities do
     identity :unique_number, [:number]
+  end
+
+  actions do
+    defaults [:read]
+
+    read :admin_list do
+      pagination offset?: true, keyset?: true, countable: true, required?: false
+      prepare build(sort: [inserted_at: :desc])
+    end
+
+    read :search do
+      description "Admin search for invoices, drafts included, by customer or company name, email or reference " <>
+                    "number, newest first."
+
+      argument :term, :ci_string, allow_nil?: false
+
+      filter expr(matches?(term: ^arg(:term)))
+
+      prepare Edenflowers.Preparations.RankByMatch
+      prepare build(sort: [inserted_at: :desc], load: [:buyer, :status, :overdue?])
+    end
+
+    read :previous_customers do
+      description "Each invoice customer's latest issued invoice, newest first. A customer is one email (any " <>
+                    "case) as a private customer, or that email for one business and Y-tunnus. The term is " <>
+                    "matched on that latest invoice only, so an outdated name or company finds nothing rather " <>
+                    "than prefilling stale details. Without a term, the most recent customers."
+
+      argument :term, :ci_string do
+        description "Part of the name, company name or email, any case. Nil for every customer."
+      end
+
+      filter expr(
+               not is_nil(issued_at) and
+                 not exists(
+                   Edenflowers.Payments.Invoice,
+                   not is_nil(issued_at) and number > parent(number) and
+                     buyer_email_key == parent(buyer_email_key) and
+                     business_customer == parent(business_customer) and
+                     (business_id == parent(business_id) or (is_nil(business_id) and is_nil(parent(business_id))))
+                 ) and
+                 (is_nil(^arg(:term)) or contains(buyer_name, ^arg(:term)) or contains(buyer_email, ^arg(:term)) or
+                    contains(company_name, ^arg(:term)))
+             )
+
+      prepare build(sort: [number: :desc], load: [:buyer])
+    end
+
+    action :find_customers, {:array, :map} do
+      description "The customer picker on an invoice draft: invoice customers (previous_customers) and shop " <>
+                    "customers with a placed order, most recently billed or ordered first, at most 10. A shop " <>
+                    "customer whose email already has an invoice is left out, as the invoice knows more. Each is " <>
+                    "a map of id, buyer (who it bills), buyer_email, and details: the customer fields a draft " <>
+                    "takes from it, every one present so picking someone else replaces them all."
+
+      argument :term, :ci_string do
+        description "Part of the name, company name or email, any case. Nil for the most recent customers."
+      end
+
+      run Edenflowers.Payments.Actions.FindInvoiceCustomers
+    end
+
+    read :open_at do
+      description "The invoices still owed at the end of a day, for the receivables list in the accountant's " <>
+                    "monthly report: issued by then (in Helsinki) and dated by then, not cancelled by a Credit note dated by then, and not covered " <>
+                    "by the Payments dated by then (in Helsinki), refunds and Undos taken off. An invoice paid " <>
+                    "or cancelled later still counts, so the list reads the same whenever the report is built. " <>
+                    "Sorted by number. Load amount_open_at with the same date for what was owed on each."
+
+      argument :date, :date do
+        description "The last day counted, such as the reported month's last day."
+        allow_nil? false
+      end
+
+      filter expr(
+               not is_nil(issued_at) and
+                 fragment("(? AT TIME ZONE 'UTC' AT TIME ZONE ?)::date", issued_at, ^Edenflowers.ShopTime.timezone()) <=
+                   ^arg(:date) and
+                 invoice_date <= ^arg(:date) and
+                 not exists(credit_note, credit_date <= ^arg(:date)) and
+                 amount_open_at(date: ^arg(:date)) > 0
+             )
+
+      prepare build(sort: [number: :asc])
+    end
+
+    create :create do
+      description "Create an unnumbered standalone invoice draft."
+
+      accept [
+        :buyer_name,
+        :buyer_email,
+        :business_customer,
+        :company_name,
+        :business_id,
+        :billing_address,
+        :customer_reference,
+        :payment_term_days,
+        :locale,
+        :lines,
+        :supply_date,
+        :supply_description
+      ]
+
+      argument :check_issue?, :boolean,
+        default: false,
+        description:
+          "Also refuse the blank fields that would stop it being issued. The editor validates with it " <>
+            "after a failed issue, to mark those fields as Jennie corrects them, but saves without it."
+
+      validate Validations.Issuable, where: argument_equals(:check_issue?, true)
+    end
+
+    create :create_for_order do
+      description "Starts a draft invoice for an invoiceable? order, prefilled from it: its buyer, language and " <>
+                    "lines, a Delivery or Pickup fee line, the fulfillment date as the date of supply and the order " <>
+                    "number in its place. A cancelled order's draft bills its cancellation charge instead, split " <>
+                    "per VAT rate. Jennie adds the company details and edits the rest before issuing it."
+
+      accept [:order_id]
+      validate present(:order_id)
+      change Changes.PrefillFromOrder
+    end
+
+    update :update_draft do
+      accept [
+        :buyer_name,
+        :buyer_email,
+        :business_customer,
+        :company_name,
+        :business_id,
+        :billing_address,
+        :customer_reference,
+        :payment_term_days,
+        :locale,
+        :lines,
+        :supply_date,
+        :supply_description
+      ]
+
+      require_atomic? false
+      change Changes.EditInvoiceDraft
+
+      argument :check_issue?, :boolean,
+        default: false,
+        description:
+          "Also refuse the blank fields that would stop it being issued. The editor validates with it " <>
+            "after a failed issue, to mark those fields as Jennie corrects them, but saves without it."
+
+      validate Validations.Issuable, where: argument_equals(:check_issue?, true)
+    end
+
+    destroy :destroy_draft do
+      description "Deletes a draft Jennie no longer needs. Only a draft: it has no number yet, so the " <>
+                    "invoice series keeps no gap. An issued invoice is cancelled with a Credit note instead."
+
+      require_atomic? false
+      change Changes.EditInvoiceDraft
+    end
+
+    update :issue do
+      accept []
+      require_atomic? false
+      change Changes.IssueInvoice
+      change Changes.FreezeInvoiceContent
+    end
+
+    update :record_payment do
+      description "Records a bank transfer received for this issued invoice, without sending an email."
+      accept []
+      argument :amount, Edenflowers.Types.Price, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
+
+      argument :paid_on, :date,
+        allow_nil?: false,
+        default: &Edenflowers.ShopTime.today/0,
+        description:
+          "The Helsinki day the money arrived. Recorded at midday that day, as Jennie and the bank " <>
+            "only know the day, and the monthly report files a payment by its Helsinki day."
+
+      argument :bank_transaction_id, :string do
+        description "Set when the bank sync records the transfer, so the same transfer is never recorded twice."
+      end
+
+      require_atomic? false
+      change Changes.RecordInvoicePayment
+    end
+
+    read :awaiting_bank_payment do
+      description "The open invoice a transfer booked on booked_on pays with this reference number. One " <>
+                    "issued after the booking day can't be what it pays: the customer had no reference number " <>
+                    "yet. This keeps a transfer whose Payment was deleted, such as a test invoice's, from " <>
+                    "settling the next invoice that reuses its number."
+
+      argument :reference_number, :string, allow_nil?: false
+      argument :booked_on, :date, allow_nil?: false
+
+      filter expr(reference_number == ^arg(:reference_number) and status == :open and invoice_date <= ^arg(:booked_on))
+    end
+
+    action :settle_from_bank, :boolean do
+      description "Records a booked bank transfer on the open invoice whose reference number it quotes, with " <>
+                    "its amount and booking date, like Jennie entering it. A transfer already recorded, one " <>
+                    "matching no open invoice, or one for more than is owed is left alone; an overpayment " <>
+                    "needs Jennie. Returns whether it was recorded."
+
+      argument :reference_number, :string, allow_nil?: false
+      argument :amount, :decimal, allow_nil?: false
+      argument :booked_on, :date, allow_nil?: false
+      argument :bank_transaction_id, :string, allow_nil?: false
+
+      run Edenflowers.Payments.Actions.SettleInvoiceFromBank
+    end
+
+    update :undo_payment do
+      description "Reverses a bank transfer entered by mistake, keeping its original ledger row."
+      accept []
+      argument :payment_id, :uuid, allow_nil?: false
+      argument :paid_at, :utc_datetime, allow_nil?: false, default: &DateTime.utc_now/0
+      require_atomic? false
+      change {Changes.RecordInvoicePayment, reversal?: true}
+    end
+
+    update :send do
+      description "Jennie emails the invoice to its buyer's email, in its own language, with its PDF attached and " <>
+                    "as she rewrote it if she did, and sent_at is stamped. Nothing else about the invoice changes. Sent " <>
+                    "by hand only, and only while it is open (sendable?), as often as she likes. Sent while it " <>
+                    "is overdue?, the email becomes a friendly reminder with a gentler subject and the same PDF. " <>
+                    "Each send is recorded as a version, with her rewrite of the email, if any, and whether it was a reminder."
+
+      accept []
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
+      transaction? false
+      require_atomic? false
+      validate Validations.Sendable
+      change Changes.SendInvoice
+    end
+  end
+
+  validations do
+    validate attribute_in(:locale, @locales)
+  end
+
+  policies do
+    bypass actor_attribute_equals(:system, true) do
+      authorize_if action_type(:read)
+      # The bank sync records the transfers that quote an invoice's reference number.
+      authorize_if action([:settle_from_bank, :record_payment])
+    end
+
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if action_type([:read, :create])
+
+      authorize_if action([
+                     :send,
+                     :update_draft,
+                     :destroy_draft,
+                     :issue,
+                     :record_payment,
+                     :undo_payment,
+                     :find_customers
+                   ])
+    end
+  end
+
+  # The invoice register, one invoice's page, and the order whose payment
+  # section lists it all follow the same change.
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish_all :create, Events.admin_invoices()
+    publish_all :update, Events.admin_invoices()
+    publish_all :destroy, Events.admin_invoices()
+
+    publish_all :create, Events.admin_invoice(:id)
+    publish_all :update, Events.admin_invoice(:id)
+    publish_all :destroy, Events.admin_invoice(:id)
+
+    publish_all :create, Events.admin_order(:order_id)
+    publish_all :update, Events.admin_order(:order_id)
+    publish_all :destroy, Events.admin_order(:order_id)
+  end
+
+  # Each send, for the invoice history: sent_at keeps only the latest, and Jennie
+  # needs to see when a reminder went out after the first email.
+  paper_trail do
+    change_tracking_mode :changes_only
+    store_action_name? true
+    ignore_attributes [:inserted_at, :updated_at]
+    # Creating one is logged from the invoice itself; only sends are versioned.
+    ignore_actions [:create, :create_for_order, :destroy_draft]
+    on_actions [:send]
+    # sent_at is to the second, so a resend within the same second changes nothing but still went out.
+    only_when_changed? false
+
+    # Jennie's note in the email, from before she could rewrite the whole of it.
+    metadata :email_message, :string
+    # The subject and text she sent in place of the template's, if she rewrote it.
+    metadata :email_subject, :string
+    metadata :email_body, :string
+    # Whether it went as an overdue reminder.
+    metadata :reminder, :boolean
+  end
+
+  postgres do
+    repo Edenflowers.Repo
+    table "invoices"
+    migration_types amount: :decimal
+
+    custom_indexes do
+      index [:order_id], concurrently: true
+    end
+
+    references do
+      reference :order, on_delete: :restrict
+    end
   end
 end

@@ -15,9 +15,33 @@ defmodule Edenflowers.Marketing.TrackingTag do
 
   @suggestion_limit 6
 
-  postgres do
-    table "tracking_tags"
-    repo Edenflowers.Repo
+  attributes do
+    uuid_primary_key :id
+
+    attribute :parameter, :atom do
+      description "Which UTM parameter the value goes in: utm_source, utm_medium or utm_campaign."
+      allow_nil? false
+      public? true
+      constraints one_of: [:source, :medium, :campaign]
+    end
+
+    attribute :value, :string do
+      description "The value as it appears in links: lowercase, with hyphens for spaces."
+      allow_nil? false
+      public? true
+      constraints max_length: 100
+    end
+
+    attribute :last_used_at, :utc_datetime_usec do
+      description "When a copied link last carried this tag, to order the suggestions."
+      allow_nil? false
+    end
+
+    timestamps()
+  end
+
+  identities do
+    identity :unique_value, [:parameter, :value]
   end
 
   actions do
@@ -129,33 +153,9 @@ defmodule Edenflowers.Marketing.TrackingTag do
     end
   end
 
-  attributes do
-    uuid_primary_key :id
-
-    attribute :parameter, :atom do
-      description "Which UTM parameter the value goes in: utm_source, utm_medium or utm_campaign."
-      allow_nil? false
-      public? true
-      constraints one_of: [:source, :medium, :campaign]
-    end
-
-    attribute :value, :string do
-      description "The value as it appears in links: lowercase, with hyphens for spaces."
-      allow_nil? false
-      public? true
-      constraints max_length: 100
-    end
-
-    attribute :last_used_at, :utc_datetime_usec do
-      description "When a copied link last carried this tag, to order the suggestions."
-      allow_nil? false
-    end
-
-    timestamps()
-  end
-
-  identities do
-    identity :unique_value, [:parameter, :value]
+  postgres do
+    table "tracking_tags"
+    repo Edenflowers.Repo
   end
 
   @doc """

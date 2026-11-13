@@ -16,9 +16,27 @@ defmodule Edenflowers.Pricing.WelcomeOffer do
 
   alias Edenflowers.Events
 
-  postgres do
-    table "welcome_offer"
-    repo Edenflowers.Repo
+  attributes do
+    uuid_primary_key :id
+
+    attribute :singleton, :boolean do
+      description "Always true, so the unique identity on it allows one row."
+      allow_nil? false
+      default true
+      writable? false
+    end
+
+    attribute :discount_rate, :decimal do
+      description "The welcome discount as a fraction, so 0.15 is 15% off."
+      allow_nil? false
+      default Decimal.new("0.15")
+      constraints greater_than: 0, max: 1
+      public? true
+    end
+  end
+
+  identities do
+    identity :singleton, [:singleton]
   end
 
   actions do
@@ -75,26 +93,8 @@ defmodule Edenflowers.Pricing.WelcomeOffer do
     publish_all :update, Events.admin_welcome_offer()
   end
 
-  attributes do
-    uuid_primary_key :id
-
-    attribute :singleton, :boolean do
-      description "Always true, so the unique identity on it allows one row."
-      allow_nil? false
-      default true
-      writable? false
-    end
-
-    attribute :discount_rate, :decimal do
-      description "The welcome discount as a fraction, so 0.15 is 15% off."
-      allow_nil? false
-      default Decimal.new("0.15")
-      constraints greater_than: 0, max: 1
-      public? true
-    end
-  end
-
-  identities do
-    identity :singleton, [:singleton]
+  postgres do
+    table "welcome_offer"
+    repo Edenflowers.Repo
   end
 end

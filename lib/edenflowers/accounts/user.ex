@@ -38,64 +38,198 @@ defmodule Edenflowers.Accounts.User do
 
   def session_days, do: @session_days
 
-  authentication do
-    add_ons do
-      log_out_everywhere do
-      end
+  attributes do
+    uuid_primary_key :id
+
+    attribute :name, :string do
+      description "Full name as one free-text field, as typed at checkout. Nil for someone who only signed in " <>
+                    "or subscribed to the newsletter."
+
+      allow_nil? true
+      public? true
     end
 
-    tokens do
-      enabled? true
-      token_resource Edenflowers.Accounts.Token
-      signing_secret Edenflowers.Secrets
-      token_lifetime {@session_days, :days}
-      store_all_tokens? true
-      require_token_presence_for_authentication? true
+    attribute :email, :ci_string do
+      description "Sign-in identity, matched case-insensitively. Orders and course bookings for this address link here."
+      allow_nil? false
+      public? true
     end
 
-    strategies do
-      otp do
-        identity_field :email
-        registration_enabled? true
-        brute_force_strategy :rate_limit
-        otp_characters :digits_only
+    attribute :newsletter_opt_in, :boolean do
+      description "Whether they get the newsletter, which is sent from MailerLite."
+      allow_nil? false
+      default false
+      public? true
+    end
 
-        sender Edenflowers.Accounts.Senders.SendOtp
-      end
+    attribute :locale, :string do
+      description "The language they last opted in to the newsletter in, so campaigns can be split by language. " <>
+                    "Nil for users who opted in before this was kept."
+
+      allow_nil? true
+      public? true
+    end
+
+    attribute :admin, :boolean do
+      description "Gives back office access and bypasses every policy. No action can set it, so it is set in the database."
+      default false
+      public? true
+      writable? false
+    end
+
+    attribute :reviewer, :boolean do
+      description "Lets them leave review notes on any element of the site with Option+Click, without back " <>
+                    "office access. No action can set it, so it is set in the database."
+
+      default false
+      public? true
+      writable? false
+    end
+
+    attribute :admin_hue, :integer do
+      description "Hue in degrees (OKLCH) of this admin's back office colour: the sidebar, phone topbar and " <>
+                    "primary buttons. 152 is the shop's forest green."
+
+      constraints min: 0, max: 360
+      default 152
+      allow_nil? false
+      public? true
+    end
+
+    attribute :admin_chroma, :integer do
+      description "Intensity of this admin's back office colour, as OKLCH chroma in thousandths: 0 is grey, " <>
+                    "140 the most vivid. 50 is the shop's forest green."
+
+      constraints min: 0, max: 140
+      default 50
+      allow_nil? false
+      public? true
+    end
+
+    attribute :admin_lightness, :integer do
+      description "Lightness (OKLCH percent) of this admin's sidebar. Primary buttons sit about 11 points " <>
+                    "lighter. The range keeps the sidebar's white text and the buttons' text readable."
+
+      constraints min: 18, max: 36
+      default 26
+      allow_nil? false
+      public? true
+    end
+
+    attribute :admin_grain, :integer do
+      description "How much film grain this admin's back office sidebar has, from 0 (none) to 100 (heaviest)."
+      constraints min: 0, max: 100
+      default 60
+      allow_nil? false
+      public? true
+    end
+
+    attribute :avatar, :binary, allow_nil?: true, select_by_default?: false
+    attribute :avatar_content_type, :string, allow_nil?: true
+
+    attribute :stripe_customer_id, :string, allow_nil?: true
+
+    attribute :pending_email, :ci_string do
+      description "An email change waiting for its code. See `request_email_change`."
+      allow_nil? true
+    end
+
+    attribute :pending_email_code_hash, :string, allow_nil?: true, sensitive?: true
+    attribute :pending_email_expires_at, :utc_datetime_usec, allow_nil?: true
+  end
+
+  relationships do
+    belongs_to :newsletter_promo, Edenflowers.Pricing.Promotion do
+      description "The one-use welcome code generated when they subscribed to the newsletter."
+    end
+
+    has_many :placed_orders, Edenflowers.Orders.Order do
+      description "Their placed orders, newest first. Carts never checked out are left out."
+      filter expr(state == :placed)
+      sort ordered_at: :desc
     end
   end
 
-  postgres do
-    table "users"
-    repo Edenflowers.Repo
+  calculations do
+    calculate :match_rank,
+              :integer,
+              expr(fragment("least(?, ?)", match_rank(name, ^arg(:term)), match_rank(email, ^arg(:term)))) do
+      description "How closely the admin search term matches what a result row shows (see `match_rank`): " <>
+                    "0 exact, 1 at the start of a word, 2 elsewhere, 3 for a match in a field the row " <>
+                    "doesn't show. The search sorts by it."
+
+      argument :term, :ci_string, allow_nil?: false
+    end
+
+    calculate :matches?,
+              :boolean,
+              expr(contains(name, ^arg(:term)) or contains(email, ^arg(:term))) do
+      description "The admin customers search, case-insensitive: whether the term appears in the name or email."
+      argument :term, :ci_string, allow_nil?: false
+    end
+
+    calculate :can_review?, :boolean, expr(admin or reviewer) do
+      description "Whether every page turns on the Option+Click picker for leaving review notes. " <>
+                    "`Feedback.Note`'s policies grant the same people."
+    end
+
+    calculate :first_name, :string, {Calculations.NamePart, source: :name, part: :first} do
+      description "Best guess from the free-text `name`. Sent to MailerLite."
+    end
+
+    calculate :last_name, :string, {Calculations.NamePart, source: :name, part: :last} do
+      description "Best guess from the free-text `name`. Sent to MailerLite."
+    end
+
+    calculate :initials, :string, {Calculations.NamePart, source: :name, part: :initials, fallback: :email} do
+      description "One or two capital letters from `name`, or the email's first, shown where there's no photo."
+    end
+
+    # A user without a promo has no usage, so the `if` turns that NULL into a strict false.
+    calculate :newsletter_offer_hidden?,
+              :boolean,
+              expr(if(newsletter_opt_in or newsletter_promo.usage > 0, true, false)) do
+      description "Whether checkout stops offering the newsletter discount: they already subscribed, " <>
+                    "or used their welcome code."
+    end
   end
 
-  rate_limit do
-    backend Edenflowers.RateLimiter
+  aggregates do
+    count :placed_order_count, :placed_orders do
+      description "Placed orders, cancelled ones included."
+    end
 
-    # Keyed on the lowercased address: the email is matched case-insensitively,
-    # so "Info@" and "info@" are one account and must share one allowance.
-    action :request_otp,
-      limit: 5,
-      per: :timer.minutes(15),
-      key: fn input -> "otp:request:#{String.downcase(to_string(input.arguments[:email]))}" end
+    count :recent_order_count, :placed_orders do
+      description "Placed orders in the last 12 months, cancelled ones included. Ranks the top customers."
+      filter expr(ordered_at > ago(12, :month))
+    end
 
-    action :sign_in_with_otp,
-      limit: 5,
-      per: :timer.minutes(10),
-      key: fn input -> "otp:sign_in:#{String.downcase(to_string(input.arguments[:email]))}" end
+    max :last_ordered_at, :placed_orders, :ordered_at do
+      description "When their latest order was placed. Nil without one."
+    end
 
-    # Each code goes to an address the customer only claims to own.
-    action :request_email_change, limit: 5, per: :timer.minutes(15)
+    first :phone_number, :placed_orders, :customer_phone_number do
+      description "The phone number on their latest order. Users keep no phone number of their own, " <>
+                    "and the latest order's is the freshest."
 
-    # Wrong codes are counted here rather than on the user: a failed confirm
-    # rolls back anything it writes. Counted before the transaction so a wrong
-    # code still counts.
-    action :confirm_email_change, limit: 5, per: :timer.minutes(10), on: :before_transaction
+      sort ordered_at: :desc
+    end
+
+    first :order_locale, :placed_orders, :locale do
+      description "The language of their latest order, which an invoice to them is written in. Users keep only " <>
+                    "a newsletter language of their own."
+
+      sort ordered_at: :desc
+    end
+
+    sum :total_spent, [:placed_orders, :payments], :amount do
+      description "Money received in euros, refunds taken off (see ADR 0001), which can differ from the orders' totals."
+      default Decimal.new("0")
+    end
   end
 
-  admin do
-    actor?(true)
+  identities do
+    identity :unique_email, [:email]
   end
 
   actions do
@@ -290,6 +424,49 @@ defmodule Edenflowers.Accounts.User do
     end
   end
 
+  # Per-visitor limits on top of the per-email ones above, which can't stop one
+  # visitor trying many addresses. `rate_limit` takes one entry per action, so
+  # these are added directly. The address comes from EdenflowersWeb.Plugs.PutClientIp
+  # (the `/auth` routes) or OtpSignInLive; callers outside the web have none.
+  preparations do
+    prepare {AshRateLimiter.Preparation,
+             action: :request_otp,
+             limit: 10,
+             per: :timer.minutes(15),
+             key: fn input -> "otp:request:ip:#{input.context[:client_ip]}" end},
+            on: :action,
+            where: fn input, _context -> if input.context[:client_ip], do: :ok, else: {:error, "no client IP"} end
+  end
+
+  changes do
+    change {AshRateLimiter.Change,
+            action: :sign_in_with_otp,
+            limit: 20,
+            per: :timer.minutes(10),
+            key: fn changeset -> "otp:sign_in:ip:#{changeset.context[:client_ip]}" end},
+           on: :create,
+           where: fn changeset, _context ->
+             if changeset.context[:client_ip], do: :ok, else: {:error, "no client IP"}
+           end
+  end
+
+  validations do
+    # email stays a :ci_string for case-insensitive matching, so the format
+    # check from Edenflowers.Types.Email is applied here instead.
+    validate match(:email, Email.format()),
+      message: "Must be a valid email address",
+      where: changing(:email)
+
+    # A code can only reach a real address, so the sign-in page asks again
+    # instead of waiting on one that never comes.
+    validate match(:email, Email.format()),
+      message: "Must be a valid email address",
+      on: [:action],
+      where: action_is(:request_otp)
+
+    validate attribute_in(:locale, Edenflowers.Locales.all()), where: present(:locale)
+  end
+
   policies do
     bypass actor_attribute_equals(:system, true) do
       authorize_if always()
@@ -348,240 +525,63 @@ defmodule Edenflowers.Accounts.User do
       ]
   end
 
-  # Per-visitor limits on top of the per-email ones above, which can't stop one
-  # visitor trying many addresses. `rate_limit` takes one entry per action, so
-  # these are added directly. The address comes from EdenflowersWeb.Plugs.PutClientIp
-  # (the `/auth` routes) or OtpSignInLive; callers outside the web have none.
-  preparations do
-    prepare {AshRateLimiter.Preparation,
-             action: :request_otp,
-             limit: 10,
-             per: :timer.minutes(15),
-             key: fn input -> "otp:request:ip:#{input.context[:client_ip]}" end},
-            on: :action,
-            where: fn input, _context -> if input.context[:client_ip], do: :ok, else: {:error, "no client IP"} end
-  end
-
-  changes do
-    change {AshRateLimiter.Change,
-            action: :sign_in_with_otp,
-            limit: 20,
-            per: :timer.minutes(10),
-            key: fn changeset -> "otp:sign_in:ip:#{changeset.context[:client_ip]}" end},
-           on: :create,
-           where: fn changeset, _context ->
-             if changeset.context[:client_ip], do: :ok, else: {:error, "no client IP"}
-           end
-  end
-
-  validations do
-    # email stays a :ci_string for case-insensitive matching, so the format
-    # check from Edenflowers.Types.Email is applied here instead.
-    validate match(:email, Email.format()),
-      message: "Must be a valid email address",
-      where: changing(:email)
-
-    # A code can only reach a real address, so the sign-in page asks again
-    # instead of waiting on one that never comes.
-    validate match(:email, Email.format()),
-      message: "Must be a valid email address",
-      on: [:action],
-      where: action_is(:request_otp)
-
-    validate attribute_in(:locale, Edenflowers.Locales.all()), where: present(:locale)
-  end
-
-  attributes do
-    uuid_primary_key :id
-
-    attribute :name, :string do
-      description "Full name as one free-text field, as typed at checkout. Nil for someone who only signed in " <>
-                    "or subscribed to the newsletter."
-
-      allow_nil? true
-      public? true
+  authentication do
+    add_ons do
+      log_out_everywhere do
+      end
     end
 
-    attribute :email, :ci_string do
-      description "Sign-in identity, matched case-insensitively. Orders and course bookings for this address link here."
-      allow_nil? false
-      public? true
+    tokens do
+      enabled? true
+      token_resource Edenflowers.Accounts.Token
+      signing_secret Edenflowers.Secrets
+      token_lifetime {@session_days, :days}
+      store_all_tokens? true
+      require_token_presence_for_authentication? true
     end
 
-    attribute :newsletter_opt_in, :boolean do
-      description "Whether they get the newsletter, which is sent from MailerLite."
-      allow_nil? false
-      default false
-      public? true
-    end
+    strategies do
+      otp do
+        identity_field :email
+        registration_enabled? true
+        brute_force_strategy :rate_limit
+        otp_characters :digits_only
 
-    attribute :locale, :string do
-      description "The language they last opted in to the newsletter in, so campaigns can be split by language. " <>
-                    "Nil for users who opted in before this was kept."
-
-      allow_nil? true
-      public? true
-    end
-
-    attribute :admin, :boolean do
-      description "Gives back office access and bypasses every policy. No action can set it, so it is set in the database."
-      default false
-      public? true
-      writable? false
-    end
-
-    attribute :reviewer, :boolean do
-      description "Lets them leave review notes on any element of the site with Option+Click, without back " <>
-                    "office access. No action can set it, so it is set in the database."
-
-      default false
-      public? true
-      writable? false
-    end
-
-    attribute :admin_hue, :integer do
-      description "Hue in degrees (OKLCH) of this admin's back office colour: the sidebar, phone topbar and " <>
-                    "primary buttons. 152 is the shop's forest green."
-
-      constraints min: 0, max: 360
-      default 152
-      allow_nil? false
-      public? true
-    end
-
-    attribute :admin_chroma, :integer do
-      description "Intensity of this admin's back office colour, as OKLCH chroma in thousandths: 0 is grey, " <>
-                    "140 the most vivid. 50 is the shop's forest green."
-
-      constraints min: 0, max: 140
-      default 50
-      allow_nil? false
-      public? true
-    end
-
-    attribute :admin_lightness, :integer do
-      description "Lightness (OKLCH percent) of this admin's sidebar. Primary buttons sit about 11 points " <>
-                    "lighter. The range keeps the sidebar's white text and the buttons' text readable."
-
-      constraints min: 18, max: 36
-      default 26
-      allow_nil? false
-      public? true
-    end
-
-    attribute :admin_grain, :integer do
-      description "How much film grain this admin's back office sidebar has, from 0 (none) to 100 (heaviest)."
-      constraints min: 0, max: 100
-      default 60
-      allow_nil? false
-      public? true
-    end
-
-    attribute :avatar, :binary, allow_nil?: true, select_by_default?: false
-    attribute :avatar_content_type, :string, allow_nil?: true
-
-    attribute :stripe_customer_id, :string, allow_nil?: true
-
-    attribute :pending_email, :ci_string do
-      description "An email change waiting for its code. See `request_email_change`."
-      allow_nil? true
-    end
-
-    attribute :pending_email_code_hash, :string, allow_nil?: true, sensitive?: true
-    attribute :pending_email_expires_at, :utc_datetime_usec, allow_nil?: true
-  end
-
-  relationships do
-    belongs_to :newsletter_promo, Edenflowers.Pricing.Promotion do
-      description "The one-use welcome code generated when they subscribed to the newsletter."
-    end
-
-    has_many :placed_orders, Edenflowers.Orders.Order do
-      description "Their placed orders, newest first. Carts never checked out are left out."
-      filter expr(state == :placed)
-      sort ordered_at: :desc
+        sender Edenflowers.Accounts.Senders.SendOtp
+      end
     end
   end
 
-  calculations do
-    calculate :match_rank,
-              :integer,
-              expr(fragment("least(?, ?)", match_rank(name, ^arg(:term)), match_rank(email, ^arg(:term)))) do
-      description "How closely the admin search term matches what a result row shows (see `match_rank`): " <>
-                    "0 exact, 1 at the start of a word, 2 elsewhere, 3 for a match in a field the row " <>
-                    "doesn't show. The search sorts by it."
+  rate_limit do
+    backend Edenflowers.RateLimiter
 
-      argument :term, :ci_string, allow_nil?: false
-    end
+    # Keyed on the lowercased address: the email is matched case-insensitively,
+    # so "Info@" and "info@" are one account and must share one allowance.
+    action :request_otp,
+      limit: 5,
+      per: :timer.minutes(15),
+      key: fn input -> "otp:request:#{String.downcase(to_string(input.arguments[:email]))}" end
 
-    calculate :matches?,
-              :boolean,
-              expr(contains(name, ^arg(:term)) or contains(email, ^arg(:term))) do
-      description "The admin customers search, case-insensitive: whether the term appears in the name or email."
-      argument :term, :ci_string, allow_nil?: false
-    end
+    action :sign_in_with_otp,
+      limit: 5,
+      per: :timer.minutes(10),
+      key: fn input -> "otp:sign_in:#{String.downcase(to_string(input.arguments[:email]))}" end
 
-    calculate :can_review?, :boolean, expr(admin or reviewer) do
-      description "Whether every page turns on the Option+Click picker for leaving review notes. " <>
-                    "`Feedback.Note`'s policies grant the same people."
-    end
+    # Each code goes to an address the customer only claims to own.
+    action :request_email_change, limit: 5, per: :timer.minutes(15)
 
-    calculate :first_name, :string, {Calculations.NamePart, source: :name, part: :first} do
-      description "Best guess from the free-text `name`. Sent to MailerLite."
-    end
-
-    calculate :last_name, :string, {Calculations.NamePart, source: :name, part: :last} do
-      description "Best guess from the free-text `name`. Sent to MailerLite."
-    end
-
-    calculate :initials, :string, {Calculations.NamePart, source: :name, part: :initials, fallback: :email} do
-      description "One or two capital letters from `name`, or the email's first, shown where there's no photo."
-    end
-
-    # A user without a promo has no usage, so the `if` turns that NULL into a strict false.
-    calculate :newsletter_offer_hidden?,
-              :boolean,
-              expr(if(newsletter_opt_in or newsletter_promo.usage > 0, true, false)) do
-      description "Whether checkout stops offering the newsletter discount: they already subscribed, " <>
-                    "or used their welcome code."
-    end
+    # Wrong codes are counted here rather than on the user: a failed confirm
+    # rolls back anything it writes. Counted before the transaction so a wrong
+    # code still counts.
+    action :confirm_email_change, limit: 5, per: :timer.minutes(10), on: :before_transaction
   end
 
-  aggregates do
-    count :placed_order_count, :placed_orders do
-      description "Placed orders, cancelled ones included."
-    end
-
-    count :recent_order_count, :placed_orders do
-      description "Placed orders in the last 12 months, cancelled ones included. Ranks the top customers."
-      filter expr(ordered_at > ago(12, :month))
-    end
-
-    max :last_ordered_at, :placed_orders, :ordered_at do
-      description "When their latest order was placed. Nil without one."
-    end
-
-    first :phone_number, :placed_orders, :customer_phone_number do
-      description "The phone number on their latest order. Users keep no phone number of their own, " <>
-                    "and the latest order's is the freshest."
-
-      sort ordered_at: :desc
-    end
-
-    first :order_locale, :placed_orders, :locale do
-      description "The language of their latest order, which an invoice to them is written in. Users keep only " <>
-                    "a newsletter language of their own."
-
-      sort ordered_at: :desc
-    end
-
-    sum :total_spent, [:placed_orders, :payments], :amount do
-      description "Money received in euros, refunds taken off (see ADR 0001), which can differ from the orders' totals."
-      default Decimal.new("0")
-    end
+  admin do
+    actor?(true)
   end
 
-  identities do
-    identity :unique_email, [:email]
+  postgres do
+    table "users"
+    repo Edenflowers.Repo
   end
 end

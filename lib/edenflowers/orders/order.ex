@@ -44,289 +44,6 @@ defmodule Edenflowers.Orders.Order do
 
   @checkout_states [:contact_details, :gift_options, :delivery, :payment]
 
-  postgres do
-    repo Edenflowers.Repo
-    table "orders"
-
-    migration_types quoted_fulfillment_fee: :decimal,
-                    quoted_free_delivery_fee: :decimal,
-                    fulfillment_fee_override: :decimal,
-                    kept_amount: :decimal,
-                    stored_grand_total: :decimal
-
-    identity_wheres_to_sql unique_cart_per_visitor: "state != 'placed'"
-
-    custom_indexes do
-      index [:user_id], concurrently: true
-    end
-
-    check_constraints do
-      check_constraint :quoted_fulfillment_fee, "orders_valid_quoted_fulfillment_fee",
-        check: "quoted_fulfillment_fee >= 0 AND quoted_fulfillment_fee = round(quoted_fulfillment_fee, 2)",
-        message: "must be a non-negative amount in whole cents"
-
-      check_constraint :quoted_free_delivery_fee, "orders_valid_quoted_free_delivery_fee",
-        check:
-          "quoted_free_delivery_fee IS NULL OR (quoted_free_delivery_fee >= 0 AND quoted_free_delivery_fee = round(quoted_free_delivery_fee, 2))",
-        message: "must be a non-negative amount in whole cents"
-
-      check_constraint :fulfillment_fee_override, "orders_valid_fulfillment_fee_override",
-        check:
-          "fulfillment_fee_override IS NULL OR (fulfillment_fee_override >= 0 AND fulfillment_fee_override = round(fulfillment_fee_override, 2))",
-        message: "must be a non-negative amount in whole cents"
-
-      # A placing path that skips Changes.SnapshotVatBreakdown fails here instead of leaving a wrong Balance.
-      check_constraint :stored_grand_total, "orders_placed_have_stored_grand_total",
-        check: "state <> 'placed' OR stored_grand_total IS NOT NULL",
-        message: "must be stored once the order is placed"
-    end
-
-    # Shared with course registrations so an order and a booking never have
-    # the same number.
-    custom_statements do
-      statement :reference_seq do
-        up "CREATE SEQUENCE reference_seq START 1400"
-        down "DROP SEQUENCE reference_seq"
-      end
-    end
-  end
-
-  def checkout_states, do: @checkout_states
-
-  state_machine do
-    # A custom order skips checkout: Jennie creates it already placed. An
-    # Occurrence starts waiting for its charge, and checkout's own
-    # finalize_checkout places it once the card is charged.
-    initial_states([:contact_details, :payment, :placed])
-    default_initial_state(:contact_details)
-
-    transitions do
-      transition(:submit_contact_details, from: :contact_details, to: :gift_options)
-      transition(:submit_gift_options, from: :gift_options, to: :delivery)
-      transition(:submit_delivery, from: :delivery, to: :payment)
-      # The customer has paid, so any step they have since stepped back to still places the order.
-      transition(:finalize_checkout, from: @checkout_states, to: :placed)
-      transition(:place_paid_by_voucher, from: :payment, to: :placed)
-      transition(:place_unpaid_occurrence, from: :payment, to: :placed)
-
-      transition(:return_to_contact_details, from: [:gift_options, :delivery, :payment], to: :contact_details)
-      transition(:return_to_gift_options, from: [:delivery, :payment], to: :gift_options)
-      transition(:return_to_delivery, from: :payment, to: :delivery)
-
-      transition(:restart_checkout, from: @checkout_states, to: :contact_details)
-    end
-  end
-
-  # The order log on the admin order page. Only what happens to an order once
-  # it is placed: checkout's cart steps would bury it, and crawlers' carts with it.
-  paper_trail do
-    # full_diff would show "from → to", but it can't track atomic updates,
-    # and checkout's payment guards depend on being atomic.
-    change_tracking_mode :changes_only
-    # Abandoned carts have no log, and a deleted Custom Order takes its log with it.
-    create_version_on_destroy? false
-    # An edit that changes only the lines changes nothing on the order row, but
-    # still belongs in the log. RecordEnteredLineItems asks to skip an edit that
-    # changed nothing at all.
-    only_when_changed? false
-    store_action_name? true
-    ignore_attributes [:inserted_at, :updated_at]
-    sensitive_attributes :redact
-
-    # Set by RecordEnteredLineItems when the lines change: what they now are,
-    # since changes_only can't see into another resource.
-    metadata :items, :string
-    # Jennie's note in the email an action sent, from before she could rewrite the whole of it.
-    metadata :email_message, :string
-    # The subject and text she sent in place of the template's, if she rewrote
-    # the email, set by its Send* change or Cancel.
-    metadata :email_subject, :string
-    # Where Jennie sent an email, when she chose an address other than the customer's.
-    metadata :email_to, :string
-    # Which delivery email SendFulfillmentEmail sent: "delivered" or "left_at_door".
-    metadata :fulfillment_email, :string
-    metadata :email_body, :string
-    # The pass-it-on card linked or removed, set by LinkPassItOnCard: the link lives on the card.
-    metadata :pass_it_on_card, :string
-
-    # on_actions only filters updates; every create is versioned unless ignored.
-    ignore_actions [:create_for_checkout, :start_gift_voucher_sale]
-
-    on_actions [
-      :finalize_checkout,
-      :place_paid_by_voucher,
-      :place_unpaid_occurrence,
-      :place_custom,
-      :edit,
-      :update_florist_note,
-      :link_pass_it_on_card,
-      :remove_pass_it_on_card,
-      :cancel,
-      :cancel_by_customer,
-      :mark_fulfilled,
-      :mark_ready,
-      :undo_ready,
-      :open_payment_link,
-      :send_order_details_email,
-      :send_order_updated_email,
-      :send_payment_failed_email,
-      :send_payment_received_email,
-      :send_payment_reminder,
-      :send_receipt_email,
-      :send_fulfillment_email,
-      :record_fulfillment_email_failure,
-      :record_receipt_email_failure,
-      :record_payment_received_email_failure,
-      :record_order_details_email_failure,
-      :record_order_updated_email_failure,
-      :record_payment_failed_email_failure,
-      :email_receipt,
-      :email_gift_voucher
-    ]
-  end
-
-  actions do
-    defaults [:read]
-  end
-
-  policies do
-    # System bypass is scoped: anything outside this list (including updates
-    # to a :placed order) falls through to the main policies.
-    bypass actor_attribute_equals(:system, true) do
-      authorize_if action([
-                     :finalize_checkout,
-                     :place_paid_by_voucher,
-                     :create_occurrence,
-                     :place_unpaid_occurrence,
-                     :start_subscription,
-                     :mark_payment_cancelled,
-                     :send_receipt_email,
-                     :send_fulfillment_email,
-                     :remind_shop,
-                     :record_fulfillment_email_failure,
-                     :record_receipt_email_failure,
-                     :record_payment_received_email_failure,
-                     :record_order_details_email_failure,
-                     :record_order_updated_email_failure,
-                     :record_payment_failed_email_failure,
-                     :send_order_details_email,
-                     :send_order_updated_email,
-                     :send_payment_failed_email,
-                     :send_payment_received_email,
-                     :record_link_payment,
-                     :record_stripe_refund,
-                     :reconcile_payment,
-                     :purge_abandoned_cart
-                   ])
-
-      # The payment link page creates its PaymentIntent on a placed order.
-      authorize_if action(:add_payment_intent_id)
-      authorize_if action(:add_customer_email)
-
-      authorize_if action_type(:read)
-    end
-
-    bypass actor_attribute_equals(:admin, true) do
-      authorize_if action([
-                     :mark_fulfilled,
-                     :mark_ready,
-                     :undo_ready,
-                     :email_fulfillment_confirmation,
-                     :sales_summary,
-                     :place_custom,
-                     :sell_gift_voucher,
-                     :edit,
-                     :quote_entered,
-                     :update_florist_note,
-                     :link_pass_it_on_card,
-                     :remove_pass_it_on_card,
-                     :cancel,
-                     :record_payment,
-                     :pay_with_gift_voucher,
-                     :undo_payment,
-                     :refund,
-                     :open_payment_link,
-                     :send_order_details_email,
-                     :send_payment_reminder,
-                     :email_receipt,
-                     :email_gift_voucher
-                   ])
-
-      authorize_if action_type(:read)
-    end
-
-    # Guest checkout: creating an order does not require authentication.
-    policy action([:create_for_checkout, :open_cart_with_code, :start_gift_voucher_sale]) do
-      authorize_if always()
-    end
-
-    # Each reads the order with the access it needs itself: the cart by the
-    # actor's read policy, the link by its token.
-    policy action([:prepare_checkout_payment, :prepare_link_payment]) do
-      authorize_if always()
-    end
-
-    bypass action(:cancel_by_customer) do
-      authorize_if expr(user_id == ^actor(:id))
-    end
-
-    policy action_type(:read) do
-      authorize_if expr(state in ^@checkout_states)
-      authorize_if expr(state == :placed and user_id == ^actor(:id))
-    end
-
-    # Placed orders are sealed for every actor; the bypasses above name the
-    # few actions that may still change one.
-    policy action_type(:update) do
-      forbid_if expr(state == :placed)
-      authorize_if expr(state in ^@checkout_states)
-    end
-  end
-
-  pub_sub do
-    module EdenflowersWeb.Endpoint
-
-    publish :restart_checkout, Events.order_checkout_restarted(:id)
-    publish :finalize_checkout, Events.order_placed(:id)
-    publish :place_paid_by_voucher, Events.order_placed(:id)
-    publish :record_link_payment, Events.order_paid(:id)
-
-    # The admin is an installed app without pull to refresh, so every change
-    # to a placed order, by anyone, refreshes the pages showing it. Carts and
-    # occurrences still waiting for payment are left out.
-    publish_all :create, Events.admin_orders(), filter: &placed?/1
-    publish_all :update, Events.admin_orders(), filter: &placed?/1
-    publish_all :destroy, Events.admin_orders(), filter: &placed?/1
-
-    # The order page follows one order, including invoices tied to it.
-    publish_all :create, Events.admin_order(:id), filter: &placed?/1
-    publish_all :update, Events.admin_order(:id), filter: &placed?/1
-    publish_all :destroy, Events.admin_order(:id), filter: &placed?/1
-
-    # The customer's own order page.
-    publish_all :update, Events.order_changed(:id), filter: &placed?/1
-
-    publish :add_promotion_with_code, Events.line_items_changed(:id)
-    publish :add_promotion_from_link, Events.line_items_changed(:id)
-    publish :clear_promotion, Events.line_items_changed(:id)
-    publish :add_gift_voucher_with_code, Events.line_items_changed(:id)
-    publish :clear_gift_voucher, Events.line_items_changed(:id)
-  end
-
-  defp placed?(%{data: %{state: :placed}}), do: true
-  defp placed?(_notification), do: false
-
-  # Every read and write returns the charged fee, so code that shows or totals
-  # an order reads `fulfillment_fee` as it did when the fee was stored.
-  preparations do
-    prepare build(load: [:fulfillment_fee])
-  end
-
-  changes do
-    change load(:fulfillment_fee), on: [:create, :update]
-    change __MODULE__.Changes.RefreshWhenRepriced, on: [:update]
-  end
-
   attributes do
     uuid_primary_key :id
 
@@ -467,6 +184,8 @@ defmodule Edenflowers.Orders.Order do
 
     timestamps()
   end
+
+  def checkout_states, do: @checkout_states
 
   relationships do
     belongs_to :user, Edenflowers.Accounts.User do
@@ -1162,5 +881,286 @@ defmodule Edenflowers.Orders.Order do
     identity :unique_occurrence, [:subscription_id, :subscription_date]
     # A browser has one cart, so two tabs adding to it at once share it.
     identity :unique_cart_per_visitor, [:visitor_id], where: expr(state != :placed)
+  end
+
+  state_machine do
+    # A custom order skips checkout: Jennie creates it already placed. An
+    # Occurrence starts waiting for its charge, and checkout's own
+    # finalize_checkout places it once the card is charged.
+    initial_states([:contact_details, :payment, :placed])
+    default_initial_state(:contact_details)
+
+    transitions do
+      transition(:submit_contact_details, from: :contact_details, to: :gift_options)
+      transition(:submit_gift_options, from: :gift_options, to: :delivery)
+      transition(:submit_delivery, from: :delivery, to: :payment)
+      # The customer has paid, so any step they have since stepped back to still places the order.
+      transition(:finalize_checkout, from: @checkout_states, to: :placed)
+      transition(:place_paid_by_voucher, from: :payment, to: :placed)
+      transition(:place_unpaid_occurrence, from: :payment, to: :placed)
+
+      transition(:return_to_contact_details, from: [:gift_options, :delivery, :payment], to: :contact_details)
+      transition(:return_to_gift_options, from: [:delivery, :payment], to: :gift_options)
+      transition(:return_to_delivery, from: :payment, to: :delivery)
+
+      transition(:restart_checkout, from: @checkout_states, to: :contact_details)
+    end
+  end
+
+  defp placed?(%{data: %{state: :placed}}), do: true
+  defp placed?(_notification), do: false
+
+  actions do
+    defaults [:read]
+  end
+
+  # Every read and write returns the charged fee, so code that shows or totals
+  # an order reads `fulfillment_fee` as it did when the fee was stored.
+  preparations do
+    prepare build(load: [:fulfillment_fee])
+  end
+
+  changes do
+    change load(:fulfillment_fee), on: [:create, :update]
+    change __MODULE__.Changes.RefreshWhenRepriced, on: [:update]
+  end
+
+  policies do
+    # System bypass is scoped: anything outside this list (including updates
+    # to a :placed order) falls through to the main policies.
+    bypass actor_attribute_equals(:system, true) do
+      authorize_if action([
+                     :finalize_checkout,
+                     :place_paid_by_voucher,
+                     :create_occurrence,
+                     :place_unpaid_occurrence,
+                     :start_subscription,
+                     :mark_payment_cancelled,
+                     :send_receipt_email,
+                     :send_fulfillment_email,
+                     :remind_shop,
+                     :record_fulfillment_email_failure,
+                     :record_receipt_email_failure,
+                     :record_payment_received_email_failure,
+                     :record_order_details_email_failure,
+                     :record_order_updated_email_failure,
+                     :record_payment_failed_email_failure,
+                     :send_order_details_email,
+                     :send_order_updated_email,
+                     :send_payment_failed_email,
+                     :send_payment_received_email,
+                     :record_link_payment,
+                     :record_stripe_refund,
+                     :reconcile_payment,
+                     :purge_abandoned_cart
+                   ])
+
+      # The payment link page creates its PaymentIntent on a placed order.
+      authorize_if action(:add_payment_intent_id)
+      authorize_if action(:add_customer_email)
+
+      authorize_if action_type(:read)
+    end
+
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if action([
+                     :mark_fulfilled,
+                     :mark_ready,
+                     :undo_ready,
+                     :email_fulfillment_confirmation,
+                     :sales_summary,
+                     :place_custom,
+                     :sell_gift_voucher,
+                     :edit,
+                     :quote_entered,
+                     :update_florist_note,
+                     :link_pass_it_on_card,
+                     :remove_pass_it_on_card,
+                     :cancel,
+                     :record_payment,
+                     :pay_with_gift_voucher,
+                     :undo_payment,
+                     :refund,
+                     :open_payment_link,
+                     :send_order_details_email,
+                     :send_payment_reminder,
+                     :email_receipt,
+                     :email_gift_voucher
+                   ])
+
+      authorize_if action_type(:read)
+    end
+
+    # Guest checkout: creating an order does not require authentication.
+    policy action([:create_for_checkout, :open_cart_with_code, :start_gift_voucher_sale]) do
+      authorize_if always()
+    end
+
+    # Each reads the order with the access it needs itself: the cart by the
+    # actor's read policy, the link by its token.
+    policy action([:prepare_checkout_payment, :prepare_link_payment]) do
+      authorize_if always()
+    end
+
+    bypass action(:cancel_by_customer) do
+      authorize_if expr(user_id == ^actor(:id))
+    end
+
+    policy action_type(:read) do
+      authorize_if expr(state in ^@checkout_states)
+      authorize_if expr(state == :placed and user_id == ^actor(:id))
+    end
+
+    # Placed orders are sealed for every actor; the bypasses above name the
+    # few actions that may still change one.
+    policy action_type(:update) do
+      forbid_if expr(state == :placed)
+      authorize_if expr(state in ^@checkout_states)
+    end
+  end
+
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish :restart_checkout, Events.order_checkout_restarted(:id)
+    publish :finalize_checkout, Events.order_placed(:id)
+    publish :place_paid_by_voucher, Events.order_placed(:id)
+    publish :record_link_payment, Events.order_paid(:id)
+
+    # The admin is an installed app without pull to refresh, so every change
+    # to a placed order, by anyone, refreshes the pages showing it. Carts and
+    # occurrences still waiting for payment are left out.
+    publish_all :create, Events.admin_orders(), filter: &placed?/1
+    publish_all :update, Events.admin_orders(), filter: &placed?/1
+    publish_all :destroy, Events.admin_orders(), filter: &placed?/1
+
+    # The order page follows one order, including invoices tied to it.
+    publish_all :create, Events.admin_order(:id), filter: &placed?/1
+    publish_all :update, Events.admin_order(:id), filter: &placed?/1
+    publish_all :destroy, Events.admin_order(:id), filter: &placed?/1
+
+    # The customer's own order page.
+    publish_all :update, Events.order_changed(:id), filter: &placed?/1
+
+    publish :add_promotion_with_code, Events.line_items_changed(:id)
+    publish :add_promotion_from_link, Events.line_items_changed(:id)
+    publish :clear_promotion, Events.line_items_changed(:id)
+    publish :add_gift_voucher_with_code, Events.line_items_changed(:id)
+    publish :clear_gift_voucher, Events.line_items_changed(:id)
+  end
+
+  # The order log on the admin order page. Only what happens to an order once
+  # it is placed: checkout's cart steps would bury it, and crawlers' carts with it.
+  paper_trail do
+    # full_diff would show "from → to", but it can't track atomic updates,
+    # and checkout's payment guards depend on being atomic.
+    change_tracking_mode :changes_only
+    # Abandoned carts have no log, and a deleted Custom Order takes its log with it.
+    create_version_on_destroy? false
+    # An edit that changes only the lines changes nothing on the order row, but
+    # still belongs in the log. RecordEnteredLineItems asks to skip an edit that
+    # changed nothing at all.
+    only_when_changed? false
+    store_action_name? true
+    ignore_attributes [:inserted_at, :updated_at]
+    sensitive_attributes :redact
+
+    # Set by RecordEnteredLineItems when the lines change: what they now are,
+    # since changes_only can't see into another resource.
+    metadata :items, :string
+    # Jennie's note in the email an action sent, from before she could rewrite the whole of it.
+    metadata :email_message, :string
+    # The subject and text she sent in place of the template's, if she rewrote
+    # the email, set by its Send* change or Cancel.
+    metadata :email_subject, :string
+    # Where Jennie sent an email, when she chose an address other than the customer's.
+    metadata :email_to, :string
+    # Which delivery email SendFulfillmentEmail sent: "delivered" or "left_at_door".
+    metadata :fulfillment_email, :string
+    metadata :email_body, :string
+    # The pass-it-on card linked or removed, set by LinkPassItOnCard: the link lives on the card.
+    metadata :pass_it_on_card, :string
+
+    # on_actions only filters updates; every create is versioned unless ignored.
+    ignore_actions [:create_for_checkout, :start_gift_voucher_sale]
+
+    on_actions [
+      :finalize_checkout,
+      :place_paid_by_voucher,
+      :place_unpaid_occurrence,
+      :place_custom,
+      :edit,
+      :update_florist_note,
+      :link_pass_it_on_card,
+      :remove_pass_it_on_card,
+      :cancel,
+      :cancel_by_customer,
+      :mark_fulfilled,
+      :mark_ready,
+      :undo_ready,
+      :open_payment_link,
+      :send_order_details_email,
+      :send_order_updated_email,
+      :send_payment_failed_email,
+      :send_payment_received_email,
+      :send_payment_reminder,
+      :send_receipt_email,
+      :send_fulfillment_email,
+      :record_fulfillment_email_failure,
+      :record_receipt_email_failure,
+      :record_payment_received_email_failure,
+      :record_order_details_email_failure,
+      :record_order_updated_email_failure,
+      :record_payment_failed_email_failure,
+      :email_receipt,
+      :email_gift_voucher
+    ]
+  end
+
+  postgres do
+    repo Edenflowers.Repo
+    table "orders"
+
+    migration_types quoted_fulfillment_fee: :decimal,
+                    quoted_free_delivery_fee: :decimal,
+                    fulfillment_fee_override: :decimal,
+                    kept_amount: :decimal,
+                    stored_grand_total: :decimal
+
+    identity_wheres_to_sql unique_cart_per_visitor: "state != 'placed'"
+
+    custom_indexes do
+      index [:user_id], concurrently: true
+    end
+
+    check_constraints do
+      check_constraint :quoted_fulfillment_fee, "orders_valid_quoted_fulfillment_fee",
+        check: "quoted_fulfillment_fee >= 0 AND quoted_fulfillment_fee = round(quoted_fulfillment_fee, 2)",
+        message: "must be a non-negative amount in whole cents"
+
+      check_constraint :quoted_free_delivery_fee, "orders_valid_quoted_free_delivery_fee",
+        check:
+          "quoted_free_delivery_fee IS NULL OR (quoted_free_delivery_fee >= 0 AND quoted_free_delivery_fee = round(quoted_free_delivery_fee, 2))",
+        message: "must be a non-negative amount in whole cents"
+
+      check_constraint :fulfillment_fee_override, "orders_valid_fulfillment_fee_override",
+        check:
+          "fulfillment_fee_override IS NULL OR (fulfillment_fee_override >= 0 AND fulfillment_fee_override = round(fulfillment_fee_override, 2))",
+        message: "must be a non-negative amount in whole cents"
+
+      # A placing path that skips Changes.SnapshotVatBreakdown fails here instead of leaving a wrong Balance.
+      check_constraint :stored_grand_total, "orders_placed_have_stored_grand_total",
+        check: "state <> 'placed' OR stored_grand_total IS NOT NULL",
+        message: "must be stored once the order is placed"
+    end
+
+    # Shared with course registrations so an order and a booking never have
+    # the same number.
+    custom_statements do
+      statement :reference_seq do
+        up "CREATE SEQUENCE reference_seq START 1400"
+        down "DROP SEQUENCE reference_seq"
+      end
+    end
   end
 end

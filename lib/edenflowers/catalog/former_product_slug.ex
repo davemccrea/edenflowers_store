@@ -11,13 +11,28 @@ defmodule Edenflowers.Catalog.FormerProductSlug do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
-  postgres do
-    table "former_product_slugs"
-    repo Edenflowers.Repo
+  attributes do
+    uuid_primary_key :id
 
-    references do
-      reference :product, on_delete: :delete
+    attribute :slug, :string do
+      description "The old slug, as it appeared in links."
+      allow_nil? false
+      public? true
     end
+
+    create_timestamp :inserted_at
+  end
+
+  relationships do
+    belongs_to :product, Edenflowers.Catalog.Product do
+      description "The product links with this slug now redirect to."
+      allow_nil? false
+      public? true
+    end
+  end
+
+  identities do
+    identity :unique_slug, [:slug]
   end
 
   actions do
@@ -49,27 +64,12 @@ defmodule Edenflowers.Catalog.FormerProductSlug do
     end
   end
 
-  attributes do
-    uuid_primary_key :id
+  postgres do
+    table "former_product_slugs"
+    repo Edenflowers.Repo
 
-    attribute :slug, :string do
-      description "The old slug, as it appeared in links."
-      allow_nil? false
-      public? true
+    references do
+      reference :product, on_delete: :delete
     end
-
-    create_timestamp :inserted_at
-  end
-
-  relationships do
-    belongs_to :product, Edenflowers.Catalog.Product do
-      description "The product links with this slug now redirect to."
-      allow_nil? false
-      public? true
-    end
-  end
-
-  identities do
-    identity :unique_slug, [:slug]
   end
 end
