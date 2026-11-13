@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.Admin.OrdersLive do
   @moduledoc """
-  Searchable, sortable admin order list. It opens on open orders, latest
-  fulfillment date first.
+  Searchable, sortable admin order list. It opens on open orders, soonest
+  fulfillment date first, so overdue and today's orders lead.
   """
 
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
@@ -16,7 +16,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
   alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
 
-  @default_view %{"open" => "true", "sort" => "-fulfillment_date"}
+  @default_view %{"open" => "true", "sort" => "fulfillment_date"}
 
   @impl true
   def mount(_params, _session, socket) do
