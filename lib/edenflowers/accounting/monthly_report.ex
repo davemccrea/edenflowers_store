@@ -24,7 +24,14 @@ defmodule Edenflowers.Accounting.MonthlyReport do
 
   The payables sheet lists the expenses still unpaid at month end. Cash basis
   only holds during the year: the accounts must be put on an accrual basis at
-  year end, which needs December's unpaid purchases (KPL 2:4 §, 4:6 §).
+  year end, which needs December's unpaid purchases (KPL 2:3 §, 4:6 §). Cash
+  basis VAT also covers only Finnish purchases: an EU purchase or a reverse
+  charge service is reported by its invoice, not its payment. So the sheet
+  carries the vendor's VAT number, and an unpaid purchase's document comes in
+  the month it is dated as well as the month it is paid.
+
+  Cash basis VAT on a sale still falls due 12 months after its supply, paid or
+  not (AVL 137 §), so each receivable carries that date.
 
   The bank statement is the month's booked transactions on the shop's account,
   as a CSV for the accountant's bookkeeping. If the bank can't be read, or isn't
@@ -86,6 +93,12 @@ defmodule Edenflowers.Accounting.MonthlyReport do
              authorize?: false
            ),
          {:ok, unpaid_expenses} <- Expenses.list_expenses_unpaid_at(last, authorize?: false),
+         payable_rows =
+           unpaid_expenses
+           |> Enum.with_index(1)
+           |> Task.async_stream(&fetch_unpaid_receipt(&1, first), max_concurrency: 5, timeout: :infinity)
+           |> Enum.map(fn {:ok, row} -> row end),
+         unpaid_receipts = for({_n, _expense, name, body} <- payable_rows, body, do: {~c"obetalda/#{name}", body}),
          rows =
            expenses
            |> Enum.with_index(1)
@@ -102,14 +115,14 @@ defmodule Edenflowers.Accounting.MonthlyReport do
            expenses_sheet(rows),
            stripe_sheet(transactions),
            receivables_sheet(open_invoices),
-           payables_sheet(unpaid_expenses)
+           payables_sheet(payable_rows)
          ],
          workbook = %Workbook{sheets: Enum.map(sheets, &with_basic_font/1)},
          {:ok, {_, xlsx}} <- Elixlsx.write_to_memory(workbook, spreadsheet),
          invoice_files =
            for(document <- invoice_documents, do: {~c"kundfakturor/#{InvoicePdf.filename(document)}", document.pdf}),
          {bank_files, missing} = bank_statement(first, last, label, options),
-         files = [{~c"#{spreadsheet}", xlsx} | receipts ++ invoice_files ++ bank_files],
+         files = [{~c"#{spreadsheet}", xlsx} | receipts ++ unpaid_receipts ++ invoice_files ++ bank_files],
          {:ok, {_, zip}} <- :zip.create(~c"redovisning-#{label}.zip", files, [:memory]) do
       {:ok, "redovisning-#{label}.zip", zip, missing}
     end
@@ -247,6 +260,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
 
     rate_totals =
       rows
+      |> Enum.reject(&is_nil(&1.rate))
       |> Enum.group_by(& &1.rate)
       |> Enum.sort_by(fn {rate, _} -> rate end, {:desc, Decimal})
       |> Enum.map(fn {rate, rate_rows} ->
@@ -262,9 +276,22 @@ defmodule Edenflowers.Accounting.MonthlyReport do
     }
   end
 
+  # shortcut: split by the order's VAT breakdown as it is now, not as it was when the money moved, so editing a
+  # mixed-rate order after a payment shifts cents between rates; store the split on the Payment if that gets common.
   defp sale_rows(%Payment{order: %{} = order} = payment) do
-    for {rate, gross} <- split_by_rate(payment.amount, order.vat_breakdown),
-        do: sale(payment, order.order_reference, ~t"order", rate, gross)
+    case split_by_rate(payment.amount, order.vat_breakdown) do
+      # An order priced down to nothing has no rate left to file its money under.
+      # The row stays, without a rate, so the sheet still sums to the money that moved.
+      [] ->
+        [
+          payment
+          |> sale(order.order_reference, ~t"order", Decimal.new(0), payment.amount)
+          |> Map.merge(%{rate: nil, net: nil, vat: nil})
+        ]
+
+      shares ->
+        for {rate, gross} <- shares, do: sale(payment, order.order_reference, ~t"order", rate, gross)
+    end
   end
 
   defp sale_rows(%Payment{invoice_id: id, invoice: invoice} = payment) when not is_nil(id) do
@@ -312,7 +339,11 @@ defmodule Edenflowers.Accounting.MonthlyReport do
 
   defp sale_totals(rows) do
     for field <- [:net, :vat, :gross] do
-      rows |> Enum.map(&Map.fetch!(&1, field)) |> Enum.reduce(Decimal.new("0.00"), &Decimal.add/2) |> amount_cell()
+      rows
+      |> Enum.map(&Map.fetch!(&1, field))
+      |> Enum.reject(&is_nil/1)
+      |> Enum.reduce(Decimal.new("0.00"), &Decimal.add/2)
+      |> amount_cell()
     end
   end
 
@@ -339,6 +370,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
     }
   end
 
+  defp rate_cell(nil), do: nil
   defp rate_cell(rate), do: [Decimal.to_float(rate), num_format: "0.0%"]
 
   defp paid_expenses(first, last) do
@@ -350,10 +382,10 @@ defmodule Edenflowers.Accounting.MonthlyReport do
     end
   end
 
-  defp receipt_name(n, expense, content_type) do
+  defp receipt_name(n, date, expense, content_type) do
     number = n |> Integer.to_string() |> String.pad_leading(3, "0")
     extension = content_type |> MIME.extensions() |> List.first("pdf")
-    "#{number}_#{Date.to_iso8601(expense.paid_on)}_#{ascii_vendor(expense.vendor_name)}.#{extension}"
+    "#{number}_#{Date.to_iso8601(date)}_#{ascii_vendor(expense.vendor_name)}.#{extension}"
   end
 
   defp ascii_vendor(nil), do: ""
@@ -365,12 +397,19 @@ defmodule Edenflowers.Accounting.MonthlyReport do
     |> String.replace(~r/[^A-Za-z0-9-]/, "")
   end
 
-  defp fetch_receipt({expense, n}) do
+  # An unpaid purchase's document goes out once while unpaid, in the month it is dated.
+  defp fetch_unpaid_receipt({expense, n}, first) do
+    if Date.before?(expense.date, first),
+      do: {n, expense, :sent_earlier, nil},
+      else: fetch_receipt({expense, n}, expense.date)
+  end
+
+  defp fetch_receipt({expense, n}, date \\ nil) do
     organization_id = Application.get_env(:edenflowers, :papra_organization_id)
 
     case PapraAPI.impl().fetch_document(organization_id, expense.document_id) do
       {:ok, %{body: body, content_type: content_type}} ->
-        {n, expense, receipt_name(n, expense, content_type), body}
+        {n, expense, receipt_name(n, date || expense.paid_on, expense, content_type), body}
 
       {:error, error} ->
         Logger.warning("Receipt #{expense.document_id} couldn't be fetched for the monthly report: #{inspect(error)}")
@@ -497,6 +536,8 @@ defmodule Edenflowers.Accounting.MonthlyReport do
       ~t"Invoice number",
       ~t"Invoice date",
       ~t"Due date",
+      # Translators: column heading. The date 12 months after supply, when VAT on an unpaid sale falls due.
+      ~t"VAT reported by",
       ~t"Buyer",
       ~t"Invoice amount",
       ~t"Unpaid at month end"
@@ -508,6 +549,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
           invoice.number,
           date_cell(invoice.invoice_date),
           date_cell(invoice.due_date),
+          date_cell(invoice.supply_date && Date.shift(invoice.supply_date, month: 12)),
           invoice.buyer,
           amount_cell(invoice.amount),
           amount_cell(invoice.amount_open_at)
@@ -520,38 +562,47 @@ defmodule Edenflowers.Accounting.MonthlyReport do
       name: "Kundfordringar",
       rows:
         [Enum.map(headings, &[&1, bold: true]) | rows] ++
-          [[], [nil, nil, nil, nil, [~t"Sum", bold: true], amount_cell(total)]]
+          [[], [nil, nil, nil, nil, nil, [~t"Sum", bold: true], amount_cell(total)]]
     }
   end
 
-  # Their receipts arrive in the report of the month they are paid.
-  defp payables_sheet(expenses) do
+  defp payables_sheet(rows) do
+    expenses = Enum.map(rows, fn {_n, expense, _receipt, _body} -> expense end)
+
     headings = [
       ~t"Invoice date",
       ~t"Vendor",
+      ~t"Vendor VAT number",
       ~t"Category",
       ~t"Currency",
       ~t"Total",
       ~t"VAT",
-      ~t"Net"
+      ~t"Net",
+      ~t"Receipt file"
     ]
 
     rows =
-      Enum.map(expenses, fn expense ->
+      Enum.map(rows, fn {_n, expense, receipt, _body} ->
         [
           date_cell(expense.date),
           expense.vendor_name,
+          expense.vendor_vat_number,
           expense.category && Components.category_label(expense.category),
           currency(expense.currency),
           amount_cell(expense.total_amount),
           amount_cell(expense.vat_amount),
-          amount_cell(net(expense))
+          amount_cell(net(expense)),
+          case receipt do
+            :sent_earlier -> nil
+            nil -> ~t"Missing: couldn't be fetched from Papra"
+            name -> name
+          end
         ]
       end)
 
     %Sheet{
       name: "Leverantörsskulder",
-      rows: [Enum.map(headings, &[&1, bold: true]) | rows] ++ [[]] ++ currency_totals(expenses, 2)
+      rows: [Enum.map(headings, &[&1, bold: true]) | rows] ++ [[]] ++ currency_totals(expenses, 3)
     }
   end
 

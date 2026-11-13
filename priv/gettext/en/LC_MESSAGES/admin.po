@@ -3426,146 +3426,150 @@ msgstr ""
 msgid "your own fee replaces this"
 msgstr ""
 
-#: lib/edenflowers/accounting/monthly_report.ex:388
-#: lib/edenflowers/accounting/monthly_report.ex:532
+#: lib/edenflowers/accounting/monthly_report.ex:427
+#: lib/edenflowers/accounting/monthly_report.ex:576
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Category"
 msgstr "Category"
 
-#: lib/edenflowers/accounting/monthly_report.ex:140
-#: lib/edenflowers/accounting/monthly_report.ex:389
-#: lib/edenflowers/accounting/monthly_report.ex:533
+#: lib/edenflowers/accounting/monthly_report.ex:153
+#: lib/edenflowers/accounting/monthly_report.ex:428
+#: lib/edenflowers/accounting/monthly_report.ex:577
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Currency"
 msgstr "Currency"
 
-#: lib/edenflowers/accounting/monthly_report.ex:245
+#: lib/edenflowers/accounting/monthly_report.ex:258
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Gross"
 msgstr "Gross"
 
-#: lib/edenflowers/accounting/monthly_report.ex:385
-#: lib/edenflowers/accounting/monthly_report.ex:498
-#: lib/edenflowers/accounting/monthly_report.ex:530
+#: lib/edenflowers/accounting/monthly_report.ex:424
+#: lib/edenflowers/accounting/monthly_report.ex:537
+#: lib/edenflowers/accounting/monthly_report.ex:573
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Invoice date"
 msgstr "Invoice date"
 
-#: lib/edenflowers/accounting/monthly_report.ex:414
+#: lib/edenflowers/accounting/monthly_report.ex:453
+#: lib/edenflowers/accounting/monthly_report.ex:597
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Missing: couldn't be fetched from Papra"
 msgstr "Missing: couldn't be fetched from Papra"
 
-#: lib/edenflowers/accounting/monthly_report.ex:243
-#: lib/edenflowers/accounting/monthly_report.ex:392
-#: lib/edenflowers/accounting/monthly_report.ex:536
+#: lib/edenflowers/accounting/monthly_report.ex:256
+#: lib/edenflowers/accounting/monthly_report.ex:431
+#: lib/edenflowers/accounting/monthly_report.ex:580
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Net"
 msgstr "Net"
 
-#: lib/edenflowers/accounting/monthly_report.ex:238
-#: lib/edenflowers/accounting/monthly_report.ex:321
-#: lib/edenflowers/accounting/monthly_report.ex:384
+#: lib/edenflowers/accounting/monthly_report.ex:251
+#: lib/edenflowers/accounting/monthly_report.ex:352
+#: lib/edenflowers/accounting/monthly_report.ex:423
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Paid date"
 msgstr "Paid date"
 
-#: lib/edenflowers/accounting/monthly_report.ex:241
-#: lib/edenflowers/accounting/monthly_report.ex:321
+#: lib/edenflowers/accounting/monthly_report.ex:254
+#: lib/edenflowers/accounting/monthly_report.ex:352
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Payment method"
 msgstr "Payment method"
 
-#: lib/edenflowers/accounting/monthly_report.ex:393
+#: lib/edenflowers/accounting/monthly_report.ex:432
+#: lib/edenflowers/accounting/monthly_report.ex:581
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Receipt file"
 msgstr "Receipt file"
 
-#: lib/edenflowers/accounting/monthly_report.ex:142
-#: lib/edenflowers/accounting/monthly_report.ex:239
-#: lib/edenflowers/accounting/monthly_report.ex:321
+#: lib/edenflowers/accounting/monthly_report.ex:155
+#: lib/edenflowers/accounting/monthly_report.ex:252
+#: lib/edenflowers/accounting/monthly_report.ex:352
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Reference"
 msgstr "Reference"
 
-#: lib/edenflowers/accounting/monthly_report.ex:383
+#: lib/edenflowers/accounting/monthly_report.ex:422
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Row number"
 msgstr "No."
 
-#: lib/edenflowers/accounting/monthly_report.ex:240
+#: lib/edenflowers/accounting/monthly_report.ex:253
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Source"
 msgstr "Source"
 
-#: lib/edenflowers/accounting/monthly_report.ex:256
-#: lib/edenflowers/accounting/monthly_report.ex:338
-#: lib/edenflowers/accounting/monthly_report.ex:432
-#: lib/edenflowers/accounting/monthly_report.ex:523
+#: lib/edenflowers/accounting/monthly_report.ex:270
+#: lib/edenflowers/accounting/monthly_report.ex:369
+#: lib/edenflowers/accounting/monthly_report.ex:471
+#: lib/edenflowers/accounting/monthly_report.ex:565
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Sum"
 msgstr "Sum"
 
-#: lib/edenflowers/accounting/monthly_report.ex:390
-#: lib/edenflowers/accounting/monthly_report.ex:534
+#: lib/edenflowers/accounting/monthly_report.ex:429
+#: lib/edenflowers/accounting/monthly_report.ex:578
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Total"
 msgstr "Total"
 
-#: lib/edenflowers/accounting/monthly_report.ex:253
+#: lib/edenflowers/accounting/monthly_report.ex:267
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Total per VAT rate"
 msgstr "Total per VAT rate"
 
-#: lib/edenflowers/accounting/monthly_report.ex:244
-#: lib/edenflowers/accounting/monthly_report.ex:391
-#: lib/edenflowers/accounting/monthly_report.ex:535
+#: lib/edenflowers/accounting/monthly_report.ex:257
+#: lib/edenflowers/accounting/monthly_report.ex:430
+#: lib/edenflowers/accounting/monthly_report.ex:579
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "VAT"
 msgstr "VAT"
 
-#: lib/edenflowers/accounting/monthly_report.ex:242
+#: lib/edenflowers/accounting/monthly_report.ex:255
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "VAT rate"
 msgstr "VAT rate"
 
-#: lib/edenflowers/accounting/monthly_report.ex:386
-#: lib/edenflowers/accounting/monthly_report.ex:531
+#: lib/edenflowers/accounting/monthly_report.ex:425
+#: lib/edenflowers/accounting/monthly_report.ex:574
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Vendor"
 msgstr "Vendor"
 
-#: lib/edenflowers/accounting/monthly_report.ex:387
+#: lib/edenflowers/accounting/monthly_report.ex:426
+#: lib/edenflowers/accounting/monthly_report.ex:575
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Vendor VAT number"
 msgstr "Vendor VAT number"
 
-#: lib/edenflowers/accounting/monthly_report.ex:281
+#: lib/edenflowers/accounting/monthly_report.ex:308
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "course"
 msgstr "course"
 
-#: lib/edenflowers/accounting/monthly_report.ex:267
+#: lib/edenflowers/accounting/monthly_report.ex:288
+#: lib/edenflowers/accounting/monthly_report.ex:293
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "order"
@@ -3908,31 +3912,31 @@ msgstr ""
 msgid "This invoice is paid, so there is nothing to send."
 msgstr ""
 
-#: lib/edenflowers/accounting/monthly_report.ex:500
+#: lib/edenflowers/accounting/monthly_report.ex:541
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Buyer"
 msgstr ""
 
-#: lib/edenflowers/accounting/monthly_report.ex:499
+#: lib/edenflowers/accounting/monthly_report.ex:538
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Due date"
 msgstr ""
 
-#: lib/edenflowers/accounting/monthly_report.ex:501
+#: lib/edenflowers/accounting/monthly_report.ex:542
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Invoice amount"
 msgstr ""
 
-#: lib/edenflowers/accounting/monthly_report.ex:497
+#: lib/edenflowers/accounting/monthly_report.ex:536
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Invoice number"
 msgstr ""
 
-#: lib/edenflowers/accounting/monthly_report.ex:502
+#: lib/edenflowers/accounting/monthly_report.ex:543
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Unpaid at month end"
@@ -4122,7 +4126,7 @@ msgstr ""
 msgid "Total incl. VAT"
 msgstr ""
 
-#: lib/edenflowers/accounting/monthly_report.ex:274
+#: lib/edenflowers/accounting/monthly_report.ex:301
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "invoice"
@@ -4473,32 +4477,32 @@ msgstr ""
 msgid "Leave empty if unpaid. A future date means it's scheduled."
 msgstr ""
 
-#: lib/edenflowers/accounting/monthly_report.ex:139
-#: lib/edenflowers/accounting/monthly_report.ex:321
+#: lib/edenflowers/accounting/monthly_report.ex:152
+#: lib/edenflowers/accounting/monthly_report.ex:352
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Amount"
 msgstr ""
 
-#: lib/edenflowers/accounting/monthly_report.ex:144
+#: lib/edenflowers/accounting/monthly_report.ex:157
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Archive ID"
 msgstr ""
 
-#: lib/edenflowers/accounting/monthly_report.ex:138
+#: lib/edenflowers/accounting/monthly_report.ex:151
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Booking date"
 msgstr ""
 
-#: lib/edenflowers/accounting/monthly_report.ex:143
+#: lib/edenflowers/accounting/monthly_report.ex:156
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Message"
 msgstr ""
 
-#: lib/edenflowers/accounting/monthly_report.ex:141
+#: lib/edenflowers/accounting/monthly_report.ex:154
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Payee or payer"
@@ -5619,4 +5623,10 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/overview_live.ex:966
 #, elixir-autogen, elixir-format
 msgid "Thunder"
+msgstr ""
+
+#: lib/edenflowers/accounting/monthly_report.ex:540
+#, elixir-autogen, elixir-format
+msgctxt "accounting report"
+msgid "VAT reported by"
 msgstr ""

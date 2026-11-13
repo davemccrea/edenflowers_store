@@ -157,6 +157,17 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
              october |> unzip() |> Map.fetch!("rapport-2026-10.xlsx") |> read_sheet(1)
   end
 
+  test "a refund of an order since priced down to nothing stays on the sales sheet, without a rate" do
+    order = sales_order("1004", vat_breakdown: [])
+    generate(payment(order_id: order.id, amount: Decimal.new("-85.00"), paid_at: ~U[2026-09-02 08:00:00Z]))
+
+    assert {:ok, _, zip, _} = MonthlyReport.build(2026, 9)
+    [_headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(1)
+
+    assert [[_date, "1004", "beställning", "Stripe", nil, nil, nil, "-85.0"], [], total] = rows
+    assert total == [nil, nil, nil, "Summa", nil, "0.0", "0.0", "-85.0"]
+  end
+
   test "voucher purchases go on their own sheet, and what a voucher pays for is a sale at its rates" do
     sale = sales_order("1004", vat_breakdown: [])
 
@@ -268,6 +279,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
              "kvitton/001_2026-09-03_Kukkatukku-Oy.pdf",
              "kvitton/002_2026-09-11_Adobe.pdf",
              "kvitton/003_2026-09-20_Tyokalu-Ab.png",
+             "obetalda/001_2026-09-04_Unpaid-Oy.pdf",
              "rapport-2026-09.xlsx"
            ]
 
@@ -315,14 +327,18 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     assert List.last(adobe) == "002_2026-09-11_Adobe.pdf"
   end
 
-  test "counts an invoice in the month it was paid" do
+  test "counts an invoice in the month it was paid, and sends it unpaid in the month it is dated" do
     create_expense("doc-late", "Late Oy", ~D[2026-08-25], "EUR", "50.00", "10.00", paid_on: ~D[2026-09-02])
 
     stub(PapraAPI.Mock, :fetch_document, fn _, _ -> {:ok, %{body: "%PDF", content_type: "application/pdf"}} end)
 
     assert {:ok, _, august, _} = MonthlyReport.build(2026, 8)
-    refute Map.has_key?(unzip(august), "kvitton/001_2026-09-02_Late-Oy.pdf")
-    assert Map.keys(unzip(august)) == ["kontoutdrag-2026-08.csv", "rapport-2026-08.xlsx"]
+
+    assert august |> unzip() |> Map.keys() |> Enum.sort() == [
+             "kontoutdrag-2026-08.csv",
+             "obetalda/001_2026-08-25_Late-Oy.pdf",
+             "rapport-2026-08.xlsx"
+           ]
 
     assert {:ok, _, september, _} = MonthlyReport.build(2026, 9)
     assert Map.has_key?(unzip(september), "kvitton/001_2026-09-02_Late-Oy.pdf")
@@ -514,6 +530,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
                "Fakturanummer",
                "Fakturadatum",
                "Förfallodag",
+               "Moms redovisas senast",
                "Köpare",
                "Fakturabelopp",
                "Obetalt vid månadens slut"
@@ -521,7 +538,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
 
       {invoices, [[] | totals]} = Enum.split_while(rows, &(&1 != []))
 
-      assert Enum.map(invoices, fn [number, _date, _due, buyer, amount, open] ->
+      assert Enum.map(invoices, fn [number, _date, _due, _vat_due, buyer, amount, open] ->
                {number, buyer, amount, open}
              end) == [
                {"#{ctx.open.number}", "Ada Lovelace", "50.0", "50.0"},
@@ -531,11 +548,13 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
                {"#{ctx.undone.number}", "Kukka Oy", "50.0", "50.0"}
              ]
 
-      assert [[_number, date, due | _] | _] = invoices
+      assert [[_number, date, due, vat_due | _] | _] = invoices
       assert date == excel_date(~D[2026-09-01])
       assert due == excel_date(~D[2026-09-15])
+      # 12 months after the date of supply (AVL 137 §).
+      assert vat_due == excel_date(~D[2027-09-01])
 
-      assert totals == [[nil, nil, nil, nil, "Summa", "230.0"]]
+      assert totals == [[nil, nil, nil, nil, nil, "Summa", "230.0"]]
     end
 
     test "leaves the sales sheet counting only the month's payments", _ctx do
@@ -587,6 +606,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     create_expense("doc-scheduled", "Scheduled Ab", ~D[2026-09-28], "SEK", "100.00", "20.00", paid_on: ~D[2026-10-14])
     create_expense("doc-paid", "Paid Oy", ~D[2026-09-10], "EUR", "5.00", "1.00", paid_on: ~D[2026-09-15])
     create_expense("doc-october", "October Oy", ~D[2026-10-02], "EUR", "5.00", "1.00", paid_on: nil)
+    create_expense("doc-august", "August Oy", ~D[2026-08-20], "EUR", "5.00", "1.00", paid_on: nil)
 
     stub(PapraAPI.Mock, :fetch_document, fn _, _ -> {:ok, %{body: "%PDF", content_type: "application/pdf"}} end)
 
@@ -594,11 +614,26 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     [_headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(6)
 
     {expenses, [[] | totals]} = Enum.split_while(rows, &(&1 != []))
-    assert Enum.map(expenses, &Enum.at(&1, 1)) == ["Later Oy", "Unpaid Oy", "Scheduled Ab"]
+    assert Enum.map(expenses, &Enum.at(&1, 1)) == ["August Oy", "Later Oy", "Unpaid Oy", "Scheduled Ab"]
+    assert Enum.map(expenses, &Enum.at(&1, 2)) == List.duplicate("FI12345678", 4)
+
+    # Each document goes out in the month it is dated, so August's went with August's report.
+    assert Enum.map(expenses, &Enum.at(&1, 8)) == [
+             nil,
+             "002_2026-09-20_Later-Oy.pdf",
+             "003_2026-09-25_Unpaid-Oy.pdf",
+             "004_2026-09-28_Scheduled-Ab.pdf"
+           ]
+
+    assert zip |> unzip() |> Map.keys() |> Enum.filter(&String.starts_with?(&1, "obetalda/")) |> Enum.sort() == [
+             "obetalda/002_2026-09-20_Later-Oy.pdf",
+             "obetalda/003_2026-09-25_Unpaid-Oy.pdf",
+             "obetalda/004_2026-09-28_Scheduled-Ab.pdf"
+           ]
 
     assert totals == [
-             [nil, nil, "Summa", "EUR", "50.0", "10.0", "40.0"],
-             [nil, nil, "Summa", "SEK", "100.0", "20.0", "80.0"]
+             [nil, nil, nil, "Summa", "EUR", "55.0", "11.0", "44.0"],
+             [nil, nil, nil, "Summa", "SEK", "100.0", "20.0", "80.0"]
            ]
   end
 
