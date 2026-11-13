@@ -58,6 +58,11 @@ defmodule Edenflowers.External.ClaudeAPI do
       type: :string,
       required: true,
       doc: "Overall extraction certainty across all fields: high, medium, or low."
+    ],
+    uncertainty: [
+      type: :string,
+      doc:
+        "Only when confidence is not high: what you were unsure of and why, in one short sentence in Finland Swedish, e.g. which field was hard to read."
     ]
   ]
 
@@ -68,6 +73,7 @@ defmodule Edenflowers.External.ClaudeAPI do
   Decide whether the document shows it has already been paid, or is an invoice still to be paid.
   Omit any field you cannot determine with reasonable confidence.
   Set confidence to reflect your overall certainty across all fields.
+  When it is not high, say in uncertainty what you were unsure of, so the shop owner knows what to check.
   """
 
   @translation_model "anthropic:claude-opus-5-5"

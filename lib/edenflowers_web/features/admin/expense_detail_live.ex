@@ -13,7 +13,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
 
-  @loads [:overdue, :scheduled, :needs_review, :bank_transaction]
+  @loads [:overdue, :scheduled, :needs_review, :review_reasons, :bank_transaction]
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -57,7 +57,6 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
               <.badge :if={@expense.paid_on && !@expense.scheduled} tone={:success} icon="hero-check">
                 {~t"Paid #{date = Format.date(@expense.paid_on, @locale)}"}
               </.badge>
-              <.badge :if={@expense.matched_by_amount} tone={:attention}>{~t"Matched by amount"}</.badge>
               <.badge :if={@expense.needs_review} tone={:attention}>{~t"Needs review"}</.badge>
             </span>
           </:subtitle>
@@ -165,6 +164,12 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           </.form>
 
           <aside class="order-first flex flex-col gap-6 xl:order-none">
+            <.widget :if={@expense.needs_review} id="expense-review" title={~t"What to check"}>
+              <ul class="text-base-content/75 list-disc space-y-1.5 pl-5 text-sm">
+                <li :for={reason <- @expense.review_reasons}>{review_reason(reason, @expense)}</li>
+              </ul>
+            </.widget>
+
             <.widget id="expense-summary" title={~t"Total amount"}>
               <p class="text-base-content truncate text-3xl font-semibold tabular-nums tracking-tight">
                 <span :if={@expense.total_amount && @expense.currency}>
@@ -317,4 +322,17 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   defp build_form(expense, actor) do
     AshPhoenix.Form.for_update(expense, :correct, actor: actor) |> to_form()
   end
+
+  defp review_reason(:matched_by_amount, _expense),
+    do: ~t"Marked paid from a bank payment of the same amount that quoted no reference. Check it's the right payment."
+
+  defp review_reason(:missing_date, _expense), do: ~t"No date found."
+  defp review_reason(:missing_vendor, _expense), do: ~t"No vendor found."
+  defp review_reason(:missing_total, _expense), do: ~t"No total amount found."
+  defp review_reason(:missing_currency, _expense), do: ~t"No currency found."
+
+  defp review_reason(:unsure, %{uncertainty: nil}),
+    do: ~t"Claude was unsure of the reading. Compare the details with the document."
+
+  defp review_reason(:unsure, expense), do: ~t"Claude was unsure: #{note = expense.uncertainty}"
 end

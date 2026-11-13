@@ -74,6 +74,7 @@ defmodule Edenflowers.Expenses.Expense do
     notifiers: [Ash.Notifier.PubSub]
 
   alias Edenflowers.Events
+  alias Edenflowers.Expenses.Calculations
   alias Edenflowers.Expenses.Changes
 
   attributes do
@@ -153,6 +154,11 @@ defmodule Edenflowers.Expenses.Expense do
       allow_nil? false
     end
 
+    attribute :uncertainty, :string do
+      description "What Claude was unsure of when confidence isn't :high, in Finland Swedish, so Jennie knows " <>
+                    "what to check. Nil for expenses read before Claude was asked."
+    end
+
     attribute :processed_at, :utc_datetime do
       description "When Claude last extracted it from its document."
       allow_nil? false
@@ -225,7 +231,11 @@ defmodule Edenflowers.Expenses.Expense do
                         is_nil(currency)))
               ) do
       description "Claude was unsure or left a required field empty, or the bank sync marked it paid by amount " <>
-                    "alone, and Jennie hasn't saved it since."
+                    "alone, and Jennie hasn't saved it since. review_reasons says which."
+    end
+
+    calculate :review_reasons, {:array, :atom}, Calculations.ReviewReasons do
+      description "Why it needs review, for Jennie's page: empty when needs_review is false."
     end
   end
 
@@ -259,6 +269,7 @@ defmodule Edenflowers.Expenses.Expense do
         :category,
         :description,
         :confidence,
+        :uncertainty,
         :reference_number,
         :processed_at
       ]
@@ -276,7 +287,8 @@ defmodule Edenflowers.Expenses.Expense do
         :currency,
         :category,
         :description,
-        :confidence
+        :confidence,
+        :uncertainty
       ]
 
       change set_attribute(:processed_at, &DateTime.utc_now/0)

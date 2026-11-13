@@ -175,11 +175,11 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     assert has_element?(list, "[data-item-id]", "Kukkatukku")
 
     {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
-    assert render(view) =~ "Matched by amount"
+    assert has_element?(view, "#expense-review li", "bank payment of the same amount")
     assert render(view) =~ "Needs review"
 
     view |> element("#expense-actions button", "Mark unpaid") |> render_click()
-    refute render(view) =~ "Matched by amount"
+    refute has_element?(view, "#expense-review")
     refute render(view) =~ "Needs review"
   end
 

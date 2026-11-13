@@ -58,9 +58,21 @@ defmodule Edenflowers.Expenses.ExpenseTest do
         )
 
       assert [false, true, true] == Enum.map([sure, unsure, undated], &needs_review?/1)
+      assert [[], [:unsure], [:missing_date]] == Enum.map([sure, unsure, undated], &review_reasons/1)
 
       {:ok, saved} = Expenses.correct_expense(unsure, %{}, actor: admin_actor())
       refute needs_review?(saved)
+      assert review_reasons(saved) == []
+    end
+
+    test "a payment matched by amount alone is a reason even after Jennie saved Claude's reading" do
+      {:ok, expense} = Expenses.ingest_expense(%{@valid_attrs | confidence: "low"}, actor: system_actor())
+      {:ok, saved} = Expenses.correct_expense(expense, %{}, actor: admin_actor())
+
+      {:ok, matched} =
+        Expenses.mark_expense_paid_from_bank(saved, ~D[2026-06-02], %{matched_by_amount: true}, actor: system_actor())
+
+      assert review_reasons(matched) == [:matched_by_amount]
     end
 
     test "a draft missing its date, vendor, total or currency is stored but can't be saved until filled in" do
@@ -238,6 +250,7 @@ defmodule Edenflowers.Expenses.ExpenseTest do
   end
 
   defp needs_review?(expense), do: Ash.load!(expense, :needs_review, authorize?: false).needs_review
+  defp review_reasons(expense), do: Ash.load!(expense, :review_reasons, authorize?: false).review_reasons
   defp overdue?(expense), do: Ash.load!(expense, :overdue, authorize?: false).overdue
 
   defp system_actor, do: %{system: true}
