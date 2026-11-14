@@ -54,24 +54,25 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       refute has_element?(view, "[data-testid='address-confirmation']")
     end
 
-    test "looks the address up in the customer's language", %{conn: conn, delivery_option: delivery_option} do
-      test_pid = self()
+    for {locale, shown} <- [{"sv-FI", "Handelsesplanaden 20, 65100 Vasa"}, {"fi-FI", "Kauppapuistikko 20, 65100 Vaasa"}] do
+      test "shows a #{locale} customer the address in their language", %{conn: conn, delivery_option: delivery_option} do
+        stub(Edenflowers.External.HereAPI.Mock, :geocode, fn _query ->
+          {:ok,
+           {%{fi: "Kauppapuistikko 20, 65100 Vaasa", sv: "Handelsesplanaden 20, 65100 Vasa"}, "63.0931,21.6167",
+            "here-id-123"}}
+        end)
 
-      stub(Edenflowers.External.HereAPI.Mock, :geocode, fn _query ->
-        send(test_pid, {:geocode_locale, Gettext.get_locale(EdenflowersWeb.Gettext)})
-        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
-      end)
+        stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)
 
-      stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)
+        conn = Plug.Test.init_test_session(conn, %{Localize.Plug.PutLocale.session_key() => unquote(locale)})
+        {:ok, view, _html} = live(conn, ~p"/checkout")
 
-      conn = Plug.Test.init_test_session(conn, %{Localize.Plug.PutLocale.session_key() => "sv-FI"})
-      {:ok, view, _html} = live(conn, ~p"/checkout")
+        select_delivery_option(view, delivery_option.id)
+        blur_address(view, "Kauppapuistikko 20")
+        render_async(view, 500)
 
-      select_delivery_option(view, delivery_option.id)
-      blur_address(view, "Stadsgatan 3")
-      render_async(view, 500)
-
-      assert_received {:geocode_locale, "sv"}
+        assert view |> element("[data-testid='address-confirmation']") |> render() =~ unquote(shown)
+      end
     end
 
     test "address not found shows field error", %{conn: conn, delivery_option: delivery_option} do
@@ -89,7 +90,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
     test "out of delivery range shows field error", %{conn: conn, delivery_option: delivery_option} do
       stub(Edenflowers.External.HereAPI.Mock, :geocode, fn _query ->
-        {:ok, {"Somewhere Far Away 1, 99999 Nowhere", "70.0000,30.0000", "here-id-456"}}
+        {:ok,
+         {%{fi: "Somewhere Far Away 1, 99999 Nowhere", sv: "Somewhere Far Away 1, 99999 Nowhere"}, "70.0000,30.0000",
+          "here-id-456"}}
       end)
 
       stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:error, :out_of_delivery_range} end)
@@ -306,7 +309,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
   defp stub_successful_geocode do
     stub(Edenflowers.External.HereAPI.Mock, :geocode, fn _query ->
-      {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+      {:ok, {%{fi: "Stadsgatan 3, 65300 Vasa", sv: "Stadsgatan 3, 65300 Vasa"}, "63.0951,21.6165", "here-id-123"}}
     end)
 
     stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)

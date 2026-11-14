@@ -62,7 +62,13 @@ defmodule Edenflowers.Orders.Order.Changes.PrefillFromLastOrder do
         last ->
           Ash.Changeset.force_change_attributes(
             changeset,
-            Map.take(last, [:delivery_address, :delivery_instructions, :geocoded_address, :distance])
+            Map.take(last, [
+              :delivery_address,
+              :delivery_instructions,
+              :geocoded_address,
+              :geocoded_address_sv,
+              :distance
+            ])
           )
       end
     else

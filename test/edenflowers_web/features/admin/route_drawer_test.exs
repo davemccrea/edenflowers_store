@@ -29,6 +29,21 @@ defmodule EdenflowersWeb.Admin.RouteDrawerTest do
       )
     end
 
+    test "names each stop in Swedish, with its Finnish name under it", %{conn: conn} do
+      bilingual =
+        delivery("Torget",
+          geocoded_address: "Kauppapuistikko 20, 65100 Vaasa",
+          geocoded_address_sv: "Handelsesplanaden 20, 65100 Vasa"
+        )
+
+      {:ok, view, _html} = live(conn, ~p"/admin")
+      view |> element("#day-orders-route") |> render_click()
+
+      stop = view |> element("label:has(#route-stop-#{bilingual.id})") |> render()
+      assert stop =~ "Handelsesplanaden 20, 65100 Vasa"
+      assert stop =~ ~r/lang="fi"[^>]*>\s*Kauppapuistikko 20, 65100 Vaasa/
+    end
+
     test "plans the ticked deliveries and starts the run at its first stop", %{conn: conn, admin: admin} do
       near = delivery("Near")
       far = delivery("Far", position: "63.20,21.70")

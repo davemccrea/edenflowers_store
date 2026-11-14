@@ -194,7 +194,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
 
     test "computes the fee from the integer distance route_distance returns", %{option: option} do
       stub(Edenflowers.External.HereAPI.Mock, :geocode, fn _query ->
-        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+        {:ok, {%{fi: "Stadsgatan 3, 65300 Vasa", sv: "Stadsgatan 3, 65300 Vasa"}, "63.0951,21.6165", "here-id-123"}}
       end)
 
       stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 7250} end)

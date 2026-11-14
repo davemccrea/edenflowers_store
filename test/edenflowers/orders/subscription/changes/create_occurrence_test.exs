@@ -52,7 +52,10 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
   end
 
   defp stub_geocoding do
-    stub(HereAPI.Mock, :geocode, fn _query -> {:ok, {"Hovrättsesplanaden 1, Vasa", "63.09,21.61", "here:1"}} end)
+    stub(HereAPI.Mock, :geocode, fn _query ->
+      {:ok, {%{fi: "Hovrättsesplanaden 1, Vasa", sv: "Hovrättsesplanaden 1, Vasa"}, "63.09,21.61", "here:1"}}
+    end)
+
     stub(HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)
   end
 

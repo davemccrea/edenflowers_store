@@ -52,7 +52,9 @@ defmodule Edenflowers.Orders.Order.Changes.CalculateFulfillmentCost do
     case Fulfillment.calculate_delivery(delivery_address, id, authorize?: false) do
       {:ok, %{error: nil} = result} ->
         changeset
-        |> Ash.Changeset.force_change_attributes(Map.take(result, [:geocoded_address, :position, :here_id, :distance]))
+        |> Ash.Changeset.force_change_attributes(
+          Map.take(result, [:geocoded_address, :geocoded_address_sv, :position, :here_id, :distance])
+        )
         |> Ash.Changeset.force_change_attributes(%{
           quoted_fulfillment_fee: result.fulfillment_fee,
           quoted_free_delivery_fee: result.free_delivery_fee

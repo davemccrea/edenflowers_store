@@ -4,7 +4,7 @@ defmodule Edenflowers.External.HereAPI.Behaviour do
   """
 
   @callback geocode(query :: String.t()) ::
-              {:ok, {String.t(), String.t(), String.t()}} | {:error, atom()}
+              {:ok, {%{fi: String.t(), sv: String.t()}, String.t(), String.t()}} | {:error, atom()}
   @callback route_distance(position :: String.t()) :: {:ok, integer()} | {:error, atom()}
   @callback sequence(
               start :: String.t(),
@@ -23,8 +23,6 @@ defmodule Edenflowers.External.HereAPI do
 
   @behaviour Edenflowers.External.HereAPI.Behaviour
 
-  use GettextSigils, backend: EdenflowersWeb.Gettext
-
   require Logger
 
   @origin "63.1243488,21.5974075"
@@ -35,32 +33,21 @@ defmodule Edenflowers.External.HereAPI do
   @doc "The shop's coordinates, \"latitude,longitude\", where deliveries are measured from."
   def shop_position, do: @origin
 
+  @doc """
+  Finds the address `query` means. Returns its Finnish and Swedish names, as
+  `"Street 1, 65100 City"`, which are the same where a place has only one.
+  """
   def geocode(query) when is_binary(query) do
     url =
-      "https://geocode.search.hereapi.com/v1/geocode?q=#{URI.encode(query)}&at=#{@origin}&limit=1&lang=#{Gettext.get_locale(EdenflowersWeb.Gettext)}&apiKey=#{api_key()}"
+      "https://geocode.search.hereapi.com/v1/geocode?q=#{URI.encode(query)}&at=#{@origin}&limit=1&lang=fi&apiKey=#{api_key()}"
 
-    with {:ok, %{status: 200, body: body}} <- Req.get(url),
-         %{
-           "items" => [
-             %{
-               "address" => %{
-                 "street" => street,
-                 "houseNumber" => house_number,
-                 "postalCode" => postal_code,
-                 "city" => city
-               },
-               "id" => here_id,
-               "position" => %{"lat" => lat, "lng" => lng}
-             } = _head
-             | _tail
-           ]
-         } <- body do
-      address = "#{street} #{house_number}, #{postal_code} #{city}"
-      position = "#{lat},#{lng}"
-
-      {:ok, {address, position, here_id}}
+    with {:ok, %{status: 200, body: %{"items" => [%{"id" => here_id} = item | _]}}} <- Req.get(url),
+         {:ok, fi} <- format_address(item),
+         {:ok, sv} <- lookup_address(here_id, "sv") do
+      %{"position" => %{"lat" => lat, "lng" => lng}} = item
+      {:ok, {%{fi: fi, sv: sv}, "#{lat},#{lng}", here_id}}
     else
-      {:ok, %{status: status}} ->
+      {:ok, %{status: status}} when status != 200 ->
         Logger.error("HereAPI geocode returned status #{status}")
         {:error, :address_not_found}
 
@@ -68,6 +55,24 @@ defmodule Edenflowers.External.HereAPI do
         {:error, :address_not_found}
     end
   end
+
+  @doc "The address HERE knows as `here_id`, named in `lang`."
+  def lookup_address(here_id, lang) do
+    url =
+      "https://lookup.search.hereapi.com/v1/lookup?id=#{URI.encode_www_form(here_id)}&lang=#{lang}&apiKey=#{api_key()}"
+
+    case Req.get(url) do
+      {:ok, %{status: 200, body: item}} -> format_address(item)
+      _ -> {:error, :address_not_found}
+    end
+  end
+
+  defp format_address(%{
+         "address" => %{"street" => street, "houseNumber" => house_number, "postalCode" => postal_code, "city" => city}
+       }),
+       do: {:ok, "#{street} #{house_number}, #{postal_code} #{city}"}
+
+  defp format_address(_item), do: {:error, :address_not_found}
 
   def route_distance(position) when is_binary(position) do
     url =

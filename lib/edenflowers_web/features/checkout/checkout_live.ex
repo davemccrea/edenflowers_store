@@ -1071,9 +1071,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   # A geocode saved by an earlier submit stands as the quote when the
   # customer comes back to the delivery step.
-  defp quote_from_order(%{delivery_address: address, geocoded_address: geocoded_address, distance: distance})
-       when is_integer(distance),
-       do: %{address: address, geocoded_address: geocoded_address, distance: distance}
+  defp quote_from_order(%{delivery_address: address, distance: distance} = order) when is_integer(distance),
+    do: %{
+      address: address,
+      geocoded_address: order.geocoded_address,
+      geocoded_address_sv: order.geocoded_address_sv,
+      distance: distance
+    }
 
   defp quote_from_order(_order), do: nil
 

@@ -258,7 +258,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
     test "quotes the driving-distance price when tabbing out of the address", %{conn: conn} do
       expect(Edenflowers.External.HereAPI.Mock, :geocode, fn "Stadsgatan 3" ->
-        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+        {:ok, {%{fi: "Stadsgatan 3, 65300 Vasa", sv: "Stadsgatan 3, 65300 Vasa"}, "63.0951,21.6165", "here-id-123"}}
       end)
 
       expect(Edenflowers.External.HereAPI.Mock, :route_distance, fn "63.0951,21.6165" -> {:ok, 8000} end)
@@ -281,7 +281,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
     test "shows only the ordinary fee inside the free-delivery area", %{conn: conn} do
       expect(Edenflowers.External.HereAPI.Mock, :geocode, fn _address ->
-        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+        {:ok, {%{fi: "Stadsgatan 3, 65300 Vasa", sv: "Stadsgatan 3, 65300 Vasa"}, "63.0951,21.6165", "here-id-123"}}
       end)
 
       expect(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)
@@ -296,20 +296,17 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     end
 
     test "the checker and availability guidance use the customer's language", %{conn: conn} do
-      test_pid = self()
-
       expect(Edenflowers.External.HereAPI.Mock, :geocode, 2, fn _address ->
-        send(test_pid, {:lookup_locale, Gettext.get_locale(EdenflowersWeb.Gettext)})
-        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+        {:ok, {%{fi: "Stadsgatan 3, 65300 Vasa", sv: "Stadsgatan 3, 65300 Vasa"}, "63.0951,21.6165", "here-id-123"}}
       end)
 
       expect(Edenflowers.External.HereAPI.Mock, :route_distance, 2, fn _position -> {:ok, 3000} end)
 
-      for {path, locale, availability, price, free} <- [
-            {"/sv/vanliga-fragor", "sv",
+      for {path, availability, price, free} <- [
+            {"/sv/vanliga-fragor",
              "I kassan ser du vilka leverans- och avhämtningsdatum som är möjliga för produkterna du väljer.",
              "Leverans:", "levereras gratis till den här adressen"},
-            {"/fi/ukk", "fi", "Kassalla näet valitsemillesi tuotteille saatavilla olevat toimitus- ja noutopäivät.",
+            {"/fi/ukk", "Kassalla näet valitsemillesi tuotteille saatavilla olevat toimitus- ja noutopäivät.",
              "Toimitus:", "toimitetaan tähän osoitteeseen ilmaiseksi"}
           ] do
         {:ok, view, _html} = live(conn, path)
@@ -320,7 +317,6 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
         view |> element("#faq-delivery-cost") |> render_submit(%{"delivery_address" => "Stadsgatan 3"})
         render_async(view, 1000)
 
-        assert_receive {:lookup_locale, ^locale}
         assert has_element?(view, "[data-testid=faq-delivery-quote]", price)
         refute has_element?(view, "[data-testid=faq-delivery-quote]", free)
       end
@@ -328,7 +324,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
     test "an address beyond the delivery area shows no price", %{conn: conn} do
       expect(Edenflowers.External.HereAPI.Mock, :geocode, fn _address ->
-        {:ok, {"Far Away 1", "63.0951,21.6165", "here-id-123"}}
+        {:ok, {%{fi: "Far Away 1", sv: "Far Away 1"}, "63.0951,21.6165", "here-id-123"}}
       end)
 
       expect(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 20_000} end)
@@ -343,7 +339,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
     test "failed lookups clear a previous price", %{conn: conn} do
       expect(Edenflowers.External.HereAPI.Mock, :geocode, fn "Stadsgatan 3" ->
-        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+        {:ok, {%{fi: "Stadsgatan 3, 65300 Vasa", sv: "Stadsgatan 3, 65300 Vasa"}, "63.0951,21.6165", "here-id-123"}}
       end)
 
       expect(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 8000} end)
@@ -363,7 +359,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
     test "a routing service failure shows a retry message instead of a price", %{conn: conn} do
       expect(Edenflowers.External.HereAPI.Mock, :geocode, fn _address ->
-        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+        {:ok, {%{fi: "Stadsgatan 3, 65300 Vasa", sv: "Stadsgatan 3, 65300 Vasa"}, "63.0951,21.6165", "here-id-123"}}
       end)
 
       expect(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:error, :timeout} end)
@@ -410,7 +406,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
         send(test_pid, :lookup_started)
 
         receive do
-          :finish -> {:ok, {"Old address", "63.0951,21.6165", "here-id-123"}}
+          :finish -> {:ok, {%{fi: "Old address", sv: "Old address"}, "63.0951,21.6165", "here-id-123"}}
         end
       end)
 

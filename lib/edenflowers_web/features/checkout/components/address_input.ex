@@ -89,7 +89,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
           data-testid="address-confirmation"
           class="text-base-content/65 mt-1.5 text-sm"
         >
-          {~t"Delivering to #{address = @quote.geocoded_address}"}
+          {~t"Delivering to #{address = in_customer_language(@quote)}"}
         </p>
       </div>
     </div>
@@ -136,19 +136,13 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
 
       true ->
         fulfillment_option = socket.assigns.fulfillment_option
-        locale = Gettext.get_locale(EdenflowersWeb.Gettext)
         send(self(), {:delivery_quoted, nil})
 
         # Reusing the task name ignores earlier results, so only the latest lookup updates the quote.
         {:noreply,
          socket
          |> assign(loading: true, typed: address, error: nil)
-         |> start_async(:lookup_address, fn ->
-           # Async tasks do not inherit the parent's Gettext locale. Restore it
-           # because the HERE request derives its `lang` parameter from Gettext.
-           Gettext.put_locale(EdenflowersWeb.Gettext, locale)
-           Fulfillment.calculate_delivery(address, fulfillment_option.id)
-         end)}
+         |> start_async(:lookup_address, fn -> Fulfillment.calculate_delivery(address, fulfillment_option.id) end)}
     end
   end
 
@@ -166,6 +160,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
          %{
            address: socket.assigns.typed,
            geocoded_address: result.geocoded_address,
+           geocoded_address_sv: result.geocoded_address_sv,
            distance: result.distance,
            fulfillment_fee: result.fulfillment_fee
          }}
@@ -198,4 +193,11 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
   defp errors({:required, _}, false), do: []
   defp errors({_kind, message}, _touched), do: [message]
   defp errors(nil, _touched), do: []
+
+  # Finnish unless the customer reads Swedish. Orders from before Swedish names were kept have none.
+  defp in_customer_language(quote) do
+    if Gettext.get_locale(EdenflowersWeb.Gettext) == "sv",
+      do: quote[:geocoded_address_sv] || quote.geocoded_address,
+      else: quote.geocoded_address
+  end
 end

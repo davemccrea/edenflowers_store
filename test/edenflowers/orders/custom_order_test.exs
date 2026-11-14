@@ -92,7 +92,10 @@ defmodule Edenflowers.Orders.CustomOrderTest do
   end
 
   defp stub_geocoding(distance_m) do
-    stub(HereAPI.Mock, :geocode, fn _query -> {:ok, {"Kyrkvägen 5, Vasa", "63.09,21.61", "here:1"}} end)
+    stub(HereAPI.Mock, :geocode, fn _query ->
+      {:ok, {%{fi: "Kyrkvägen 5, Vasa", sv: "Kyrkvägen 5, Vasa"}, "63.09,21.61", "here:1"}}
+    end)
+
     stub(HereAPI.Mock, :route_distance, fn _position -> {:ok, distance_m} end)
   end
 

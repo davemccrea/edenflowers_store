@@ -133,7 +133,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
       )
 
     stub(Edenflowers.External.HereAPI.Mock, :geocode, fn _query ->
-      {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+      {:ok, {%{fi: "Stadsgatan 3, 65300 Vasa", sv: "Stadsgatan 3, 65300 Vasa"}, "63.0951,21.6165", "here-id-123"}}
     end)
 
     stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)

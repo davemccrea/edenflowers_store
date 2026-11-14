@@ -9,6 +9,7 @@ defmodule Edenflowers.Orders.Order.Changes.ClearDeliveryFields do
     :delivery_address,
     :delivery_instructions,
     :geocoded_address,
+    :geocoded_address_sv,
     :position,
     :here_id,
     :distance,

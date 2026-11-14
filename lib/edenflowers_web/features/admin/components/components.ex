@@ -978,6 +978,26 @@ defmodule EdenflowersWeb.Admin.Components do
   defp fulfillment_status_label(:cancelled), do: ~t"Cancelled"
   defp fulfillment_status_label(value), do: to_string(value)
 
+  attr :order, :map, required: true, doc: "anything with `geocoded_address` (Finnish) and `geocoded_address_sv`"
+
+  @doc """
+  A geocoded delivery address in Swedish, with the Finnish name under it
+  where the street has one. Orders from before Swedish names were kept show
+  the one name they have.
+  """
+  def geocoded_address(assigns) do
+    ~H"""
+    {@order.geocoded_address_sv || @order.geocoded_address}
+    <span
+      :if={@order.geocoded_address_sv && @order.geocoded_address != @order.geocoded_address_sv}
+      lang="fi"
+      class="text-base-content/60 block text-xs"
+    >
+      {@order.geocoded_address}
+    </span>
+    """
+  end
+
   @doc "Only a string with non-whitespace content is present."
   def present?(value), do: is_binary(value) and String.trim(value) != ""
 

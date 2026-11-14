@@ -44,7 +44,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
   defp stub_geocoding(distance_m) do
     stub(Edenflowers.External.HereAPI.Mock, :geocode, fn _query ->
-      {:ok, {"Kyrkvägen 5, Vasa", "63.09,21.61", "here:1"}}
+      {:ok, {%{fi: "Kyrkvägen 5, Vasa", sv: "Kyrkvägen 5, Vasa"}, "63.09,21.61", "here:1"}}
     end)
 
     stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, distance_m} end)

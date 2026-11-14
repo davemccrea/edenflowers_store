@@ -16,7 +16,7 @@ defmodule Edenflowers.Orders.Order.Changes.PriceFulfillment do
   alias Edenflowers.Fulfillment.Fee
   alias Edenflowers.Orders.Order.Changes.ClearDeliveryFields
 
-  @geocoded_fields [:geocoded_address, :position, :here_id, :distance]
+  @geocoded_fields [:geocoded_address, :geocoded_address_sv, :position, :here_id, :distance]
 
   @priced_by [:fulfillment_option_id, :delivery_address, :fulfillment_fee_override]
 

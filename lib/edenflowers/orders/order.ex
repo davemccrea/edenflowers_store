@@ -159,7 +159,11 @@ defmodule Edenflowers.Orders.Order do
     attribute :fulfillment_option_name, :string
 
     attribute :geocoded_address, :string do
-      description "The delivery address as HERE resolved it, which the fee was quoted for."
+      description "The delivery address as HERE resolved it, which the fee was quoted for, in Finnish."
+    end
+
+    attribute :geocoded_address_sv, :string do
+      description "`geocoded_address` in Swedish, the language Jennie delivers in."
     end
 
     attribute :here_id, :string

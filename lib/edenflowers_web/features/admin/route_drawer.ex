@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.Admin.RouteDrawer do
 
   use EdenflowersWeb, {:html, gettext_domain: "admin"}
 
-  import EdenflowersWeb.Admin.Components, only: [presence: 1]
+  import EdenflowersWeb.Admin.Components, only: [geocoded_address: 1, presence: 1]
   import EdenflowersWeb.Admin.Drawers, only: [admin_drawer: 1, drawer_body: 1, drawer_footer: 1]
 
   alias Edenflowers.Format
@@ -96,7 +96,7 @@ defmodule EdenflowersWeb.Admin.RouteDrawer do
                   </span>
                 </span>
                 <span class="text-base-content/75 block">
-                  {order.geocoded_address}
+                  <.geocoded_address order={order} />
                   <span :if={Format.fulfillment_time_range(order, Format.locale())}>
                     · {Format.fulfillment_time_range(order, Format.locale())}
                   </span>
@@ -212,7 +212,7 @@ defmodule EdenflowersWeb.Admin.RouteDrawer do
             <.link navigate={~p"/admin/orders/#{stop.order.id}"} class="text-base-content block font-semibold">
               {stop_name(stop.order)}
             </.link>
-            <span class="text-base-content/75 block">{stop.order.geocoded_address}</span>
+            <span class="text-base-content/75 block"><.geocoded_address order={stop.order} /></span>
           </span>
           <span class="shrink-0 text-right tabular-nums">
             {clock(stop.starts_at, @locale)}

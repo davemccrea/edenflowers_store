@@ -405,7 +405,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
             <.button
               :if={@directions? && stop == @next}
               id={"#{@id}-directions"}
-              href={directions_url(stop.geocoded_address, parse_position(stop.position), stop.delivery_address)}
+              href={
+                directions_url(
+                  stop.geocoded_address_sv || stop.geocoded_address,
+                  parse_position(stop.position),
+                  stop.delivery_address
+                )
+              }
               target="_blank"
               rel="noopener"
               variant="primary"
@@ -618,12 +624,20 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   attr :position, :any, required: true
   attr :token, :string, default: nil
   attr :address, :string, default: nil
-  attr :geocoded_address, :string, default: nil, doc: "the address as HERE resolved it, which directions prefer"
+  attr :order, Order, required: true, doc: "for the address as HERE resolved it, which directions prefer"
   attr :distance_km, :any, default: nil
 
   def delivery_location(assigns) do
     assigns =
-      assign(assigns, :directions, directions_url(assigns.geocoded_address, assigns.position, assigns.address))
+      assign(
+        assigns,
+        :directions,
+        directions_url(
+          assigns.order.geocoded_address_sv || assigns.order.geocoded_address,
+          assigns.position,
+          assigns.address
+        )
+      )
 
     ~H"""
     <div
@@ -634,6 +648,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       <div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <.summary_fact label={~t"Deliver to"}>
           {@address}
+          <span :if={@order.geocoded_address} class="text-base-content/75 block text-sm font-normal">
+            <.geocoded_address order={@order} />
+          </span>
           <span :if={@distance_km} class="text-base-content/75 block text-sm font-normal tabular-nums">
             {@distance_km} km
           </span>

@@ -76,7 +76,10 @@ defmodule Edenflowers.Orders.FreeDeliveryTest do
 
   # Checks out `variants` for delivery to an address `metres` from the shop.
   defp delivered_to(ctx, variants, metres) do
-    stub(HereAPI.Mock, :geocode, fn _query -> {:ok, {"Kyrkvägen 5, Vasa", "63.09,21.61", "here:1"}} end)
+    stub(HereAPI.Mock, :geocode, fn _query ->
+      {:ok, {%{fi: "Kyrkvägen 5, Vasa", sv: "Kyrkvägen 5, Vasa"}, "63.09,21.61", "here:1"}}
+    end)
+
     stub(HereAPI.Mock, :route_distance, fn _position -> {:ok, metres} end)
 
     order = generate(order(state: :delivery))

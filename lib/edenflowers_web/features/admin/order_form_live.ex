@@ -547,6 +547,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       address: address,
       option_id: option_id,
       geocoded_address: result.geocoded_address,
+      geocoded_address_sv: result.geocoded_address_sv,
       fee: result.fulfillment_fee,
       free_delivery_fee: result.free_delivery_fee,
       distance: result.distance
@@ -778,6 +779,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
               address: order.delivery_address,
               option_id: option.id,
               geocoded_address: order.geocoded_address,
+              geocoded_address_sv: order.geocoded_address_sv,
               fee: fee.fulfillment_fee,
               free_delivery_fee: fee.free_delivery_fee,
               distance: distance
@@ -918,7 +920,9 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     ~H"""
     <div aria-live="polite">
       <div :if={match?(%{status: :ok}, @quote)} id="delivery-quote" class="text-base-content/75 mt-1.5 text-sm">
-        <p :if={@quote.geocoded_address}>{~t"Delivering to #{address = @quote.geocoded_address}"}</p>
+        <p :if={@quote.geocoded_address}>
+          {~t"Delivering to #{address = @quote.geocoded_address_sv || @quote.geocoded_address}"}
+        </p>
         <p>
           {Format.currency(@quote.fee, Format.locale())} ({Format.distance(@quote.distance, Format.locale())})
           <span :if={@override not in [nil, ""]}>· {~t"your own fee replaces this"}</span>

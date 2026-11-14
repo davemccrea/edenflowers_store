@@ -268,7 +268,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 position={parse_position(@order.position)}
                 token={@mapbox_token}
                 address={@order.delivery_address}
-                geocoded_address={@order.geocoded_address}
+                order={@order}
                 distance_km={@order.distance_km}
               />
 
