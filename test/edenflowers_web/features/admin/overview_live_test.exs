@@ -253,8 +253,8 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin")
 
-    assert has_element?(view, ~s|a[href="/admin/orders/#{missing.id}"]|, "Missing recipient phone")
-    refute has_element?(view, ~s|a[href="/admin/orders/#{phoned.id}"]|, "Missing recipient phone")
+    assert has_element?(view, ~s|#day-order-#{missing.id}|, "Missing recipient phone")
+    refute has_element?(view, ~s|#day-order-#{phoned.id}|, "Missing recipient phone")
   end
 
   test "says what an order still owes, and nothing once it's refunded in full", %{conn: conn} do
@@ -268,11 +268,11 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin")
 
-    assert has_element?(view, ~s|a[href="/admin/orders/#{unpaid.id}"]|, "Unpaid")
-    assert has_element?(view, ~s|a[href="/admin/orders/#{part_paid.id}"]|, "To collect 38,50")
+    assert has_element?(view, ~s|#day-order-#{unpaid.id}|, "Unpaid")
+    assert has_element?(view, ~s|#day-order-#{part_paid.id}|, "To collect 38,50")
     assert has_element?(view, ~s|a[href="/admin/orders/#{refunded.id}"]|)
-    refute has_element?(view, ~s|a[href="/admin/orders/#{refunded.id}"]|, "Unpaid")
-    refute has_element?(view, ~s|a[href="/admin/orders/#{refunded.id}"]|, "To collect")
+    refute has_element?(view, ~s|#day-order-#{refunded.id}|, "Unpaid")
+    refute has_element?(view, ~s|#day-order-#{refunded.id}|, "To collect")
   end
 
   test "shows an order placed elsewhere without a refresh", %{conn: conn} do

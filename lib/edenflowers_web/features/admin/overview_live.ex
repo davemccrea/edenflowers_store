@@ -1311,10 +1311,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         </p>
 
         <div
-          :if={
-            @order.gift or present?(@order.card_message) or @order.missing_delivery_phone? or
-              @order.to_collect?
-          }
+          :if={@order.gift or present?(@order.card_message)}
           class="text-base-content/75 mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs"
         >
           <span :if={@order.gift} class="inline-flex min-w-0 items-baseline gap-1.5">
@@ -1328,19 +1325,19 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           <span :if={present?(@order.card_message)} class="inline-flex items-center gap-1.5">
             <.icon name="hero-pencil-square" class="h-3.5 w-3.5 shrink-0" /> {~t"Card to write"}
           </span>
-          <.badge :if={@order.missing_delivery_phone?} tone={:warning} icon="hero-phone-x-mark">
-            {~t"Missing recipient phone"}
-          </.badge>
-          <.badge :if={@order.to_collect?} tone={:warning}>
-            <%= if Decimal.positive?(@order.amount_paid) do %>
-              {~t"To collect #{amount = Format.currency(@order.balance, Format.locale())}"}
-            <% else %>
-              {~t"Unpaid"}
-            <% end %>
-          </.badge>
         </div>
       </.link>
-      <div class="flex flex-wrap items-center justify-between gap-2 px-4 pt-1 pb-4 sm:px-5">
+      <div class="flex flex-wrap items-center gap-2 px-4 pt-1 pb-4 sm:px-5">
+        <.badge :if={@order.missing_delivery_phone?} tone={:warning} icon="hero-phone-x-mark">
+          {~t"Missing recipient phone"}
+        </.badge>
+        <.badge :if={@order.to_collect?} tone={:warning}>
+          <%= if Decimal.positive?(@order.amount_paid) do %>
+            {~t"To collect #{amount = Format.currency(@order.balance, Format.locale())}"}
+          <% else %>
+            {~t"Unpaid"}
+          <% end %>
+        </.badge>
         <.fulfillment_status_badge
           :if={!@order.can_mark_ready?}
           status={@order.fulfillment_status}
