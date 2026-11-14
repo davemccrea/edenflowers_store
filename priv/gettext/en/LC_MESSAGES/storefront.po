@@ -161,7 +161,7 @@ msgid "Add-ons are sold with flowers. Add a bouquet to check out."
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:986
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1110
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1114
 #: lib/edenflowers_web/features/marketing/contact_live.ex:76
 #, elixir-autogen, elixir-format
 msgid "Address"
@@ -1433,12 +1433,12 @@ msgstr ""
 msgid "I'll deliver your order on %{date}."
 msgstr ""
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1120
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1124
 #, elixir-autogen, elixir-format
 msgid "I'll only call if I need to reach %{name} about the delivery."
 msgstr ""
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1122
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1126
 #, elixir-autogen, elixir-format
 msgid "I'll only call if I need to reach you about the delivery."
 msgstr ""
@@ -1449,7 +1449,7 @@ msgstr ""
 msgid "I'll replace them or refund you, provided care instructions are followed."
 msgstr ""
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1116
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1120
 #: lib/edenflowers_web/features/checkout/pay_live.ex:104
 #, elixir-autogen, elixir-format
 msgid "I'll send a message when your order is ready for pick up."
@@ -4321,17 +4321,17 @@ msgstr ""
 msgid "Your name"
 msgstr ""
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1103
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1107
 #, elixir-autogen, elixir-format
 msgid "%{name}'s address"
 msgstr ""
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1104
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1108
 #, elixir-autogen, elixir-format
 msgid "%{name}'s phone number"
 msgstr ""
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1111
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1115
 #, elixir-autogen, elixir-format
 msgid "Phone number"
 msgstr ""

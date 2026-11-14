@@ -4,7 +4,8 @@ defmodule Edenflowers.External.FastmailAPI do
 
   Finds folders, lists the emails in one with their attachments, downloads an
   attachment and moves an email between folders. Used by
-  `Edenflowers.Expenses.Actions.ImportInvoiceEmails`. Authenticates with an API
+  `Edenflowers.Expenses.Actions.ImportInvoiceEmails` and
+  `Edenflowers.Minimossen.Actions.ImportReports`. Authenticates with an API
   token that needs mail write access, since importing moves emails.
   """
 

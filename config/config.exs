@@ -97,7 +97,8 @@ config :edenflowers,
     Edenflowers.Expenses,
     Edenflowers.Bank,
     Edenflowers.Feedback,
-    Edenflowers.Marketing
+    Edenflowers.Marketing,
+    Edenflowers.Minimossen
   ]
 
 # Receipts and invoices identify the seller using this registered Finnish

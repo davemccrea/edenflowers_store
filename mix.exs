@@ -123,6 +123,7 @@ defmodule Edenflowers.MixProject do
       {:jason, "~> 1.2"},
       {:web_push_ex, "~> 0.2"},
       {:elixlsx, "~> 0.6"},
+      {:spreadsheet, "~> 0.7"},
       {:req, "~> 0.5"},
       {:tz, "~> 0.28"},
       # Dev & build tooling

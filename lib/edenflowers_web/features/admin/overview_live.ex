@@ -1,7 +1,8 @@
 defmodule EdenflowersWeb.Admin.OverviewLive do
   @moduledoc """
   Back-office home page with a nine-day fulfillment calendar, items needing
-  attention, sales, the monthly accounting report and the bank connection.
+  attention, sales, Minimossen sales, the monthly accounting report and the bank
+  connection.
   """
 
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
@@ -17,6 +18,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Availability
+  alias Edenflowers.Minimossen
   alias Edenflowers.Orders
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.BankConnection
@@ -94,7 +96,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               <.online_customers customers={@connected_customers} />
             </div>
           </div>
-          <div class="min-w-0 xl:col-start-2">
+          <div class="min-w-0 space-y-6 xl:col-start-2">
             <.sales_widget
               sales={@sales}
               last_month={@last_month_sales}
@@ -103,6 +105,13 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               today={@today}
               owed={@owed}
               expenses={@expenses}
+              locale={@locale}
+            />
+            <.minimossen_widget
+              :if={@minimossen.weeks != []}
+              weeks={@minimossen.weeks}
+              average={@minimossen.average}
+              year={@minimossen.year}
               locale={@locale}
             />
           </div>
@@ -355,6 +364,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     |> assign(:delivery_run, Orders.list_delivery_run!(today, actor: actor))
     |> assign(:owed, owed |> Enum.filter(&(&1.kind == :order)) |> sum_amounts())
     |> assign(:sales, Orders.sales_summary!(Date.beginning_of_month(today), today, actor: actor))
+    |> assign(:minimossen, Minimossen.recent_minimossen_weeks!(actor: actor))
     |> assign(:expenses, Expenses.expenses_paid_totals!(Date.beginning_of_month(today), today, actor: actor))
     |> assign(:last_month_to, same_day_last_month)
     |> assign(
@@ -705,6 +715,109 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   end
 
   defp svg_path([{x, y} | rest]), do: Enum.reduce(rest, "M#{x},#{y}", fn {x, y}, path -> path <> " L#{x},#{y}" end)
+
+  attr :weeks, :list, required: true, doc: "oldest first, from `recent_minimossen_weeks`"
+  attr :average, :map, required: true, doc: "the usual week to compare with, or nil before there is one"
+  attr :year, :map, required: true, doc: "the year's total so far, from the first week imported in it"
+  attr :locale, :any, required: true
+
+  defp minimossen_widget(assigns) do
+    highest = assigns.weeks |> Enum.map(& &1.total) |> Enum.max(Decimal) |> Decimal.to_float()
+
+    assigns =
+      assign(assigns,
+        latest: List.last(assigns.weeks),
+        average_height: assigns.average && bar_height(assigns.average.total, highest),
+        bars:
+          Enum.map(assigns.weeks, fn week ->
+            %{flowers: bar_height(week.flowers, highest), shop: bar_height(week.shop, highest)}
+          end)
+      )
+
+    ~H"""
+    <.widget id="minimossen" title={~t"Minimossen"}>
+      <dl>
+        <dt class="text-base-content/75 text-sm">{~t"Sales in week #{week = week_number(@latest.week_start)}"}</dt>
+        <dd id="minimossen-total" class="text-base-content text-3xl font-semibold tabular-nums tracking-tight">
+          {Format.currency(@latest.total, @locale)}
+        </dd>
+        <dd :if={@average} id="minimossen-change" class="text-base-content/75 text-sm tabular-nums">
+          {~t"#{change = change(@latest.total, @average.total, @locale)} on the 8-week average"}
+        </dd>
+      </dl>
+
+      <dl id="minimossen-groups" class="mt-3 space-y-1 text-sm tabular-nums">
+        <div class="flex items-baseline gap-3">
+          <dt class="text-base-content/75 flex-1">{~t"Flowers"}</dt>
+          <dd class="font-semibold">{Format.currency(@latest.flowers, @locale)}</dd>
+          <dd :if={@average} class="text-base-content/75 w-24 text-right">
+            {change(@latest.flowers, @average.flowers, @locale)}
+          </dd>
+        </div>
+        <div class="flex items-baseline gap-3">
+          <dt class="text-base-content/75 flex-1">{~t"Shop"}</dt>
+          <dd class="font-semibold">{Format.currency(@latest.shop, @locale)}</dd>
+          <dd :if={@average} class="text-base-content/75 w-24 text-right">
+            {change(@latest.shop, @average.shop, @locale)}
+          </dd>
+        </div>
+      </dl>
+
+      <figure class="border-base-content/12 mt-4 border-t pt-3" aria-hidden="true">
+        <figcaption class="text-base-content/75 mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+          <span class="text-base-content mr-auto">{~t"Last 12 weeks"}</span>
+          <span class="flex items-center gap-1.5"><span class="bg-primary h-2.5 w-2.5 rounded-sm" /> {~t"Flowers"}</span>
+          <span class="flex items-center gap-1.5">
+            <span class="bg-base-content/25 h-2.5 w-2.5 rounded-sm" /> {~t"Shop"}
+          </span>
+          <span :if={@average} class="flex items-center gap-1.5">
+            <span class="border-base-content/40 w-4 border-t border-dashed" /> {~t"8-week average"}
+          </span>
+        </figcaption>
+        <div class="border-base-content/12 relative flex h-24 items-end gap-1 border-b">
+          <div :for={bar <- @bars} class="flex h-full flex-1 flex-col justify-end">
+            <div class="bg-base-content/25 rounded-t-sm" style={"height: #{bar.shop}%"} />
+            <div class="bg-primary" style={"height: #{bar.flowers}%"} />
+          </div>
+          <div
+            :if={@average}
+            class="border-base-content/40 absolute inset-x-0 border-t border-dashed"
+            style={"bottom: #{@average_height}%"}
+          />
+        </div>
+        <div class="text-base-content/75 mt-1 flex justify-between text-xs tabular-nums">
+          <span>{~t"Week #{week = week_number(hd(@weeks).week_start)}"}</span>
+          <span>{~t"Week #{week = week_number(@latest.week_start)}"}</span>
+        </div>
+      </figure>
+
+      <p
+        id="minimossen-year"
+        class="border-base-content/12 text-base-content/75 mt-4 flex items-baseline justify-between gap-4 border-t pt-3 text-sm"
+      >
+        {~t"This year, weeks #{first = week_number(@year.first_week_start)}–#{last = week_number(@latest.week_start)}"}
+        <span class="text-base-content font-semibold tabular-nums">{Format.currency(@year.total, @locale)}</span>
+      </p>
+    </.widget>
+    """
+  end
+
+  # How much more or less than the usual week, signed, e.g. "+37,00 €".
+  defp change(now, usual, locale) do
+    difference = Decimal.sub(now, usual)
+
+    if Decimal.positive?(difference),
+      do: "+" <> Format.currency(difference, locale),
+      else: Format.currency(difference, locale)
+  end
+
+  defp bar_height(_amount, highest) when highest == 0, do: 0
+  defp bar_height(amount, highest), do: Float.round(Decimal.to_float(amount) / highest * 100, 1)
+
+  defp week_number(date) do
+    {_year, week} = :calendar.iso_week_number(Date.to_erl(date))
+    week
+  end
 
   attr :customers, :list, required: true
 
