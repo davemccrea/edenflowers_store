@@ -46,18 +46,20 @@ defmodule Edenflowers.Minimossen.Actions.RecentSales do
 
       periods =
         starts
-        |> Enum.map(fn start ->
-          start
-          |> totals(Map.get(by_period, start, []), codes)
-          |> Map.put(:average, if(period == :week, do: average(usual_weeks(start, by_period, codes), codes)))
-          |> Map.put(:last_year, last_year(period, start, sales, latest, codes))
-          |> Map.put(:partial?, partial?(period, start, earliest, latest))
-        end)
+        |> Enum.map(&period_summary(period, &1, by_period, sales, earliest, latest, codes))
         # Periods before the first report are left out, so the chart starts at the first import.
         |> Enum.drop_while(&Date.before?(elem(weeks(period, &1.start), 1), earliest))
 
       {:ok, %{groups: groups, periods: periods}}
     end
+  end
+
+  defp period_summary(period, start, by_period, sales, earliest, latest, codes) do
+    start
+    |> totals(Map.get(by_period, start, []), codes)
+    |> Map.put(:average, if(period == :week, do: average(usual_weeks(start, by_period, codes), codes)))
+    |> Map.put(:last_year, last_year(period, start, sales, latest, codes))
+    |> Map.put(:partial?, partial?(period, start, earliest, latest))
   end
 
   # Only the weeks up to a year before the latest import, so a month still
