@@ -104,18 +104,6 @@ defmodule Edenflowers.Minimossen.RecentSalesTest do
     assert average(12) == nil
   end
 
-  test "totals the latest week's year from its first week imported, by ISO week" do
-    # Week 52 of 2025.
-    record(~D[2025-12-22], "3", "500.00")
-    # Week 1 of 2026 starts in December.
-    record(~D[2025-12-29], "3", "100.00")
-    record(~D[2026-11-02], "3", "154.40")
-    record(~D[2026-11-02], "6", "221.40")
-
-    assert %{total: total, first_week_start: ~D[2025-12-29], last_week_start: ~D[2026-11-02]} = summary(12).year
-    assert amount(total) == "475.80"
-  end
-
   test "totals each month, counting a week in the month its Thursday falls in" do
     # Thursday 2026-10-01: October.
     record(~D[2026-09-28], "3", "100.00")
@@ -146,7 +134,7 @@ defmodule Edenflowers.Minimossen.RecentSalesTest do
   end
 
   test "nothing before the first import" do
-    assert summary(12) == %{groups: [], periods: [], year: nil}
+    assert summary(12) == %{groups: [], periods: []}
   end
 
   test "only admins see them" do

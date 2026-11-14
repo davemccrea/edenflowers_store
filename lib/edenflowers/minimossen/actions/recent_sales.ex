@@ -3,7 +3,7 @@ defmodule Edenflowers.Minimossen.Actions.RecentSales do
   Totals Minimossen's sales by Winpos product group for the last `count` weeks, months
   or years up to the latest week imported, so the Overview always ends on the newest
   report even before Monday comes round. By week, averages the 8 weeks before each
-  week as the usual week to compare it with. Totals the year so far.
+  week as the usual week to compare it with.
   """
   use Ash.Resource.Actions.Implementation
 
@@ -18,7 +18,7 @@ defmodule Edenflowers.Minimossen.Actions.RecentSales do
     opts = Ash.Context.to_opts(context)
 
     case WeeklySales |> Ash.Query.sort(week_start: :desc) |> Ash.Query.limit(1) |> Ash.read_one(opts) do
-      {:ok, nil} -> {:ok, %{groups: [], periods: [], year: nil}}
+      {:ok, nil} -> {:ok, %{groups: [], periods: []}}
       {:ok, latest} -> summary(input.arguments.period, latest.week_start, input.arguments.count, opts)
       {:error, error} -> {:error, error}
     end
@@ -31,8 +31,7 @@ defmodule Edenflowers.Minimossen.Actions.RecentSales do
     # and the first week's average needs the 8 weeks before it.
     first_week = if period == :week, do: Date.add(hd(starts), -7 * @average_weeks), else: Date.add(hd(starts), -3)
 
-    with {:ok, sales} <- WeeklySales |> Ash.Query.filter(week_start >= ^first_week) |> Ash.read(opts),
-         {:ok, year} <- year(last, opts) do
+    with {:ok, sales} <- WeeklySales |> Ash.Query.filter(week_start >= ^first_week) |> Ash.read(opts) do
       groups = groups(sales)
       codes = Enum.map(groups, & &1.code)
       by_period = Enum.group_by(sales, &period_start(period, &1.week_start))
@@ -47,7 +46,7 @@ defmodule Edenflowers.Minimossen.Actions.RecentSales do
         # Periods before the first report are left out, so the year view starts at the first import.
         |> Enum.drop_while(&(not &1.reported?))
 
-      {:ok, %{groups: groups, periods: periods, year: year}}
+      {:ok, %{groups: groups, periods: periods}}
     end
   end
 
@@ -55,24 +54,6 @@ defmodule Edenflowers.Minimossen.Actions.RecentSales do
   defp period_start(:week, week_start), do: week_start
   defp period_start(:month, week_start), do: week_start |> Date.add(3) |> Date.beginning_of_month()
   defp period_start(:year, week_start), do: Date.new!(Date.add(week_start, 3).year, 1, 1)
-
-  # The year is the latest week's ISO week-numbering year, so week 1 can start in December.
-  # `first_week_start` says where the imported reports begin, for a year that isn't all in,
-  # and `last_week_start` where they end.
-  defp year(last, opts) do
-    {iso_year, _week} = :calendar.iso_week_number(Date.to_erl(last))
-    january_4 = Date.new!(iso_year, 1, 4)
-    year_start = Date.add(january_4, 1 - Date.day_of_week(january_4))
-
-    with {:ok, sales} <- WeeklySales |> Ash.Query.filter(week_start >= ^year_start) |> Ash.read(opts) do
-      {:ok,
-       %{
-         total: sum(Enum.map(sales, & &1.gross)),
-         first_week_start: sales |> Enum.map(& &1.week_start) |> Enum.min(Date),
-         last_week_start: last
-       }}
-    end
-  end
 
   # Sorted by code as a number ("3" before "66"), each named as its latest report names it.
   # A week without sales only has the code as its name, so a real name wins over it.

@@ -4,7 +4,7 @@ title: Show Minimossen's weekly till sales on the admin overview
 status: done
 assignee: []
 created_date: '2026-11-14 09:06'
-updated_date: '2026-11-14 11:00'
+updated_date: '2026-11-14 12:00'
 labels:
   - admin
   - spec
@@ -56,7 +56,7 @@ Jennie sells flowers and refurbished shop items through Minimossen's shared till
 - [x] #1 Winpos emails filed in the Fastmail folder `Winpos` are imported and moved to `Winpos/Importerade`
 - [x] #2 Each week's gross sales are stored per product group, and importing the same report again overwrites instead of duplicating
 - [x] #3 A report that doesn't match the expected layout fails the job with an alert and saves nothing
-- [x] #4 The Overview shows the latest week's Minimossen sales against the 8-week average, split by product group, each in its own colour, with the last 12 weeks as stacked bars and the year's total so far
+- [x] #4 The Overview shows the latest week's Minimossen sales against the 8-week average, split by product group, each in its own colour, with the last 12 weeks as stacked bars
 - [x] #5 Both 2.-8.11.2026 reports are test fixtures
 <!-- AC:END -->
 
@@ -74,4 +74,6 @@ Reviewed 2026-11-14: the card compares the latest week with the average of the 8
 Changed 2026-11-14: the card splits by Winpos product group instead of Flowers and Shop. Each group gets a row, named as Winpos names it, and its own colour in the bars; the rows double as the chart's legend.
 
 Reviewed again 2026-11-14: a week without sales was left out as if unreported. Each report now saves 0 for every group its `Tuoteryhmät:` filter cells cover (e.g. `6 - 7`) that has no line, named by its code, so a closed week counts in the average and the card can end on it. A report without those cells fails as a changed layout. `WinposReport.from_rows/1` lets tests check the layout errors with plain rows.
+
+Changed 2026-11-14: the card is `EdenflowersWeb.Admin.MinimossenCard`, a LiveComponent, shown on the Overview and full width on its own page, `/admin/minimossen` (under Finances), where each bar is labelled on large screens ("v. 34"). The year's-total line is gone, since the Year view gives the same total. The card loads once per visit rather than on every Overview refresh, so a report imported meanwhile shows after a reload.
 <!-- SECTION:NOTES:END -->

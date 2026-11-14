@@ -276,7 +276,8 @@ defmodule EdenflowersWeb.Layouts do
       {dgettext("admin", "Finances"),
        [
          {~p"/admin/invoices", dgettext("admin", "Invoices"), true, "hero-document-text"},
-         {~p"/admin/expenses", dgettext("admin", "Expenses"), true, "hero-banknotes"}
+         {~p"/admin/expenses", dgettext("admin", "Expenses"), true, "hero-banknotes"},
+         {~p"/admin/minimossen", dgettext("admin", "Minimossen"), true, "hero-chart-bar"}
        ]}
     ]
 

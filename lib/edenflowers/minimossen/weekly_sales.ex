@@ -70,14 +70,12 @@ defmodule Edenflowers.Minimossen.WeeklySales do
                     "total for each of the last `count` weeks, months or years up to the latest week imported, " <>
                     "oldest first, from the first with a report, where one without a report reads 0. A week " <>
                     "counts in the month and year its Thursday falls in. By week, each week also has the average " <>
-                    "of the 8 weeks before it, leaving out weeks without a report. And the total for the latest " <>
-                    "week's year, from the first week imported in it. No periods or year before any import, and " <>
+                    "of the 8 weeks before it, leaving out weeks without a report. No periods before any import, and " <>
                     "no average by month or year, or without an earlier report."
 
       constraints fields: [
                     groups: [type: {:array, :map}, allow_nil?: false],
-                    periods: [type: {:array, :map}, allow_nil?: false],
-                    year: [type: :map, allow_nil?: true]
+                    periods: [type: {:array, :map}, allow_nil?: false]
                   ]
 
       argument :period, :atom, default: :week, constraints: [one_of: [:week, :month, :year]]

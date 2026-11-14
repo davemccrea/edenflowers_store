@@ -624,9 +624,6 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     assert has_element?(view, "#minimossen-groups div", "Flowers 154,40 € +34,40 €")
     assert has_element?(view, "#minimossen-groups div", "Pots 406,90 € +46,90 €")
 
-    year_total = Edenflowers.Format.currency(Decimal.new("1041.30"), Edenflowers.Format.locale())
-    assert has_element?(view, "#minimossen-year", "This year, weeks 44–45 #{year_total}")
-
     view |> element("#minimossen-groups button", "Flowers") |> render_click()
     assert has_element?(view, "#minimossen-total", "154,40 €")
     assert has_element?(view, "#minimossen-change", "+34,40 € on the 8-week average")

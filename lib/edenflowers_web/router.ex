@@ -224,6 +224,7 @@ defmodule EdenflowersWeb.Router do
       live "/invoices/:id", InvoiceLive, :show
       live "/expenses", ExpensesLive
       live "/expenses/:id", ExpenseDetailLive
+      live "/minimossen", MinimossenLive
       live "/account", AccountLive
       live "/search", SearchLive
       live "/links", LinksLive
