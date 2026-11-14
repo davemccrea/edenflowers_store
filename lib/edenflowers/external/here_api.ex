@@ -106,7 +106,7 @@ defmodule Edenflowers.External.HereAPI do
       {:ok, route}
     else
       {:ok, %{status: status, body: body}} ->
-        Logger.error("HereAPI sequence returned status #{status}: #{inspect(body["errors"] || body)}")
+        Logger.error("HereAPI sequence returned status #{status}: #{inspect(body, limit: 20)}")
         {:error, :route_not_planned}
 
       other ->
@@ -115,7 +115,8 @@ defmodule Edenflowers.External.HereAPI do
     end
   end
 
-  defp destination(%{id: id, position: position, service: service} = stop) do
+  @doc false
+  def destination(%{id: id, position: position, service: service} = stop) do
     window =
       case stop[:window] do
         {from, to} -> ";acc:#{weekday_time(from)}|#{weekday_time(to)}"

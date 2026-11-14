@@ -226,9 +226,12 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     end
   end
 
-  def handle_event("start_run", _params, socket) do
-    %{route_date: date, route: %{stops: stops, back_at: back_at}, route_stale?: false, current_user: actor} =
-      socket.assigns
+  def handle_event(
+        "start_run",
+        _params,
+        %{assigns: %{route: %{stops: stops, back_at: back_at}, route_stale?: false}} = socket
+      ) do
+    %{route_date: date, current_user: actor} = socket.assigns
 
     case Orders.start_delivery_run(
            date,
@@ -247,6 +250,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         {:noreply, put_flash(socket, :error, ~t"The delivery run couldn't be started. Plan the route again.")}
     end
   end
+
+  # A click that raced a form change: the route is out of date and the button is already gone.
+  def handle_event("start_run", _params, socket), do: {:noreply, socket}
 
   # Only today, so a page left open overnight can't toggle yesterday.
   def handle_event("toggle-date", %{"date" => date}, socket) do

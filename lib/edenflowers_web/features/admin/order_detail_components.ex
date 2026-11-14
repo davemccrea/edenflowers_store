@@ -334,6 +334,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         behind: behind,
         back_at: next && planned_back_at && DateTime.add(planned_back_at, behind),
         delivered: Enum.count(assigns.run, &(not &1.fulfillable?)),
+        # The place in the list, not the saved number: a stop cancelled or moved mid-run leaves a gap.
+        position: assigns.order && Enum.find_index(assigns.run, &(&1.id == assigns.order.id)) + 1,
         directions?: is_nil(assigns.order) or not assigns.order.fulfillable?
       )
 
@@ -347,7 +349,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         <h2 id={"#{@id}-title"} class="text-base-content flex items-center gap-2 text-base font-semibold">
           <.icon name="hero-truck" class="text-base-content/60 h-5 w-5" />
           <%= if @order do %>
-            {~t"Stop #{position = @order.route_position} of #{total = length(@run)}"}
+            {~t"Stop #{position = @position} of #{total = length(@run)}"}
           <% else %>
             {~t"Delivery run"}
           <% end %>
@@ -369,7 +371,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
 
       <ol id={"#{@id}-stops"} class="divide-base-content/12 divide-y text-sm">
         <li
-          :for={stop <- @run}
+          :for={{stop, n} <- Enum.with_index(@run, 1)}
           id={"#{@id}-stop-#{stop.id}"}
           aria-current={@order && stop.id == @order.id && "step"}
           class={["py-1.5", !stop.fulfillable? && "text-base-content/60"]}
@@ -378,7 +380,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           <div class="min-h-8 flex items-center gap-3">
             <span class={["flex w-5 shrink-0 tabular-nums", if(@order && stop.id == @order.id, do: "text-primary font-semibold", else: "text-base-content/60")]}>
               <%= if stop.fulfillable? do %>
-                {stop.route_position}
+                {n}
               <% else %>
                 <.icon name="hero-check" class="text-success h-4 w-4" />
                 <span class="sr-only">{~t"Delivered"}</span>

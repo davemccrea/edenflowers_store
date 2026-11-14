@@ -43,4 +43,26 @@ defmodule Edenflowers.External.HereAPISequenceTest do
     assert route.distance == 14_905
     assert route.driving == 1788
   end
+
+  test "sends a stop's window as HERE's weekday times, in the shop's offset on either side of summer time" do
+    tz = Edenflowers.ShopTime.timezone()
+    window = fn date, from, to -> {DateTime.new!(date, from, tz), DateTime.new!(date, to, tz)} end
+
+    assert HereAPI.destination(%{id: "a", position: "63.1,21.6", service: 300, window: nil}) ==
+             "a;63.1,21.6;st:300"
+
+    assert HereAPI.destination(%{
+             id: "a",
+             position: "63.1,21.6",
+             service: 300,
+             window: window.(~D[2026-11-20], ~T[10:00:00], ~T[12:00:00])
+           }) == "a;63.1,21.6;acc:fr10:00:00+02:00|fr12:00:00+02:00;st:300"
+
+    assert HereAPI.destination(%{
+             id: "a",
+             position: "63.1,21.6",
+             service: 300,
+             window: window.(~D[2026-03-30], ~T[09:30:00], ~T[11:00:00])
+           }) == "a;63.1,21.6;acc:mo09:30:00+03:00|mo11:00:00+03:00;st:300"
+  end
 end
