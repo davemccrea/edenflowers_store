@@ -280,7 +280,7 @@ defmodule EdenflowersWeb.Admin.RouteDrawer do
 
     overlays = Enum.join(["geojson(#{URI.encode(line, &URI.char_unreserved?/1)})" | ends ++ stop_pins], ",")
 
-    "https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/#{overlays}/auto/1000x600@2x" <>
+    "https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/#{overlays}/auto/600x360@2x" <>
       "?padding=40&access_token=#{token}&logo=false&attribution=false"
   end
 
