@@ -168,15 +168,27 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     end
 
     action :plan_route, :map do
-      description "Orders the day's chosen deliveries into the fastest drive with HERE, from the shop or " <>
-                    "Jennie's home and back to either. A route that can't be planned, or that misses an " <>
-                    "agreed time, is returned as `%{error: reason}` rather than failing."
+      description "Orders the day's chosen deliveries into the fastest drive with HERE, from the shop, " <>
+                    "Parkhemmet or Jennie's home and back to any of them. A route that can't be planned, " <>
+                    "or that misses an agreed time, is returned as `%{error: reason}` rather than failing."
 
       argument :order_ids, {:array, :uuid}, allow_nil?: false
       argument :date, :date, allow_nil?: false
-      argument :start, :atom, allow_nil?: false, constraints: [one_of: [:shop, :home]]
-      argument :finish, :atom, allow_nil?: false, constraints: [one_of: [:shop, :home]]
+      argument :start, :atom, allow_nil?: false, constraints: [one_of: [:shop, :parkhemmet, :home]]
+      argument :finish, :atom, allow_nil?: false, constraints: [one_of: [:shop, :parkhemmet, :home]]
       argument :departure, :time, allow_nil?: false
+
+      argument :ignore_times, :boolean,
+        default: false,
+        allow_nil?: false,
+        description: "Plans the drive as if no delivery had an agreed time."
+
+      argument :optimise_for, :atom,
+        default: :distance,
+        allow_nil?: false,
+        constraints: [one_of: [:time, :distance]],
+        description: "Whether HERE picks the order that finishes soonest, waiting included, or drives the least."
+
       run Actions.PlanRoute
     end
   end

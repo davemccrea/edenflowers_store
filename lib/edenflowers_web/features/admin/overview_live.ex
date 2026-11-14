@@ -210,6 +210,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
              params["start"],
              params["finish"],
              params["departure"],
+             %{ignore_times: params["ignore_times"] == "true"},
              actor: actor
            ) do
         {:ok, route} -> route
@@ -975,9 +976,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               {method_heading(method)}
               <.count_badge count={length(orders)} active={true} />
             </h4>
-            <span class="text-base-content/75 text-sm tabular-nums">
-              {~t"#{ready = Enum.count(orders, & &1.can_undo_ready?)} of #{total = length(orders)} ready"}
-            </span>
             <.button
               :if={method == :delivery}
               id={"#{@id}-route"}
@@ -989,12 +987,15 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             >
               <.icon name="hero-map" class="h-4 w-4" /> {~t"Plan route"}
             </.button>
-            <.day_booking_controls :if={index == 0} id={@id} date={@date} booking={@booking} />
           </div>
           <ul class="divide-base-content/12 -mx-4 divide-y sm:-mx-5">
             <.order_row :for={order <- orders} order={order} />
           </ul>
         </div>
+      </div>
+
+      <div :if={@orders != [] && @booking} class="pt-4">
+        <.day_booking_controls id={@id} date={@date} booking={@booking} />
       </div>
 
       <div :if={@orders == []} class="flex flex-wrap items-center justify-between gap-3 py-5">

@@ -140,6 +140,13 @@ defmodule EdenflowersWeb.Admin.RouteDrawer do
             <.input field={@form[:departure]} type="time" label={~t"Leaving at"} required class="input w-full" />
           </div>
 
+          <.input
+            :if={timed_stop_ticked?(@stops, @form)}
+            field={@form[:ignore_times]}
+            type="checkbox"
+            label={~t"Ignore agreed times"}
+          />
+
           <div :if={@route} id="route-result" class="border-base-content/12 space-y-3 border-t pt-4">
             <p
               :if={@route_stale?}
@@ -319,12 +326,16 @@ defmodule EdenflowersWeb.Admin.RouteDrawer do
     if date == DateTime.to_date(now), do: Calendar.strftime(now, "%H:%M"), else: "09:00"
   end
 
+  defp timed_stop_ticked?(stops, form),
+    do: Enum.any?(stops, &(&1.fulfillment_time_start && &1.id in ticked(form)))
+
   @doc "The ids of the stops ticked in the form, without the empty value that lets none be sent."
   def ticked(form), do: Enum.reject(form[:stops].value || [], &(&1 == ""))
 
   defp place_options(places), do: Enum.map(places, &{place_label(&1), &1})
 
-  defp place_label(:shop), do: ~t"Shop"
+  defp place_label(:shop), do: "Minimossen"
+  defp place_label(:parkhemmet), do: "Parkhemmet"
   defp place_label(:home), do: ~t"Home"
 
   @doc "Who a stop is for: a gift's recipient, otherwise the customer."

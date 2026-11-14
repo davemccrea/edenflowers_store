@@ -42,7 +42,7 @@ defmodule Edenflowers.Fulfillment.PlanRouteTest do
 
     shop = HereAPI.shop_position()
 
-    expect(HereAPI.Mock, :sequence, fn ^shop, stops, ^shop, departure ->
+    expect(HereAPI.Mock, :sequence, fn ^shop, stops, ^shop, departure, :distance ->
       assert departure == helsinki(~T[09:00:00])
       assert stops |> Enum.map(& &1.id) |> Enum.sort() == Enum.sort([first.id, second.id])
 
@@ -74,7 +74,7 @@ defmodule Edenflowers.Fulfillment.PlanRouteTest do
     late = delivery("Late", fulfillment_time_start: ~T[08:00:00], fulfillment_time_end: ~T[08:10:00])
 
     # HERE meets a window it can't make today a week later.
-    expect(HereAPI.Mock, :sequence, fn _start, _stops, _finish, _departure ->
+    expect(HereAPI.Mock, :sequence, fn _start, _stops, _finish, _departure, _optimise_for ->
       {:ok,
        %{
          stops: [%{id: late.id, starts_at: DateTime.add(helsinki(~T[08:00:00]), 7, :day)}],
@@ -89,10 +89,41 @@ defmodule Edenflowers.Fulfillment.PlanRouteTest do
     assert id == late.id
   end
 
+  test "can ignore agreed times and finish soonest", %{admin: admin} do
+    late = delivery("Late", fulfillment_time_start: ~T[08:00:00], fulfillment_time_end: ~T[08:10:00])
+
+    expect(HereAPI.Mock, :sequence, fn _start, [stop], _finish, _departure, :time ->
+      assert stop.window == nil
+
+      {:ok,
+       %{
+         stops: [%{id: late.id, starts_at: helsinki(~T[09:10:00])}],
+         back_at: helsinki(~T[09:20:00]),
+         distance: 8000,
+         driving: 900
+       }}
+    end)
+
+    route =
+      Fulfillment.plan_route!(
+        [late.id],
+        @date,
+        :shop,
+        :shop,
+        ~T[09:00:00],
+        %{ignore_times: true, optimise_for: :time},
+        actor: admin
+      )
+
+    assert route.error == nil
+    assert [%{order: %{id: id}}] = route.stops
+    assert id == late.id
+  end
+
   test "gives an order with only a start time a quarter of an hour either side", %{admin: admin} do
     order = delivery("At ten", fulfillment_time_start: ~T[10:00:00])
 
-    expect(HereAPI.Mock, :sequence, fn _start, [stop], _finish, _departure ->
+    expect(HereAPI.Mock, :sequence, fn _start, [stop], _finish, _departure, _optimise_for ->
       assert stop.window == {helsinki(~T[09:45:00]), helsinki(~T[10:15:00])}
       {:error, :route_not_planned}
     end)
@@ -101,9 +132,22 @@ defmodule Edenflowers.Fulfillment.PlanRouteTest do
              Fulfillment.plan_route!([order.id], @date, :shop, :shop, ~T[09:00:00], actor: admin)
   end
 
+  test "can start from Parkhemmet", %{admin: admin} do
+    order = delivery("Somewhere")
+    parkhemmet = Fulfillment.route_place_position(:parkhemmet)
+    shop = HereAPI.shop_position()
+
+    expect(HereAPI.Mock, :sequence, fn ^parkhemmet, _stops, ^shop, _departure, _optimise_for ->
+      {:error, :route_not_planned}
+    end)
+
+    assert %{error: :route_not_planned} =
+             Fulfillment.plan_route!([order.id], @date, :parkhemmet, :shop, ~T[09:00:00], actor: admin)
+  end
+
   test "can't start from home until it's configured", %{admin: admin} do
     order = delivery("Somewhere")
-    assert Fulfillment.route_places() == [:shop]
+    assert Fulfillment.route_places() == [:shop, :parkhemmet]
 
     assert %{error: :no_home} =
              Fulfillment.plan_route!([order.id], @date, :home, :shop, ~T[09:00:00], actor: admin)

@@ -6,7 +6,13 @@ defmodule Edenflowers.External.HereAPI.Behaviour do
   @callback geocode(query :: String.t()) ::
               {:ok, {String.t(), String.t(), String.t()}} | {:error, atom()}
   @callback route_distance(position :: String.t()) :: {:ok, integer()} | {:error, atom()}
-  @callback sequence(start :: String.t(), stops :: [map()], finish :: String.t(), departure :: DateTime.t()) ::
+  @callback sequence(
+              start :: String.t(),
+              stops :: [map()],
+              finish :: String.t(),
+              departure :: DateTime.t(),
+              improve_for :: :time | :distance
+            ) ::
               {:ok, map()} | {:error, atom()}
 end
 
@@ -82,7 +88,7 @@ defmodule Edenflowers.External.HereAPI do
   Returns the stops' ids in driving order with when each one's visit starts,
   which is after any wait for its window to open.
   """
-  def sequence(start, stops, finish, departure) do
+  def sequence(start, stops, finish, departure, improve_for) do
     destinations =
       stops
       |> Enum.with_index(1)
@@ -93,7 +99,7 @@ defmodule Edenflowers.External.HereAPI do
         destinations ++
         [
           mode: "fastest;car;traffic:enabled",
-          improveFor: "time",
+          improveFor: Atom.to_string(improve_for),
           departure: DateTime.to_iso8601(departure),
           apiKey: api_key()
         ]

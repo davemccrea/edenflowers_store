@@ -17,11 +17,16 @@ defmodule Edenflowers.Fulfillment do
 
   def shop_address, do: "Muurahaistie 1, 65230 Vaasa"
 
-  @doc "Where a delivery route can start or finish: the shop always, and Jennie's home when it's configured."
-  def route_places, do: if(route_place_position(:home), do: [:shop, :home], else: [:shop])
+  @doc "Where a delivery route can start or finish: the fixed places always, and Jennie's home when it's configured."
+  def route_places do
+    fixed = [:shop, :parkhemmet]
+    if route_place_position(:home), do: fixed ++ [:home], else: fixed
+  end
 
   @doc "A route place's coordinates, \"latitude,longitude\", or nil when home isn't configured."
   def route_place_position(:shop), do: Edenflowers.External.HereAPI.shop_position()
+  # Långviksgatan 31–33, 65100 Vasa
+  def route_place_position(:parkhemmet), do: "63.10017,21.6189"
   def route_place_position(:home), do: Application.get_env(:edenflowers, :home_position)
 
   @doc "Returns the distance-priced delivery option, or nil."
@@ -44,7 +49,10 @@ defmodule Edenflowers.Fulfillment do
       define :get_option_by_id, action: :read, get_by: [:id]
       define :update_pricing, action: :update_pricing
       define :calculate_delivery, action: :calculate_delivery, args: [:delivery_address, :fulfillment_option_id]
-      define :plan_route, action: :plan_route, args: [:order_ids, :date, :start, :finish, :departure]
+
+      define :plan_route,
+        action: :plan_route,
+        args: [:order_ids, :date, :start, :finish, :departure]
     end
 
     resource Edenflowers.Fulfillment.ShopCalendar do

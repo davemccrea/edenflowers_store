@@ -26,7 +26,6 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       order = open_order("To prepare", :delivery, 0)
       {:ok, view, _html} = live(conn, ~p"/admin")
       row = "#day-order-#{order.id}"
-      assert has_element?(view, "#day-orders-delivery", "0 of 1 ready")
 
       view |> element("#{row} button", "Mark as ready") |> render_click()
       assert_push_event(view, "order-ready", %{})
@@ -34,7 +33,6 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
       eventually(fn ->
         assert has_element?(view, row, "Ready for delivery")
-        assert has_element?(view, "#day-orders-delivery", "1 of 1 ready")
         assert has_element?(view, "#{row} a", "To prepare")
 
         # The order page is where readiness is undone; the overview only moves work forward.
@@ -46,7 +44,6 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
       eventually(fn ->
         assert has_element?(view, "#{row} button")
-        assert has_element?(view, "#day-orders-delivery", "0 of 1 ready")
       end)
     end
 

@@ -36,7 +36,7 @@ defmodule EdenflowersWeb.Admin.RouteDrawerTest do
       unmade = delivery("Unmade", fulfillment_status: :pending)
       unplaced = delivery("Unplaced", position: nil)
 
-      expect(HereAPI.Mock, :sequence, fn _start, stops, _finish, _departure ->
+      expect(HereAPI.Mock, :sequence, fn _start, stops, _finish, _departure, _optimise_for ->
         assert stops |> Enum.map(& &1.id) |> Enum.sort() == Enum.sort([near.id, far.id])
         today = Edenflowers.ShopTime.today()
 
@@ -80,6 +80,18 @@ defmodule EdenflowersWeb.Admin.RouteDrawerTest do
       # The order page's next arrow follows the run.
       queue = Edenflowers.Orders.list_orders_to_fulfil!(actor: admin)
       assert Enum.map(queue, & &1.id) |> Enum.take(2) == [far.id, near.id]
+    end
+
+    test "offers to ignore agreed times only while a ticked delivery has one", %{conn: conn} do
+      untimed = delivery("Untimed")
+      timed = delivery("Timed", fulfillment_status: :pending, fulfillment_time_start: ~T[10:00:00])
+
+      {:ok, view, _html} = live(conn, ~p"/admin")
+      view |> element("#day-orders-route") |> render_click()
+      refute has_element?(view, "#route-form input[name='route[ignore_times]']")
+
+      view |> form("#route-form", route: %{stops: [untimed.id, timed.id]}) |> render_change()
+      assert has_element?(view, "#route-form input[name='route[ignore_times]']")
     end
 
     test "shows today's run at the top of the Overview, in stop order, with Directions to the next", %{conn: conn} do
@@ -130,7 +142,7 @@ defmodule EdenflowersWeb.Admin.RouteDrawerTest do
     test "keeps a route the form no longer matches, out of date and not startable", %{conn: conn} do
       order = delivery("Only")
 
-      expect(HereAPI.Mock, :sequence, fn _start, _stops, _finish, _departure ->
+      expect(HereAPI.Mock, :sequence, fn _start, _stops, _finish, _departure, _optimise_for ->
         today = Edenflowers.ShopTime.today()
 
         {:ok,
@@ -158,7 +170,7 @@ defmodule EdenflowersWeb.Admin.RouteDrawerTest do
       gone = delivery("Gone")
       next = delivery("Next")
 
-      expect(HereAPI.Mock, :sequence, fn _start, _stops, _finish, _departure ->
+      expect(HereAPI.Mock, :sequence, fn _start, _stops, _finish, _departure, _optimise_for ->
         today = Edenflowers.ShopTime.today()
 
         {:ok,
@@ -214,7 +226,7 @@ defmodule EdenflowersWeb.Admin.RouteDrawerTest do
     test "says which delivery can't be reached in its agreed time", %{conn: conn} do
       late = delivery("Late", fulfillment_time_start: ~T[08:00:00], fulfillment_time_end: ~T[08:10:00])
 
-      expect(HereAPI.Mock, :sequence, fn _start, _stops, _finish, _departure ->
+      expect(HereAPI.Mock, :sequence, fn _start, _stops, _finish, _departure, _optimise_for ->
         next_week = Date.add(Edenflowers.ShopTime.today(), 7)
 
         {:ok,

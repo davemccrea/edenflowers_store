@@ -27,26 +27,32 @@ defmodule Edenflowers.Fulfillment.Actions.PlanRoute do
          orders,
          Fulfillment.route_place_position(start),
          Fulfillment.route_place_position(finish),
-         departure_at(date, departure)
+         departure_at(date, departure),
+         Map.take(input.arguments, [:ignore_times, :optimise_for])
        )}
     end
   end
 
   defp departure_at(date, time), do: DateTime.new!(date, time, ShopTime.timezone())
 
-  defp plan([], _start, _finish, _departure), do: %{error: :no_stops}
-  defp plan(_orders, nil, _finish, _departure), do: %{error: :no_home}
-  defp plan(_orders, _start, nil, _departure), do: %{error: :no_home}
+  defp plan([], _start, _finish, _departure, _settings), do: %{error: :no_stops}
+  defp plan(_orders, nil, _finish, _departure, _settings), do: %{error: :no_home}
+  defp plan(_orders, _start, nil, _departure, _settings), do: %{error: :no_home}
 
-  defp plan(orders, start, finish, departure) do
+  defp plan(orders, start, finish, departure, %{ignore_times: ignore_times, optimise_for: optimise_for}) do
     by_id = Map.new(orders, &{&1.id, &1})
 
     stops =
       Enum.map(orders, fn order ->
-        %{id: order.id, position: order.position, service: @service_seconds, window: window(order)}
+        %{
+          id: order.id,
+          position: order.position,
+          service: @service_seconds,
+          window: unless(ignore_times, do: window(order))
+        }
       end)
 
-    case HereAPI.impl().sequence(start, stops, finish, departure) do
+    case HereAPI.impl().sequence(start, stops, finish, departure, optimise_for) do
       {:ok, route} ->
         stops =
           Enum.map(route.stops, fn %{id: id, starts_at: starts_at} ->
@@ -60,7 +66,7 @@ defmodule Edenflowers.Fulfillment.Actions.PlanRoute do
           end)
 
         # HERE repeats windows weekly, so a window it can't make today it makes a week later.
-        case Enum.filter(stops, &late?/1) do
+        case if(ignore_times, do: [], else: Enum.filter(stops, &late?/1)) do
           [] ->
             %{
               error: nil,
