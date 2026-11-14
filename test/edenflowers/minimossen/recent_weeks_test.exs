@@ -52,6 +52,17 @@ defmodule Edenflowers.Minimossen.RecentWeeksTest do
     assert summary(2).groups == [%{code: "3", name: "Eden Flowers kukat"}, %{code: "66", name: "Group 66"}]
   end
 
+  test "a week without sales, named only by its code, doesn't rename the group" do
+    record(~D[2026-10-26], "7", "160.50")
+
+    Minimossen.record_minimossen_sales!(
+      %{week_start: ~D[2026-11-02], group_code: "7", group_name: "7", gross: "0.00"},
+      actor: Edenflowers.Actors.system_actor()
+    )
+
+    assert summary(2).groups == [%{code: "7", name: "Group 7"}]
+  end
+
   test "a week without a report reads 0" do
     record(~D[2026-10-19], "3", "100.00")
     record(~D[2026-11-02], "3", "154.40")

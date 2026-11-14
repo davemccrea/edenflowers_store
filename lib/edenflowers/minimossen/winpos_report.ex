@@ -7,14 +7,24 @@ defmodule Edenflowers.Minimossen.WinposReport do
 
   @period ~r/^Pvm: (\d{1,2})\.(\d{1,2})\.(\d{4}) - (\d{1,2})\.(\d{1,2})\.(\d{4})$/
 
+  @covered ~r/^Tuoteryhmät: (.+)$/
+
   @doc """
   Returns `{:ok, %{week_start: monday, groups: [%{code: "3", name: "Eden Flowers kukat", gross: Decimal}]}}`.
+
+  Every group the report covers is in `groups`. One without sales that week has no line
+  in the report, so it reads 0 and is named by its code.
   """
   def parse(xls) do
-    with {:ok, rows} <- read(xls),
-         {:ok, week_start} <- week_start(rows),
+    with {:ok, rows} <- read(xls), do: from_rows(rows)
+  end
+
+  @doc "Reads the rows of a report's sheet, as `parse/1` does."
+  def from_rows(rows) do
+    with {:ok, week_start} <- week_start(rows),
+         {:ok, covered} <- covered_codes(rows),
          {:ok, groups} <- groups(rows) do
-      {:ok, %{week_start: week_start, groups: groups}}
+      {:ok, %{week_start: week_start, groups: groups ++ unsold(covered, groups)}}
     end
   end
 
@@ -49,6 +59,32 @@ defmodule Edenflowers.Minimossen.WinposReport do
   end
 
   defp period(_cell), do: nil
+
+  # The report's filter cells name the groups it covers, e.g. "Tuoteryhmät: 66" and
+  # "Tuoteryhmät: 6 - 7", a range of codes.
+  defp covered_codes(rows) do
+    filters = for row <- rows, cell <- row, is_binary(cell), [_match, filter] <- [Regex.run(@covered, cell)], do: filter
+
+    codes =
+      Enum.flat_map(filters, fn filter ->
+        case filter |> String.split("-") |> Enum.map(&Integer.parse(String.trim(&1))) do
+          [{code, ""}] -> [code]
+          [{from, ""}, {to, ""}] when from <= to -> Enum.to_list(from..to)
+          _other -> [:bad]
+        end
+      end)
+
+    cond do
+      codes == [] -> {:error, :winpos_report_groups_missing}
+      :bad in codes -> {:error, {:winpos_report_bad_groups, filters}}
+      true -> {:ok, codes |> Enum.map(&Integer.to_string/1) |> Enum.uniq()}
+    end
+  end
+
+  defp unsold(covered, groups) do
+    sold = MapSet.new(groups, & &1.code)
+    for code <- covered, code not in sold, do: %{code: code, name: code, gross: Decimal.new("0.00")}
+  end
 
   # The groups sit between the "Koodi" header and the "Yhteensä" total, which must add up.
   defp groups(rows) do

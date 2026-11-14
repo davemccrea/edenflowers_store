@@ -65,9 +65,10 @@ defmodule Edenflowers.Minimossen.Actions.RecentWeeks do
   end
 
   # Sorted by code as a number ("3" before "66"), each named as its latest report names it.
+  # A week without sales only has the code as its name, so a real name wins over it.
   defp groups(sales) do
     sales
-    |> Enum.sort_by(& &1.week_start, Date)
+    |> Enum.sort_by(&{&1.group_name != &1.group_code, Date.to_gregorian_days(&1.week_start)})
     |> Map.new(&{&1.group_code, &1.group_name})
     |> Enum.map(fn {code, name} -> %{code: code, name: name} end)
     |> Enum.sort_by(&{String.length(&1.code), &1.code})

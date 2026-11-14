@@ -4,7 +4,7 @@ title: Show Minimossen's weekly till sales on the admin overview
 status: done
 assignee: []
 created_date: '2026-11-14 09:06'
-updated_date: '2026-11-14 10:33'
+updated_date: '2026-11-14 11:00'
 labels:
   - admin
   - spec
@@ -72,4 +72,6 @@ Before it works in production: create the Fastmail folders `Winpos` and `Winpos/
 Reviewed 2026-11-14: the card compares the latest week with the average of the 8 weeks before it rather than with the week before, since one week is too noisy to judge by. Weeks without a report are left out of the average. The average is drawn as a light dashed line across the bars. A last line gives the year's total so far, by ISO week year, labelled with the weeks it covers (e.g. "This year, weeks 34–45") until older reports are backfilled.
 
 Changed 2026-11-14: the card splits by Winpos product group instead of Flowers and Shop. Each group gets a row, named as Winpos names it, and its own colour in the bars; the rows double as the chart's legend.
+
+Reviewed again 2026-11-14: a week without sales was left out as if unreported. Each report now saves 0 for every group its `Tuoteryhmät:` filter cells cover (e.g. `6 - 7`) that has no line, named by its code, so a closed week counts in the average and the card can end on it. A report without those cells fails as a changed layout. `WinposReport.from_rows/1` lets tests check the layout errors with plain rows.
 <!-- SECTION:NOTES:END -->
