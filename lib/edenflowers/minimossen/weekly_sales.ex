@@ -65,23 +65,25 @@ defmodule Edenflowers.Minimossen.WeeklySales do
       run Actions.ImportReports
     end
 
-    action :recent_weeks, :map do
-      description "The product groups sold in those weeks, sorted by code; each group's gross sales and the " <>
-                    "total for each of the last `count` weeks up to the latest week " <>
-                    "imported, oldest first, where a week without a report reads 0; and the average of the " <>
-                    "8 weeks before the latest, leaving out weeks without a report; and the total for the latest " <>
-                    "week's year, from the first week imported in it. No weeks or year before any import, and no " <>
-                    "average without an earlier report."
+    action :recent_sales, :map do
+      description "The product groups sold in those periods, sorted by code; each group's gross sales and the " <>
+                    "total for each of the last `count` weeks, months or years up to the latest week imported, " <>
+                    "oldest first, from the first with a report, where one without a report reads 0. A week " <>
+                    "counts in the month and year its Thursday falls in. By week, also the average of the 8 " <>
+                    "weeks before the latest, leaving out weeks without a report. And the total for the latest " <>
+                    "week's year, from the first week imported in it. No periods or year before any import, and " <>
+                    "no average by month or year, or without an earlier report."
 
       constraints fields: [
                     groups: [type: {:array, :map}, allow_nil?: false],
-                    weeks: [type: {:array, :map}, allow_nil?: false],
+                    periods: [type: {:array, :map}, allow_nil?: false],
                     average: [type: :map, allow_nil?: true],
                     year: [type: :map, allow_nil?: true]
                   ]
 
+      argument :period, :atom, default: :week, constraints: [one_of: [:week, :month, :year]]
       argument :count, :integer, default: 12, constraints: [min: 1]
-      run Actions.RecentWeeks
+      run Actions.RecentSales
     end
   end
 
@@ -90,7 +92,7 @@ defmodule Edenflowers.Minimossen.WeeklySales do
       authorize_if always()
     end
 
-    policy action([:read, :recent_weeks]) do
+    policy action([:read, :recent_sales]) do
       authorize_if actor_attribute_equals(:admin, true)
     end
   end

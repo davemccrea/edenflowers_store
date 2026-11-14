@@ -446,6 +446,18 @@ body:has(.admin-theme) {
   --color-loading-bar: oklch(
     calc(var(--admin-l) + 30%) var(--admin-c) var(--admin-h)
   );
+
+  /* Chart series, in this order: neighbours of the admin's hue within about
+     100°, so a chart reads as the same family as the primary, alternating
+     lightness so segments next to each other in a stack stay apart. Chroma is
+     fixed so a grey admin colour still gets a readable chart. Checked with the
+     dataviz palette validator at every hue: neighbouring slots never drop below
+     ΔE 14 for colour-blind readers (target 8). Any two slots can be closer, so
+     each colour sits beside its group's name in the legend. */
+  --chart-1: oklch(54% 0.09 var(--admin-h));
+  --chart-2: oklch(74% 0.09 calc(var(--admin-h) + 30));
+  --chart-3: oklch(44% 0.09 calc(var(--admin-h) + 60));
+  --chart-4: oklch(64% 0.09 calc(var(--admin-h) - 45));
 }
 
 /* The account page's colour picker shows hue horizontally and becomes darker

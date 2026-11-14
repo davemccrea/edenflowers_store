@@ -31,8 +31,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   @store_presence Events.topic(Events.store_presence())
 
   # Minimossen's group rows double as its chart's legend, so each group keeps its colour in both.
-  # shortcut: colours repeat past 8 groups, add more if Winpos ever has that many.
-  @group_colours ~w(bg-primary bg-amber-400 bg-sky-600 bg-rose-400 bg-violet-500 bg-teal-400 bg-orange-600 bg-slate-400)
+  # The colours follow the admin's own hue (--chart-* in admin.css).
+  # shortcut: a 5th group and later are grey, add a validated colour if Winpos ever has that many.
+  @group_colours ~w[bg-(--chart-1) bg-(--chart-2) bg-(--chart-3) bg-(--chart-4)]
 
   @impl true
   def mount(_params, _session, socket) do
@@ -58,6 +59,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
      |> assign(:connected_customers, EdenflowersWeb.Presence.connected_customers())
      |> assign(route_date: nil, route_form: nil, route: nil, route_stale?: false)
      |> assign(:mapbox_token, Application.get_env(:edenflowers, :mapbox_token))
+     |> assign(minimossen_period: :week, minimossen_group: nil)
      |> refresh()}
   end
 
@@ -112,9 +114,11 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               locale={@locale}
             />
             <.minimossen_widget
-              :if={@minimossen.weeks != []}
+              :if={@minimossen.periods != []}
+              period={@minimossen_period}
+              selected={@minimossen_group}
               groups={@minimossen.groups}
-              weeks={@minimossen.weeks}
+              periods={@minimossen.periods}
               average={@minimossen.average}
               year={@minimossen.year}
               locale={@locale}
@@ -186,6 +190,19 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
          |> put_flash(:error, ~t"The order has changed. Check its status and try again.")}
     end
   end
+
+  def handle_event("minimossen_period", %{"period" => period}, socket) when period in ~w(week month year) do
+    period = String.to_existing_atom(period)
+
+    {:noreply,
+     socket
+     |> assign(:minimossen_period, period)
+     |> assign(:minimossen, minimossen(period, socket.assigns.current_user))}
+  end
+
+  # Clicking the shown group again shows them all.
+  def handle_event("minimossen_group", %{"code" => code}, socket),
+    do: {:noreply, update(socket, :minimossen_group, &if(&1 == code, do: nil, else: code))}
 
   def handle_event("connect_bank", _params, socket), do: BankConnection.connect(socket)
 
@@ -369,7 +386,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     |> assign(:delivery_run, Orders.list_delivery_run!(today, actor: actor))
     |> assign(:owed, owed |> Enum.filter(&(&1.kind == :order)) |> sum_amounts())
     |> assign(:sales, Orders.sales_summary!(Date.beginning_of_month(today), today, actor: actor))
-    |> assign(:minimossen, Minimossen.recent_minimossen_weeks!(actor: actor))
+    |> assign(:minimossen, minimossen(socket.assigns.minimossen_period, actor))
     |> assign(:expenses, Expenses.expenses_paid_totals!(Date.beginning_of_month(today), today, actor: actor))
     |> assign(:last_month_to, same_day_last_month)
     |> assign(
@@ -721,45 +738,86 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
   defp svg_path([{x, y} | rest]), do: Enum.reduce(rest, "M#{x},#{y}", fn {x, y}, path -> path <> " L#{x},#{y}" end)
 
-  attr :groups, :list, required: true, doc: "the product groups, from `recent_minimossen_weeks`"
-  attr :weeks, :list, required: true, doc: "oldest first, from `recent_minimossen_weeks`"
+  attr :period, :atom, required: true, values: [:week, :month, :year]
+  attr :groups, :list, required: true, doc: "the product groups, from `recent_minimossen_sales`"
+  attr :periods, :list, required: true, doc: "oldest first, from `recent_minimossen_sales`"
+  attr :selected, :string, required: true, doc: "the code of the only group shown, or nil for all of them"
   attr :average, :map, required: true, doc: "the usual week to compare with, or nil before there is one"
   attr :year, :map, required: true, doc: "the year's total so far, from the first week imported in it"
   attr :locale, :any, required: true
 
   defp minimossen_widget(assigns) do
-    highest = assigns.weeks |> Enum.map(& &1.total) |> Enum.max(Decimal) |> Decimal.to_float()
+    groups =
+      assigns.groups
+      |> Enum.with_index()
+      |> Enum.map(fn {group, index} ->
+        %{group | name: group_name(group.code, group.name)} |> Map.put(:colour, group_colour(index))
+      end)
+
+    # A group that isn't in this period's reports shows them all.
+    selected = Enum.find(groups, &(&1.code == assigns.selected))
+    total = fn amounts -> if selected, do: amounts.groups[selected.code], else: amounts.total end
+    highest = assigns.periods |> Enum.map(total) |> Enum.max(Decimal) |> Decimal.to_float()
+    latest = List.last(assigns.periods)
 
     assigns =
       assign(assigns,
-        latest: List.last(assigns.weeks),
-        average_height: assigns.average && bar_height(assigns.average.total, highest),
-        groups:
-          assigns.groups
-          |> Enum.with_index()
-          |> Enum.map(fn {group, index} -> Map.put(group, :colour, group_colour(index)) end),
+        groups: groups,
+        selected: selected,
+        stacked: if(selected, do: [selected], else: Enum.reverse(groups)),
+        latest: latest,
+        latest_total: total.(latest),
+        average_total: assigns.average && total.(assigns.average),
+        average_height: assigns.average && bar_height(total.(assigns.average), highest),
         bars:
-          Enum.map(assigns.weeks, fn week ->
-            Map.new(week.groups, fn {code, gross} -> {code, bar_height(gross, highest)} end)
+          Enum.map(assigns.periods, fn period ->
+            %{
+              start: period.start,
+              groups: period.groups,
+              heights: Map.new(period.groups, fn {code, gross} -> {code, bar_height(gross, highest)} end)
+            }
           end)
       )
 
     ~H"""
     <.widget id="minimossen" title={~t"Minimossen"}>
+      <div class="mb-3 flex gap-1" role="group" aria-label={~t"Show sales by"}>
+        <button
+          :for={{period, label} <- [week: ~t"Week", month: ~t"Month", year: ~t"Year"]}
+          type="button"
+          phx-click="minimossen_period"
+          phx-value-period={period}
+          aria-pressed={to_string(period == @period)}
+          class="btn btn-xs rounded-full font-normal shadow-none aria-pressed:btn-primary not-aria-pressed:btn-ghost pointer-coarse:btn-sm"
+        >
+          {label}
+        </button>
+      </div>
+
       <dl>
-        <dt class="text-base-content/75 text-sm">{~t"Sales in week #{week = week_number(@latest.week_start)}"}</dt>
+        <dt class="text-base-content/75 text-sm">
+          {sales_heading(@period, @latest.start, @locale)}
+        </dt>
         <dd id="minimossen-total" class="text-base-content text-3xl font-semibold tabular-nums tracking-tight">
-          {Format.currency(@latest.total, @locale)}
+          {Format.currency(@latest_total, @locale)}
         </dd>
         <dd :if={@average} id="minimossen-change" class="text-base-content/75 text-sm tabular-nums">
-          {~t"#{change = change(@latest.total, @average.total, @locale)} on the 8-week average"}
+          {~t"#{change = change(@latest_total, @average_total, @locale)} on the 8-week average"}
         </dd>
       </dl>
 
       <dl id="minimossen-groups" class="mt-3 space-y-1 text-sm tabular-nums">
-        <div :for={group <- @groups} class="flex items-baseline gap-3">
-          <dt class="text-base-content/75 flex flex-1 items-center gap-1.5">
-            <span class={[group.colour, "h-2.5 w-2.5 shrink-0 rounded-sm"]} /> {group.name}
+        <div :for={group <- @groups} class={["flex items-baseline gap-3", @selected not in [nil, group] && "opacity-50"]}>
+          <dt class="flex-1">
+            <button
+              type="button"
+              phx-click="minimossen_group"
+              phx-value-code={group.code}
+              aria-pressed={to_string(@selected == group)}
+              class="text-base-content/75 flex cursor-pointer items-center gap-1.5 text-left aria-pressed:text-base-content aria-pressed:font-semibold hover:text-base-content"
+            >
+              <span class={[group.colour, "h-2.5 w-2.5 shrink-0 rounded-sm"]} /> {group.name}
+            </button>
           </dt>
           <dd class="font-semibold">{Format.currency(@latest.groups[group.code], @locale)}</dd>
           <dd :if={@average} class="text-base-content/75 w-24 text-right">
@@ -770,17 +828,29 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
       <figure class="border-base-content/12 mt-4 border-t pt-3" aria-hidden="true">
         <figcaption class="text-base-content/75 mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-          <span class="text-base-content mr-auto">{~t"Last 12 weeks"}</span>
+          <span class="text-base-content mr-auto">
+            {case @period do
+              :week -> ~t"By week"
+              :month -> ~t"By month"
+              :year -> ~t"By year"
+            end}
+          </span>
           <span :if={@average} class="flex items-center gap-1.5">
             <span class="border-base-content/40 w-4 border-t border-dashed" /> {~t"8-week average"}
           </span>
         </figcaption>
         <div class="border-base-content/12 relative flex h-24 items-end gap-1 border-b">
-          <div :for={bar <- @bars} class="flex h-full flex-1 flex-col justify-end">
+          <div
+            :for={bar <- @bars}
+            class="flex h-full flex-1 flex-col justify-end gap-0.5"
+          >
             <div
-              :for={group <- Enum.reverse(@groups)}
-              class={[group.colour, "first:rounded-t-sm"]}
-              style={"height: #{bar[group.code]}%"}
+              :for={group <- @stacked}
+              phx-click="minimossen_group"
+              phx-value-code={group.code}
+              title={"#{period_label(@period, bar.start, @locale)}, #{group.name}: #{Format.currency(bar.groups[group.code], @locale)}"}
+              class={[group.colour, "cursor-pointer first:rounded-t-sm hover:opacity-75"]}
+              style={"height: #{bar.heights[group.code]}%"}
             />
           </div>
           <div
@@ -790,23 +860,45 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           />
         </div>
         <div class="text-base-content/75 mt-1 flex justify-between text-xs tabular-nums">
-          <span>{~t"Week #{week = week_number(hd(@weeks).week_start)}"}</span>
-          <span>{~t"Week #{week = week_number(@latest.week_start)}"}</span>
+          <span>{period_label(@period, hd(@periods).start, @locale)}</span>
+          <span>{period_label(@period, @latest.start, @locale)}</span>
         </div>
       </figure>
 
       <p
+        :if={@period != :year}
         id="minimossen-year"
         class="border-base-content/12 text-base-content/75 mt-4 flex items-baseline justify-between gap-4 border-t pt-3 text-sm"
       >
-        {~t"This year, weeks #{first = week_number(@year.first_week_start)}–#{last = week_number(@latest.week_start)}"}
+        {~t"This year, weeks #{first = week_number(@year.first_week_start)}–#{last = week_number(@year.last_week_start)}"}
         <span class="text-base-content font-semibold tabular-nums">{Format.currency(@year.total, @locale)}</span>
       </p>
     </.widget>
     """
   end
 
-  defp group_colour(index), do: Enum.at(@group_colours, rem(index, length(@group_colours)))
+  defp minimossen(period, actor), do: Minimossen.recent_minimossen_sales!([period: period], actor: actor)
+
+  defp sales_heading(:week, start, _locale), do: ~t"Sales in week #{week = week_number(start)}"
+
+  defp sales_heading(:month, start, locale),
+    do: ~t"Sales in #{month = Localize.Date.to_string!(start, locale: locale, format: "LLLL y")}"
+
+  defp sales_heading(:year, start, _locale), do: ~t"Sales in #{year = start.year}"
+
+  # Under the chart's ends, e.g. "Week 34", "Nov 2025", "2024".
+  defp period_label(:week, start, _locale), do: ~t"Week #{week = week_number(start)}"
+  defp period_label(:month, start, locale), do: Localize.Date.to_string!(start, locale: locale, format: "LLL y")
+  defp period_label(:year, start, _locale), do: to_string(start.year)
+
+  defp group_colour(index), do: Enum.at(@group_colours, index, "bg-base-content/30")
+
+  # Winpos names the groups in Finnish, some with its own numbering.
+  defp group_name("3", _winpos_name), do: ~t"Flowers"
+  defp group_name("6", _winpos_name), do: ~t"Pots"
+  defp group_name("7", _winpos_name), do: ~t"Toys"
+  defp group_name("66", _winpos_name), do: ~t"Books and magazines"
+  defp group_name(_code, winpos_name), do: winpos_name
 
   # How much more or less than the usual week, signed, e.g. "+37,00 €".
   defp change(now, usual, locale) do

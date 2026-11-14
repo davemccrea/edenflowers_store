@@ -16,7 +16,7 @@ defmodule Edenflowers.Minimossen do
     resource Edenflowers.Minimossen.WeeklySales do
       define :record_minimossen_sales, action: :record
       define :import_winpos_reports, action: :import_reports
-      define :recent_minimossen_weeks, action: :recent_weeks
+      define :recent_minimossen_sales, action: :recent_sales
     end
   end
 end

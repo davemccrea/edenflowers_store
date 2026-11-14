@@ -621,10 +621,40 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     assert has_element?(view, "#minimossen dt", "Sales in week 45")
     assert has_element?(view, "#minimossen-total", "561,30 €")
     assert has_element?(view, "#minimossen-change", "+81,30 € on the 8-week average")
-    assert has_element?(view, "#minimossen-groups div", "Group 3 154,40 € +34,40 €")
-    assert has_element?(view, "#minimossen-groups div", "Group 6 406,90 € +46,90 €")
+    assert has_element?(view, "#minimossen-groups div", "Flowers 154,40 € +34,40 €")
+    assert has_element?(view, "#minimossen-groups div", "Pots 406,90 € +46,90 €")
 
     year_total = Edenflowers.Format.currency(Decimal.new("1041.30"), Edenflowers.Format.locale())
     assert has_element?(view, "#minimossen-year", "This year, weeks 44–45 #{year_total}")
+
+    view |> element("#minimossen-groups button", "Flowers") |> render_click()
+    assert has_element?(view, "#minimossen-total", "154,40 €")
+    assert has_element?(view, "#minimossen-change", "+34,40 € on the 8-week average")
+
+    view |> element("#minimossen-groups button", "Flowers") |> render_click()
+    assert has_element?(view, "#minimossen-total", "561,30 €")
+  end
+
+  test "switches Minimossen's sales to months and years", %{conn: conn} do
+    conn = log_in(conn, generate(admin_user()) |> with_token())
+
+    for {week_start, gross} <- [{~D[2025-10-27], "40.00"}, {~D[2026-10-19], "100.00"}, {~D[2026-10-26], "20.00"}] do
+      Edenflowers.Minimossen.record_minimossen_sales!(
+        %{week_start: week_start, group_code: "3", group_name: "Flowers", gross: gross},
+        actor: Edenflowers.Actors.system_actor()
+      )
+    end
+
+    {:ok, view, _html} = live(conn, ~p"/admin")
+
+    view |> element("#minimossen button", "Month") |> render_click()
+    assert has_element?(view, "#minimossen dt", "Sales in October 2026")
+    total = Edenflowers.Format.currency(Decimal.new("120.00"), Edenflowers.Format.locale())
+    assert has_element?(view, "#minimossen-total", total)
+    refute has_element?(view, "#minimossen-change")
+
+    view |> element("#minimossen button", "Year") |> render_click()
+    assert has_element?(view, "#minimossen dt", "Sales in 2026")
+    assert has_element?(view, "#minimossen button[aria-pressed=true]", "Year")
   end
 end

@@ -1,4 +1,4 @@
-defmodule Edenflowers.Minimossen.RecentWeeksTest do
+defmodule Edenflowers.Minimossen.RecentSalesTest do
   use Edenflowers.DataCase, async: true
 
   import Generator
@@ -12,10 +12,14 @@ defmodule Edenflowers.Minimossen.RecentWeeksTest do
     )
   end
 
-  defp summary(count), do: Minimossen.recent_minimossen_weeks!([count: count], actor: generate(admin_user()))
+  defp summary(count, period \\ :week),
+    do: Minimossen.recent_minimossen_sales!([count: count, period: period], actor: generate(admin_user()))
 
-  defp recent_weeks(count) do
-    Enum.map(summary(count).weeks, &{&1.week_start, Map.new(&1.groups, fn {code, gross} -> {code, amount(gross)} end)})
+  defp recent(count, period \\ :week) do
+    Enum.map(
+      summary(count, period).periods,
+      &{&1.start, Map.new(&1.groups, fn {code, gross} -> {code, amount(gross)} end)}
+    )
   end
 
   defp average(count) do
@@ -34,7 +38,7 @@ defmodule Edenflowers.Minimossen.RecentWeeksTest do
     record(~D[2026-11-02], "6", "221.40")
     record(~D[2026-11-02], "66", "25.00")
 
-    assert recent_weeks(2) == [
+    assert recent(2) == [
              {~D[2026-10-26], %{"3" => "0", "6" => "10.00", "66" => "0"}},
              {~D[2026-11-02], %{"3" => "154.40", "6" => "221.40", "66" => "25.00"}}
            ]
@@ -67,7 +71,7 @@ defmodule Edenflowers.Minimossen.RecentWeeksTest do
     record(~D[2026-10-19], "3", "100.00")
     record(~D[2026-11-02], "3", "154.40")
 
-    assert [_, {~D[2026-10-26], %{"3" => "0"}}, _] = recent_weeks(3)
+    assert [_, {~D[2026-10-26], %{"3" => "0"}}, _] = recent(3)
   end
 
   test "averages the 8 weeks before the latest, leaving out the latest and weeks without a report" do
@@ -98,17 +102,46 @@ defmodule Edenflowers.Minimossen.RecentWeeksTest do
     record(~D[2026-11-02], "3", "154.40")
     record(~D[2026-11-02], "6", "221.40")
 
-    assert %{total: total, first_week_start: ~D[2025-12-29]} = summary(12).year
+    assert %{total: total, first_week_start: ~D[2025-12-29], last_week_start: ~D[2026-11-02]} = summary(12).year
     assert amount(total) == "475.80"
   end
 
+  test "totals each month, counting a week in the month its Thursday falls in" do
+    # Thursday 2026-10-01: October.
+    record(~D[2026-09-28], "3", "100.00")
+    # Thursday 2026-09-24: September.
+    record(~D[2026-09-21], "3", "10.00")
+    record(~D[2026-10-26], "3", "50.00")
+    record(~D[2026-10-26], "6", "5.00")
+
+    assert recent(3, :month) == [
+             {~D[2026-09-01], %{"3" => "10.00", "6" => "0"}},
+             {~D[2026-10-01], %{"3" => "150.00", "6" => "5.00"}}
+           ]
+
+    assert summary(3, :month).average == nil
+  end
+
+  test "totals each ISO year from the first with a report" do
+    record(~D[2024-12-23], "3", "7.00")
+    # Week 1 of 2026 starts in December.
+    record(~D[2025-12-29], "3", "100.00")
+    record(~D[2026-11-02], "3", "54.40")
+
+    assert recent(12, :year) == [
+             {~D[2024-01-01], %{"3" => "7.00"}},
+             {~D[2025-01-01], %{"3" => "0"}},
+             {~D[2026-01-01], %{"3" => "154.40"}}
+           ]
+  end
+
   test "nothing before the first import" do
-    assert summary(12) == %{groups: [], weeks: [], average: nil, year: nil}
+    assert summary(12) == %{groups: [], periods: [], average: nil, year: nil}
   end
 
   test "only admins see them" do
     assert_raise Ash.Error.Forbidden, fn ->
-      Minimossen.recent_minimossen_weeks!(actor: nil)
+      Minimossen.recent_minimossen_sales!(actor: nil)
     end
   end
 end
