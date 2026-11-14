@@ -455,7 +455,7 @@ body:has(.admin-theme) {
      ΔE 14 for colour-blind readers (target 8). Any two slots can be closer, so
      each colour sits beside its group's name in the legend. */
   --chart-1: oklch(54% 0.09 var(--admin-h));
-  --chart-2: oklch(74% 0.09 calc(var(--admin-h) + 30));
+  --chart-2: oklch(65% 0.09 calc(var(--admin-h) + 30));
   --chart-3: oklch(44% 0.09 calc(var(--admin-h) + 60));
   --chart-4: oklch(64% 0.09 calc(var(--admin-h) - 45));
 }

@@ -83,11 +83,6 @@ defmodule Edenflowers.Minimossen.WeeklySales do
       argument :period, :atom, default: :week, constraints: [one_of: [:week, :month]]
       argument :count, :integer, default: 12, constraints: [min: 1]
 
-      argument :this_year, :boolean do
-        default false
-        description "Only the periods in the year of the latest import, still at most `count` of them."
-      end
-
       run Actions.RecentSales
     end
   end

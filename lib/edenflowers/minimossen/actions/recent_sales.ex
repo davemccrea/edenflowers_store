@@ -28,14 +28,12 @@ defmodule Edenflowers.Minimossen.Actions.RecentSales do
     end
   end
 
-  defp summary(%{period: period, count: count, this_year: this_year}, latest, opts) do
+  defp summary(%{period: period, count: count}, latest, opts) do
     last_start = period_start(period, latest)
 
     starts =
       for back <- (count - 1)..0//-1,
-          start = Date.shift(last_start, [{period, -back}]),
-          not this_year or start.year == last_start.year,
-          do: start
+          do: Date.shift(last_start, [{period, -back}])
 
     # The first period's year-earlier weeks, which also covers the first week's 8-week average.
     first_week = hd(starts) |> Date.shift(year: -1) |> Date.add(-7)

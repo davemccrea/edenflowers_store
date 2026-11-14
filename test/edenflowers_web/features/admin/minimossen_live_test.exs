@@ -48,4 +48,20 @@ defmodule EdenflowersWeb.Admin.MinimossenLiveTest do
     view |> element("#minimossen-groups a", "All groups") |> render_click()
     assert_patch(view, ~p"/admin/minimossen")
   end
+
+  test "shows a past week in the headline until sent back to the latest", %{conn: conn} do
+    record(~D[2026-10-26], "3", "20.00")
+    record(~D[2026-11-02], "3", "50.00")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/minimossen")
+    view |> element("#minimossen-table th a", "Week 44") |> render_click()
+    assert_patch(view, ~p"/admin/minimossen?at=2026-10-26")
+    assert has_element?(view, "#minimossen dt", "Week 44")
+    assert has_element?(view, "#minimossen-total", Edenflowers.Format.currency(Decimal.new("20"), "en"))
+    assert has_element?(view, "#minimossen-table tr[aria-current]", "Week 44")
+
+    view |> element("#minimossen-latest", "Back to Week 45") |> render_click()
+    assert_patch(view, ~p"/admin/minimossen")
+    assert has_element?(view, "#minimossen-total", Edenflowers.Format.currency(Decimal.new("50"), "en"))
+  end
 end

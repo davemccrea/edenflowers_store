@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.Admin.MinimossenLive do
   @moduledoc """
-  Minimossen's sales across the page's full width, by week or month and for all
-  product groups or one, with the choices in the URL.
+  Minimossen's sales across the page's full width, by week or month, for all
+  product groups or one, with any week or month in the headline, and the choices in the URL.
   """
 
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
@@ -17,14 +17,13 @@ defmodule EdenflowersWeb.Admin.MinimossenLive do
     {:ok, assign(socket, page_title: ~t"Minimossen", locale: Localize.get_locale())}
   end
 
-  # A period that doesn't parse falls back to weeks.
+  # A period that doesn't parse falls back to weeks, and a date that doesn't to the latest.
   @impl true
   def handle_params(params, _uri, socket) do
     period = if params["period"] == "month", do: :month, else: :week
-    # This year's months, January on.
-    arguments = [period: period, this_year: period == :month]
-    sales = Minimossen.recent_minimossen_sales!(arguments, actor: socket.assigns.current_user)
-    {:noreply, assign(socket, period: period, group: params["group"], sales: sales)}
+    sales = Minimossen.recent_minimossen_sales!([period: period], actor: socket.assigns.current_user)
+    at = with at when is_binary(at) <- params["at"], {:ok, date} <- Date.from_iso8601(at), do: date, else: (_ -> nil)
+    {:noreply, assign(socket, period: period, group: params["group"], at: at, sales: sales)}
   end
 
   @impl true
@@ -52,6 +51,7 @@ defmodule EdenflowersWeb.Admin.MinimossenLive do
             period={@period}
             sales={@sales}
             group={@group}
+            at={@at}
             locale={@locale}
             wide
           />

@@ -120,14 +120,6 @@ defmodule Edenflowers.Minimossen.RecentSalesTest do
     assert Enum.all?(summary(3, :month).periods, &(&1.average == nil))
   end
 
-  test "this year's months start at January" do
-    record(~D[2025-12-01], "3", "1.00")
-    record(~D[2026-02-02], "3", "1.00")
-
-    sales = Minimossen.recent_minimossen_sales!([period: :month, this_year: true], actor: generate(admin_user()))
-    assert Enum.map(sales.periods, & &1.start) == [~D[2026-01-01], ~D[2026-02-01]]
-  end
-
   test "compares each week with the week 52 weeks before it" do
     record(~D[2025-11-03], "3", "80.00")
     record(~D[2025-11-03], "6", "5.00")

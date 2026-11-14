@@ -35,9 +35,16 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
     assign(socket, sales: sales, loaded: socket.assigns.period)
   end
 
-  @doc "The Minimossen page showing this period and group; the defaults stay out of the URL."
-  def page_path(period, group) do
-    query = for {key, value} <- [period: period, group: group], value not in [nil, :week], do: {key, to_string(value)}
+  @doc """
+  The Minimossen page showing this period and group, and the week or month starting
+  `at` in the headline (the latest when nil); the defaults stay out of the URL.
+  """
+  def page_path(period, group, at \\ nil) do
+    query =
+      for {key, value} <- [period: period, group: group, at: at],
+          value not in [nil, false, :week],
+          do: {key, to_string(value)}
+
     ~p"/admin/minimossen?#{query}"
   end
 
@@ -69,6 +76,7 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
   attr :sales, :map, required: true, doc: "from `recent_minimossen_sales`, with at least one period"
   attr :group, :string, default: nil, doc: "the code of the only group shown, or nil for all of them"
   attr :locale, :any, required: true
+  attr :at, Date, default: nil, doc: "the start of the period in the headline, or nil for the latest"
   attr :wide, :boolean, default: false, doc: "the page's layout, with group chips, a scale and a table"
 
   def sales(assigns) do
@@ -83,6 +91,8 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
     selected = Enum.find(groups, &(&1.code == assigns.group))
     total = fn amounts -> amounts && if(selected, do: amounts.groups[selected.code], else: amounts.total) end
     latest = List.last(assigns.sales.periods)
+    # A period that isn't in these reports falls back to the latest.
+    shown = Enum.find(assigns.sales.periods, latest, &(&1.start == assigns.at))
 
     bars =
       Enum.map(assigns.sales.periods, fn period ->
@@ -115,11 +125,12 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
         # so a small group still shows its share on the scale all groups share.
         stacked: if(selected, do: Enum.reverse(groups -- [selected]) ++ [selected], else: Enum.reverse(groups)),
         latest: latest,
-        latest_total: total.(latest),
-        average_total: total.(latest.average),
-        last_year_total: total.(latest.last_year),
+        shown: shown,
+        shown_total: total.(shown),
+        average_total: total.(shown.average),
+        last_year_total: total.(shown.last_year),
         # Weeks compare their rows with the usual week, months with last year.
-        compare: latest.average || latest.last_year,
+        compare: shown.average || shown.last_year,
         top: top,
         ticks: ticks,
         bars: bars,
@@ -132,62 +143,78 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
       <div>
         <dl>
           <dt class="text-base-content/75 text-sm">
-            {@selected && "#{@selected.name} · "}{heading(@period, @latest.start, @locale)}
-            <span :if={@latest.partial?} class="badge badge-sm badge-ghost ml-1 align-middle">{partial()}</span>
+            {@selected && "#{@selected.name} · "}{heading(@period, @shown.start, @locale)}
+            <span :if={@period == :week} class="text-base-content/60">· {week_dates(@shown.start, @locale)}</span>
+            <span :if={@shown.partial?} class="badge badge-sm badge-ghost ml-1 align-middle">{partial()}</span>
           </dt>
           <dd id="minimossen-total" class="text-base-content text-3xl font-semibold tabular-nums tracking-tight">
-            {Format.currency(@latest_total, @locale)}
+            {Format.currency(@shown_total, @locale)}
           </dd>
         </dl>
-        <%!-- What the latest is compared with, so a percentage on a small amount reads for what it is. --%>
-        <table :if={@latest.average || @latest.last_year} class="mt-2 text-sm tabular-nums">
+        <%!-- What the shown period is compared with, so a percentage on a small amount reads for what it is. --%>
+        <table :if={@shown.average || @shown.last_year} class="mt-2 text-sm tabular-nums">
           <tbody>
-            <tr :if={@latest.average} id="minimossen-change">
+            <tr :if={@shown.average} id="minimossen-change">
               <th scope="row" class="text-base-content/75 pr-6 text-left font-normal">{~t"8-week average"}</th>
               <td class="text-base-content/75 pr-6 text-right">{Format.currency(@average_total, @locale)}</td>
-              <td class="text-right"><.change now={@latest_total} usual={@average_total} locale={@locale} /></td>
+              <td class="text-right"><.change now={@shown_total} usual={@average_total} locale={@locale} /></td>
             </tr>
-            <tr :if={@latest.last_year} id="minimossen-last-year">
+            <tr :if={@shown.last_year} id="minimossen-last-year">
               <th scope="row" class="text-base-content/75 pr-6 text-left font-normal">
-                {last_year_label(@period, @latest.last_year, @locale)}
+                {last_year_label(@period, @shown.last_year, @locale)}
               </th>
               <td class="text-base-content/75 pr-6 text-right">{Format.currency(@last_year_total, @locale)}</td>
-              <td class="text-right"><.change now={@latest_total} usual={@last_year_total} locale={@locale} /></td>
+              <td class="text-right"><.change now={@shown_total} usual={@last_year_total} locale={@locale} /></td>
             </tr>
           </tbody>
         </table>
+        <.link
+          :if={@shown != @latest}
+          id="minimossen-latest"
+          patch={page_path(@period, @selected && @selected.code)}
+          class="text-primary touch-target mt-2 inline-flex items-center gap-1 text-sm hover:underline"
+        >
+          <.icon name="hero-arrow-uturn-left-micro" class="size-4" />
+          {~t"Back to #{period = heading(@period, @latest.start, @locale)}"}
+        </.link>
       </div>
 
       <%!-- The page's legend is also its group filter; the table gives each group's amounts. --%>
       <nav :if={@wide} id="minimossen-groups" class="mt-4 flex flex-wrap gap-1 lg:mt-0" aria-label={~t"Show group"}>
         <.link
           :for={{group, label} <- [{nil, ~t"All groups"} | Enum.map(@groups, &{&1, &1.name})]}
-          patch={page_path(@period, group && group.code)}
+          patch={page_path(@period, group && group.code, @shown != @latest && @shown.start)}
           aria-current={@selected == group && "page"}
           class="btn btn-sm rounded-full font-normal shadow-none aria-[current=page]:btn-primary not-aria-[current=page]:btn-ghost"
         >
-          <span :if={group} class={[group.colour, "h-2.5 w-2.5 shrink-0 rounded-sm"]} /> {label}
+          <span :if={group} class={[group.colour, "h-2.5 w-2.5 shrink-0"]} /> {label}
         </.link>
       </nav>
 
-      <dl :if={!@wide} id="minimossen-groups" class="mt-3 space-y-1 text-sm tabular-nums">
-        <div :for={group <- @groups} class="flex items-baseline gap-3">
-          <dt class="text-base-content/75 flex flex-1 items-center gap-1.5">
-            <span class={[group.colour, "h-2.5 w-2.5 shrink-0 rounded-sm"]} /> {group.name}
-          </dt>
-          <dd class="font-semibold">{Format.currency(@latest.groups[group.code], @locale)}</dd>
-          <dd :if={@compare} class="w-16 text-right">
-            <.change now={@latest.groups[group.code]} usual={@compare.groups[group.code]} locale={@locale} />
-          </dd>
-        </div>
-      </dl>
+      <div :if={!@wide} class="mt-3 text-sm tabular-nums">
+        <p :if={@compare} class="text-base-content/75 text-right text-xs">
+          {if @shown.average, do: ~t"vs. 8-week average", else: ~t"vs. a year before"}
+        </p>
+        <dl id="minimossen-groups" class="space-y-1">
+          <div :for={group <- @groups} class="flex items-baseline gap-3">
+            <dt class="text-base-content/75 flex flex-1 items-center gap-1.5">
+              <span class={[group.colour, "h-2.5 w-2.5 shrink-0"]} /> {group.name}
+            </dt>
+            <dd class="font-semibold">{Format.currency(@shown.groups[group.code], @locale)}</dd>
+            <dd :if={@compare} class="w-16 text-right">
+              <.change now={@shown.groups[group.code]} usual={@compare.groups[group.code]} locale={@locale} />
+            </dd>
+          </div>
+        </dl>
+      </div>
     </div>
 
-    <%!-- The page's table carries the figures, so its chart is only seen. --%>
-    <figure class={["border-base-content/12 mt-4 border-t pt-3", @wide && "lg:mt-6 lg:pt-6"]} aria-hidden={@wide && "true"}>
+    <%!-- The page's table carries the figures and its rows pick a period, so its chart is
+    only seen and its bars are a pointer's shortcut to the same links. --%>
+    <figure class={["border-base-content/12 mt-4 border-t pt-3", @wide && "lg:mt-5 lg:pt-5"]} aria-hidden={@wide && "true"}>
       <div
         id="minimossen-bars"
-        class={["border-base-content/12 relative flex h-24 items-end justify-center gap-2 border-b", @wide && "lg:ml-14 lg:h-80 lg:gap-3"]}
+        class={["border-base-content/12 relative flex h-24 items-end justify-center gap-2 border-b", @wide && "lg:ml-14 lg:h-64 lg:gap-3"]}
       >
         <div
           :for={tick <- @ticks}
@@ -196,28 +223,31 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
           class="border-base-content/8 pointer-events-none absolute inset-x-0 hidden border-t lg:block"
           style={"bottom: #{bar_height(tick, @top)}%"}
         >
-          <span class="text-base-content/60 absolute right-full -translate-y-1/2 pr-2 text-xs tabular-nums">
+          <span class="text-base-content/70 absolute right-full -translate-y-1/2 pr-2 text-xs tabular-nums">
             {Format.storefront_price(Decimal.from_float(tick), @locale)}
           </span>
         </div>
-        <div
+        <.link
           :for={{bar, index} <- Enum.with_index(@bars)}
-          role="img"
-          aria-label={"#{bar_name(@period, bar, @locale)}: #{Format.currency(bar.total, @locale)}"}
-          class="group/bar max-w-24 relative flex h-full flex-1 flex-col justify-end gap-0.5 rounded-t-sm hover:bg-base-content/6"
+          navigate={!@wide && page_path(@period, nil, bar.start)}
+          patch={@wide && page_path(@period, @selected && @selected.code, bar != List.last(@bars) && bar.start)}
+          tabindex={@wide && "-1"}
+          aria-label={!@wide && "#{bar_name(@period, bar, @locale)}: #{Format.currency(bar.total, @locale)}"}
+          aria-current={@wide && bar.start == @shown.start && "true"}
+          class="group/bar max-w-24 relative flex h-full flex-1 flex-col justify-end gap-0.5 aria-[current]:bg-base-content/8 hover:bg-base-content/6"
         >
-          <%!-- The same period a year before, like for like while under way: an outline behind
-          the bar and a little wider, so its sides still show when this year is higher. --%>
-          <span
-            :if={bar.last_year}
-            class="border-base-content/40 bg-base-content/4 pointer-events-none absolute -inset-x-1 bottom-0 rounded-t-md border border-b-0 border-dashed"
-            style={"height: #{bar_height(bar.last_year, @top)}%"}
-          />
-          <%!-- Relative, so the segments paint over the outline. --%>
+          <%!-- Relative, so the segments paint over the hover fill. --%>
           <span
             :for={group <- @stacked}
-            class={["relative block first:rounded-t-sm", if(@selected in [nil, group], do: group.colour, else: "bg-base-content/10")]}
+            class={["relative block", if(@selected in [nil, group], do: group.colour, else: "bg-base-content/10")]}
             style={"height: #{bar_height(bar.groups[group.code], @top)}%"}
+          />
+          <%!-- The same period a year before, like for like while under way: a tick in front
+          of the bar and a little wider, so it reads whether this year is higher or lower. --%>
+          <span
+            :if={bar.last_year}
+            class="bg-base-content ring-base-100 z-[1] pointer-events-none absolute -inset-x-1 h-0.5 translate-y-1/2 ring-1"
+            style={"bottom: #{bar_height(bar.last_year, @top)}%"}
           />
           <%!-- Hatched while partial, so a month under way doesn't read as a fall. --%>
           <span
@@ -229,11 +259,12 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
           <span
             aria-hidden="true"
             style={"bottom: calc(#{bar_height(bar.total, @top)}% + 0.375rem)"}
-            class={["bg-base-100 border-base-content/12 pointer-events-none absolute z-10 hidden text-left", "whitespace-nowrap rounded-md border px-2.5 py-1.5 text-xs shadow-sm", "group-hover/bar:block", if(index < length(@bars) / 2, do: "left-0", else: "right-0")]}
+            class={["bg-base-100 border-base-content/12 text-base-content pointer-events-none absolute z-10 hidden text-left font-normal", "whitespace-nowrap border px-2.5 py-1.5 text-xs shadow-sm", "group-hover/bar:block", if(index < length(@bars) / 2, do: "left-0", else: "right-0")]}
           >
             <span class="text-base-content block font-semibold">{bar_name(@period, bar, @locale)}</span>
-            <span :for={group <- @listed} class="flex items-center gap-1.5">
-              <span class={[group.colour, "h-2 w-2 shrink-0 rounded-sm"]} />
+            <%!-- Top to bottom, as the bar stacks them. --%>
+            <span :for={group <- Enum.reverse(@listed)} class="flex items-center gap-1.5">
+              <span class={[group.colour, "h-2 w-2 shrink-0"]} />
               <span class="text-base-content/75 mr-auto pr-3">{group.name}</span>
               <span class="text-base-content tabular-nums">{Format.currency(bar.groups[group.code], @locale)}</span>
             </span>
@@ -246,12 +277,12 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
             </span>
             <span :if={bar.last_year} class="text-base-content/75 flex items-center justify-between gap-3">
               <span class="flex items-center gap-1.5">
-                <span class="border-base-content/40 h-2 w-2.5 rounded-t-sm border border-b-0 border-dashed" />{~t"A year before"}
+                <span class="bg-base-content h-0.5 w-2.5" />{~t"A year before"}
               </span>
               <span class="tabular-nums">{Format.currency(bar.last_year, @locale)}</span>
             </span>
           </span>
-        </div>
+        </.link>
       </div>
       <div
         class={["text-base-content/75 mt-1 flex justify-between text-xs tabular-nums", @wide && "lg:hidden"]}
@@ -262,53 +293,72 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
       </div>
       <%!-- On a large screen, a label under each bar, matching the bars' gap. --%>
       <div
-        :for={labels <- @label_rows}
+        :for={{labels, row} <- Enum.with_index(@label_rows)}
         :if={@wide}
         class="text-base-content/75 mt-1 ml-14 hidden justify-center gap-3 text-xs tabular-nums lg:flex"
         aria-hidden="true"
       >
-        <span :for={label <- labels} class="max-w-24 min-w-0 flex-1 whitespace-nowrap text-center">{label}</span>
+        <span
+          :for={{label, bar} <- Enum.zip(labels, @bars)}
+          class={["max-w-24 min-w-0 flex-1 whitespace-nowrap text-center", row == 0 and bar.start == @shown.start and "text-base-content font-semibold"]}
+        >
+          {label}
+        </span>
       </div>
       <figcaption :if={@any_last_year?} class="text-base-content/75 mt-2 flex items-center gap-1.5 text-xs">
-        <span
-          class="border-base-content/40 bg-base-content/4 h-2.5 w-3 rounded-t-sm border border-b-0 border-dashed"
-          aria-hidden="true"
-        />
+        <span class="bg-base-content h-0.5 w-3" aria-hidden="true" />
         {last_year_legend(@period)}
       </figcaption>
     </figure>
 
-    <div :if={@wide} class="mt-8 overflow-x-auto">
-      <%!-- Fixed columns, so each amount gets the same width whatever its group's name. --%>
-      <table id="minimossen-table" class="min-w-[40rem] w-full table-fixed text-sm tabular-nums">
-        <thead class="text-base-content/60 text-xs">
+    <%!-- As wide as its columns, so an amount stays near its period with few groups. --%>
+    <div :if={@wide} class="mt-6 overflow-x-auto">
+      <table id="minimossen-table" class="w-full text-sm tabular-nums sm:w-auto">
+        <thead class="text-base-content/70 text-xs">
           <tr class="border-base-content/12 border-b">
-            <th scope="col" class="w-36 pb-2 text-left font-medium">{period_heading(@period)}</th>
-            <th :for={group <- @listed} scope="col" class="pb-2 pl-4 text-right font-medium">
-              <span class="inline-flex max-w-full items-center gap-1.5" title={group.name}>
-                <span class={[group.colour, "h-2 w-2 shrink-0 rounded-sm"]} />
+            <th scope="col" class="pr-6 pb-2 text-left font-medium">{period_heading(@period)}</th>
+            <%!-- On a phone, all groups give way to the total and the change. --%>
+            <th
+              :for={group <- @listed}
+              scope="col"
+              class={["pb-2 pl-6 text-right font-medium", !@selected && "hidden sm:table-cell"]}
+            >
+              <span class="max-w-32 inline-flex items-center gap-1.5" title={group.name}>
+                <span class={[group.colour, "h-2 w-2 shrink-0"]} />
                 <span class="truncate">{group.name}</span>
               </span>
             </th>
-            <th :if={!@selected} scope="col" class="pb-2 pl-4 text-right font-medium">{~t"Total"}</th>
-            <th :if={@any_last_year?} scope="col" class="pb-2 pl-4 text-right font-medium">
+            <th :if={!@selected} scope="col" class="pb-2 pl-6 text-right font-medium">{~t"Total"}</th>
+            <th :if={@any_last_year?} scope="col" class="pb-2 pl-6 text-right font-medium">
               {~t"vs. a year before"}
             </th>
           </tr>
         </thead>
         <tbody class="divide-base-content/8 divide-y">
-          <tr :for={bar <- Enum.reverse(@bars)} class="hover:bg-base-content/4">
-            <th scope="row" class="whitespace-nowrap py-1.5 text-left font-normal">
-              {period_label(@period, bar.start, @locale)}
+          <tr
+            :for={bar <- Enum.reverse(@bars)}
+            aria-current={bar.start == @shown.start && "true"}
+            class="aria-[current]:bg-base-content/6"
+          >
+            <th scope="row" class="whitespace-nowrap py-1.5 pr-6 text-left font-normal">
+              <.link
+                patch={page_path(@period, @selected && @selected.code, bar != List.last(@bars) && bar.start)}
+                class="hover:underline"
+              >
+                {period_label(@period, bar.start, @locale)}
+              </.link>
               <span :if={bar.partial?} class="badge badge-xs badge-ghost ml-1">{partial()}</span>
             </th>
-            <td :for={group <- @listed} class="text-base-content/75 py-1.5 pl-4 text-right">
+            <td
+              :for={group <- @listed}
+              class={["text-base-content/75 py-1.5 pl-6 text-right", !@selected && "hidden sm:table-cell"]}
+            >
               {Format.currency(bar.groups[group.code], @locale)}
             </td>
-            <td :if={!@selected} class="py-1.5 pl-4 text-right font-semibold">
+            <td :if={!@selected} class="py-1.5 pl-6 text-right font-semibold">
               {Format.currency(bar.total, @locale)}
             </td>
-            <td :if={@any_last_year?} class="py-1.5 pl-4 text-right">
+            <td :if={@any_last_year?} class="py-1.5 pl-6 text-right">
               <.change now={bar.total} usual={bar.last_year} locale={@locale} />
             </td>
           </tr>
@@ -323,6 +373,16 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
   # e.g. "Week 45", "November 2026".
   defp heading(:month, start, locale), do: Localize.Date.to_string!(start, locale: locale, format: "LLLL y")
   defp heading(period, start, locale), do: period_label(period, start, locale)
+
+  # e.g. "3–9 Nov", "27 Oct–2 Nov".
+  defp week_dates(start, locale) do
+    finish = Date.add(start, 6)
+    month = &Format.short_month(&1, locale)
+
+    if start.month == finish.month,
+      do: "#{start.day}–#{finish.day} #{month.(finish)}",
+      else: "#{start.day} #{month.(start)}–#{finish.day} #{month.(finish)}"
+  end
 
   defp period_heading(:week), do: ~t"Week"
   defp period_heading(:month), do: ~t"Month"
@@ -377,7 +437,7 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
   defp last_year_label(period, last_year, locale), do: heading(period, last_year.start, locale)
 
   defp last_year_legend(:week), do: ~t"The same week a year before"
-  defp last_year_legend(_period), do: ~t"The same weeks a year before"
+  defp last_year_legend(_period), do: ~t"The same month a year before"
 
   defp group_colour(index), do: Enum.at(@group_colours, index, "bg-base-content/30")
 
@@ -417,18 +477,24 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
     if usual && Decimal.positive?(usual) do
       rate = now |> Decimal.div(usual) |> Decimal.sub(1)
       percent = Localize.Number.to_string!(rate, locale: locale, format: :percent, fractional_digits: 0)
-      if Decimal.positive?(rate), do: "+" <> percent, else: percent
+      # A real minus in every locale, as wide as the plus.
+      if Decimal.positive?(rate), do: "+" <> percent, else: String.replace(percent, "-", "−")
     end
   end
 
-  # A scale of up to 3 round steps, and the amount at its top.
+  # A scale of 2 to 5 round steps with the lowest top, and the amount at its top.
+  # Some step always fits: 2 × 10ⁿ for 2 to 5 steps, 0.5 × 10ⁿ for 2 to 4.
   defp scale(highest) when highest == 0, do: {0.0, []}
 
   defp scale(highest) do
-    rough = highest / 3
-    magnitude = :math.pow(10, Float.floor(:math.log10(rough)))
-    step = Enum.find([1, 2, 2.5, 5, 10], &(&1 * magnitude >= rough)) * magnitude
-    steps = ceil(highest / step)
+    magnitude = :math.pow(10, Float.floor(:math.log10(highest)))
+
+    {step, steps} =
+      [0.1, 0.2, 0.25, 0.5, 1, 2]
+      |> Enum.map(&{&1 * magnitude, ceil(highest / (&1 * magnitude))})
+      |> Enum.filter(fn {_step, steps} -> steps in 2..5 end)
+      |> Enum.min_by(fn {step, steps} -> {step * steps, steps} end)
+
     {steps * step, for(n <- 1..steps, do: Float.round(n * step, 2))}
   end
 
