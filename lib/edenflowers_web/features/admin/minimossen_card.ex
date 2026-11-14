@@ -1,39 +1,21 @@
 defmodule EdenflowersWeb.Admin.MinimossenCard do
   @moduledoc """
-  Minimossen's sales by Winpos product group. The live component is the Overview's
-  card, with its own week or month switch, hidden before any report is imported.
-  `sales/1` draws the sales for it and, `wide`, for the Minimossen page, which keeps its
-  choices in the URL and adds a scale, group chips and a table.
+  Minimossen's sales by Winpos product group. `week/1` is the Overview's card: the
+  latest week against one yardstick and the weeks before it. `sales/1` draws the
+  Minimossen page, which keeps its choices in the URL, with group chips, a scale
+  and a table.
   """
 
-  use EdenflowersWeb, {:live_component, gettext_domain: "admin"}
+  use EdenflowersWeb, {:html, gettext_domain: "admin"}
 
   import EdenflowersWeb.Admin.Components
 
   alias Edenflowers.Format
-  alias Edenflowers.Minimossen
 
-  # The legend's colours, one per group in the rows, chips and bars alike.
+  # The legend's colours, one per group in the chips, bars and table alike.
   # The colours follow the admin's own hue (--chart-* in admin.css).
   # shortcut: a 5th group and later are grey, add a validated colour if Winpos ever has that many.
   @group_colours ~w[bg-(--chart-1) bg-(--chart-2) bg-(--chart-3) bg-(--chart-4)]
-
-  @impl true
-  def update(assigns, socket) do
-    {:ok, socket |> assign_new(:period, fn -> :week end) |> assign(assigns) |> load()}
-  end
-
-  @impl true
-  def handle_event("minimossen_period", %{"period" => period}, socket) when period in ~w(week month),
-    do: {:noreply, socket |> assign(period: String.to_existing_atom(period)) |> load()}
-
-  # The Overview re-renders on every order and booking, so only a new period reloads.
-  defp load(%{assigns: %{period: period, loaded: period}} = socket), do: socket
-
-  defp load(socket) do
-    sales = Minimossen.recent_minimossen_sales!([period: socket.assigns.period], actor: socket.assigns.current_user)
-    assign(socket, sales: sales, loaded: socket.assigns.period)
-  end
 
   @doc """
   The Minimossen page showing this period and group, and the week or month starting
@@ -48,27 +30,54 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
     ~p"/admin/minimossen?#{query}"
   end
 
-  @impl true
-  def render(assigns) do
+  attr :sales, :map, required: true, doc: "weekly, from `recent_minimossen_sales`, with at least one week"
+  attr :locale, :any, required: true
+
+  def week(assigns) do
+    latest = List.last(assigns.sales.periods)
+    highest = assigns.sales.periods |> Enum.map(& &1.total) |> Enum.max(Decimal) |> Decimal.to_float()
+
+    assigns =
+      assign(assigns,
+        latest: latest,
+        highest: highest,
+        # A seasonal shop's fair yardstick is the same week last year; before there is one, the usual week.
+        usual: latest.last_year || latest.average,
+        usual_label:
+          if(latest.last_year, do: last_year_label(:week, latest.last_year, assigns.locale), else: ~t"8-week average")
+      )
+
     ~H"""
-    <div id={@id} class={@sales.periods == [] && "hidden"}>
-      <.widget :if={@sales.periods != []} id="minimossen" title={~t"Minimossen"} navigate={~p"/admin/minimossen"}>
-        <div class="mb-3 flex gap-1" role="group" aria-label={~t"Show sales by"}>
-          <button
-            :for={{period, label} <- period_choices()}
-            type="button"
-            phx-click="minimossen_period"
-            phx-target={@myself}
-            phx-value-period={period}
-            aria-pressed={to_string(period == @period)}
-            class="btn btn-xs rounded-full font-normal shadow-none aria-pressed:btn-primary not-aria-pressed:btn-ghost pointer-coarse:btn-sm"
-          >
-            {label}
-          </button>
+    <.widget id="minimossen" title={~t"Minimossen"} navigate={~p"/admin/minimossen"}>
+      <dl>
+        <dt class="text-base-content/75 text-sm">
+          {period_label(:week, @latest.start, @locale)}
+          <span class="text-base-content/60">· {week_dates(@latest.start, @locale)}</span>
+        </dt>
+        <dd id="minimossen-total" class="text-base-content text-3xl font-semibold tabular-nums tracking-tight">
+          {Format.currency(@latest.total, @locale)}
+        </dd>
+      </dl>
+      <p :if={@usual} id="minimossen-change" class="mt-2 flex gap-6 text-sm tabular-nums">
+        <span class="text-base-content/75">{@usual_label}</span>
+        <span class="text-base-content/75">{Format.currency(@usual.total, @locale)}</span>
+        <.change now={@latest.total} usual={@usual.total} locale={@locale} />
+      </p>
+      <%!-- The trend only; the figures are on the page. --%>
+      <figure class="border-base-content/12 mt-4 border-t pt-3" aria-hidden="true">
+        <div class="border-base-content/12 flex h-16 items-end gap-1.5 border-b">
+          <span
+            :for={week <- @sales.periods}
+            class={["flex-1", if(week == @latest, do: "bg-primary", else: "bg-primary/30")]}
+            style={"height: #{bar_height(week.total, @highest)}%"}
+          />
         </div>
-        <.sales period={@period} sales={@sales} locale={@locale} />
-      </.widget>
-    </div>
+        <div class="text-base-content/75 mt-1 flex justify-between text-xs tabular-nums">
+          <span>{period_label(:week, hd(@sales.periods).start, @locale)}</span>
+          <span>{period_label(:week, @latest.start, @locale)}</span>
+        </div>
+      </figure>
+    </.widget>
     """
   end
 
@@ -77,7 +86,6 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
   attr :group, :string, default: nil, doc: "the code of the only group shown, or nil for all of them"
   attr :locale, :any, required: true
   attr :at, Date, default: nil, doc: "the start of the period in the headline, or nil for the latest"
-  attr :wide, :boolean, default: false, doc: "the page's layout, with group chips, a scale and a table"
 
   def sales(assigns) do
     groups =
@@ -129,8 +137,6 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
         shown_total: total.(shown),
         average_total: total.(shown.average),
         last_year_total: total.(shown.last_year),
-        # Weeks compare their rows with the usual week, months with last year.
-        compare: shown.average || shown.last_year,
         top: top,
         ticks: ticks,
         bars: bars,
@@ -139,7 +145,7 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
       )
 
     ~H"""
-    <div class={@wide && "lg:flex lg:items-end lg:justify-between lg:gap-10"}>
+    <div class="lg:flex lg:items-end lg:justify-between lg:gap-10">
       <div>
         <dl>
           <dt class="text-base-content/75 text-sm">
@@ -180,7 +186,7 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
       </div>
 
       <%!-- The page's legend is also its group filter; the table gives each group's amounts. --%>
-      <nav :if={@wide} id="minimossen-groups" class="mt-4 flex flex-wrap gap-1 lg:mt-0" aria-label={~t"Show group"}>
+      <nav id="minimossen-groups" class="mt-4 flex flex-wrap gap-1 lg:mt-0" aria-label={~t"Show group"}>
         <.link
           :for={{group, label} <- [{nil, ~t"All groups"} | Enum.map(@groups, &{&1, &1.name})]}
           patch={page_path(@period, group && group.code, @shown != @latest && @shown.start)}
@@ -190,35 +196,17 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
           <span :if={group} class={[group.colour, "h-2.5 w-2.5 shrink-0"]} /> {label}
         </.link>
       </nav>
-
-      <div :if={!@wide} class="mt-3 text-sm tabular-nums">
-        <p :if={@compare} class="text-base-content/75 text-right text-xs">
-          {if @shown.average, do: ~t"vs. 8-week average", else: ~t"vs. a year before"}
-        </p>
-        <dl id="minimossen-groups" class="space-y-1">
-          <div :for={group <- @groups} class="flex items-baseline gap-3">
-            <dt class="text-base-content/75 flex flex-1 items-center gap-1.5">
-              <span class={[group.colour, "h-2.5 w-2.5 shrink-0"]} /> {group.name}
-            </dt>
-            <dd class="font-semibold">{Format.currency(@shown.groups[group.code], @locale)}</dd>
-            <dd :if={@compare} class="w-16 text-right">
-              <.change now={@shown.groups[group.code]} usual={@compare.groups[group.code]} locale={@locale} />
-            </dd>
-          </div>
-        </dl>
-      </div>
     </div>
 
     <%!-- The page's table carries the figures and its rows pick a period, so its chart is
     only seen and its bars are a pointer's shortcut to the same links. --%>
-    <figure class={["border-base-content/12 mt-4 border-t pt-3", @wide && "lg:mt-5 lg:pt-5"]} aria-hidden={@wide && "true"}>
+    <figure class="border-base-content/12 mt-4 border-t pt-3 lg:mt-5 lg:pt-5" aria-hidden="true">
       <div
         id="minimossen-bars"
-        class={["border-base-content/12 relative flex h-24 items-end justify-center gap-2 border-b", @wide && "lg:ml-14 lg:h-64 lg:gap-3"]}
+        class="border-base-content/12 relative flex h-24 items-end justify-center gap-2 border-b lg:ml-14 lg:h-64 lg:gap-3"
       >
         <div
           :for={tick <- @ticks}
-          :if={@wide}
           aria-hidden="true"
           class="border-base-content/8 pointer-events-none absolute inset-x-0 hidden border-t lg:block"
           style={"bottom: #{bar_height(tick, @top)}%"}
@@ -229,11 +217,9 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
         </div>
         <.link
           :for={{bar, index} <- Enum.with_index(@bars)}
-          navigate={!@wide && page_path(@period, nil, bar.start)}
-          patch={@wide && page_path(@period, @selected && @selected.code, bar != List.last(@bars) && bar.start)}
-          tabindex={@wide && "-1"}
-          aria-label={!@wide && "#{bar_name(@period, bar, @locale)}: #{Format.currency(bar.total, @locale)}"}
-          aria-current={@wide && bar.start == @shown.start && "true"}
+          patch={page_path(@period, @selected && @selected.code, bar != List.last(@bars) && bar.start)}
+          tabindex="-1"
+          aria-current={bar.start == @shown.start && "true"}
           class="group/bar max-w-24 relative flex h-full flex-1 flex-col justify-end gap-0.5 aria-[current]:bg-base-content/8 hover:bg-base-content/6"
         >
           <%!-- Relative, so the segments paint over the hover fill. --%>
@@ -284,19 +270,14 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
           </span>
         </.link>
       </div>
-      <div
-        class={["text-base-content/75 mt-1 flex justify-between text-xs tabular-nums", @wide && "lg:hidden"]}
-        aria-hidden="true"
-      >
+      <div class="text-base-content/75 mt-1 flex justify-between text-xs tabular-nums lg:hidden">
         <span>{period_label(@period, hd(@bars).start, @locale)}</span>
         <span>{period_label(@period, @latest.start, @locale)}</span>
       </div>
       <%!-- On a large screen, a label under each bar, matching the bars' gap. --%>
       <div
         :for={{labels, row} <- Enum.with_index(@label_rows)}
-        :if={@wide}
         class="text-base-content/75 mt-1 ml-14 hidden justify-center gap-3 text-xs tabular-nums lg:flex"
-        aria-hidden="true"
       >
         <span
           :for={{label, bar} <- Enum.zip(labels, @bars)}
@@ -312,7 +293,7 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
     </figure>
 
     <%!-- As wide as its columns, so an amount stays near its period with few groups. --%>
-    <div :if={@wide} class="mt-6 overflow-x-auto">
+    <div class="mt-6 overflow-x-auto">
       <table id="minimossen-table" class="w-full text-sm tabular-nums sm:w-auto">
         <thead class="text-base-content/70 text-xs">
           <tr class="border-base-content/12 border-b">
@@ -402,7 +383,7 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
   defp bar_name(period, %{partial?: true} = bar, locale), do: "#{period_label(period, bar.start, locale)}, #{partial()}"
   defp bar_name(period, bar, locale), do: period_label(period, bar.start, locale)
 
-  # The rows of labels under the wide chart's bars, one label per bar, nil where it
+  # The rows of labels under the chart's bars on a large screen, one label per bar, nil where it
   # would repeat the one before: months over years, or week numbers over the months
   # their Thursdays fall in, as sales count them, each year named where it starts.
   defp axis_labels(:month, starts, locale),

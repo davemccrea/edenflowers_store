@@ -599,51 +599,45 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     assert has_element?(view, "#revenue-pace", "Last month")
   end
 
-  test "compares Minimossen's latest week with the 8-week average, split by product group", %{conn: conn} do
+  test "compares Minimossen's latest week with the 8-week average before there's a year to compare with", %{conn: conn} do
     conn = log_in(conn, generate(admin_user()) |> with_token())
     {:ok, view, _html} = live(conn, ~p"/admin")
     refute has_element?(view, "#minimossen")
 
-    for {week_start, code, gross} <- [
-          {~D[2026-10-26], "3", "120.00"},
-          {~D[2026-10-26], "6", "360.00"},
-          {~D[2026-11-02], "3", "154.40"},
-          {~D[2026-11-02], "6", "406.90"}
-        ] do
+    record_minimossen([
+      {~D[2026-10-26], "3", "120.00"},
+      {~D[2026-10-26], "6", "360.00"},
+      {~D[2026-11-02], "3", "154.40"},
+      {~D[2026-11-02], "6", "406.90"}
+    ])
+
+    {:ok, view, _html} = live(conn, ~p"/admin")
+    assert has_element?(view, "#minimossen dt", "Week 45")
+    assert has_element?(view, "#minimossen-total", euros("561.30"))
+    assert has_element?(view, "#minimossen-change", "8-week average #{euros("480.00")} +17%")
+  end
+
+  test "compares Minimossen's latest week with the same week last year", %{conn: conn} do
+    conn = log_in(conn, generate(admin_user()) |> with_token())
+
+    record_minimossen([
+      {~D[2025-11-03], "3", "400.00"},
+      {~D[2026-10-26], "3", "120.00"},
+      {~D[2026-11-02], "3", "500.00"}
+    ])
+
+    {:ok, view, _html} = live(conn, ~p"/admin")
+    assert has_element?(view, "#minimossen-change", "Week 45 last year #{euros("400.00")} +25%")
+  end
+
+  defp euros(amount), do: Edenflowers.Format.currency(Decimal.new(amount), Edenflowers.Format.locale())
+
+  defp record_minimossen(sales) do
+    for {week_start, code, gross} <- sales do
       Edenflowers.Minimossen.record_minimossen_sales!(
         %{week_start: week_start, group_code: code, group_name: "Group #{code}", gross: gross},
         actor: Edenflowers.Actors.system_actor()
       )
     end
-
-    {:ok, view, _html} = live(conn, ~p"/admin")
-
-    assert has_element?(view, "#minimossen dt", "Week 45")
-    assert has_element?(view, "#minimossen-total", "561,30 €")
-    assert has_element?(view, "#minimossen-change", "8-week average 480,00 € +17%")
-    assert has_element?(view, "#minimossen-groups div", "Flowers 154,40 € +29%")
-    assert has_element?(view, "#minimossen-groups div", "Pots 406,90 € +13%")
-  end
-
-  test "switches Minimossen's sales to months", %{conn: conn} do
-    conn = log_in(conn, generate(admin_user()) |> with_token())
-
-    for {week_start, gross} <- [{~D[2025-10-27], "40.00"}, {~D[2026-10-19], "100.00"}, {~D[2026-10-26], "20.00"}] do
-      Edenflowers.Minimossen.record_minimossen_sales!(
-        %{week_start: week_start, group_code: "3", group_name: "Flowers", gross: gross},
-        actor: Edenflowers.Actors.system_actor()
-      )
-    end
-
-    {:ok, view, _html} = live(conn, ~p"/admin")
-
-    view |> element("#minimossen button", "Month") |> render_click()
-    assert has_element?(view, "#minimossen dt", "October 2026")
-    total = Edenflowers.Format.currency(Decimal.new("120.00"), Edenflowers.Format.locale())
-    assert has_element?(view, "#minimossen-total", total)
-    refute has_element?(view, "#minimossen-change")
-    # Only last October's week up to a year before the latest import, like for like.
-    assert has_element?(view, "#minimossen-last-year", "October 2025, same weeks")
-    assert has_element?(view, "#minimossen button[aria-pressed=true]", "Month")
   end
 end

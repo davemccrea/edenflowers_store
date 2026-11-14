@@ -18,6 +18,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Availability
+  alias Edenflowers.Minimossen
   alias Edenflowers.Orders
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.BankConnection
@@ -54,6 +55,8 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
      |> assign(:connected_customers, EdenflowersWeb.Presence.connected_customers())
      |> assign(route_date: nil, route_form: nil, route: nil, route_stale?: false)
      |> assign(:mapbox_token, Application.get_env(:edenflowers, :mapbox_token))
+     # Once per visit, not on each refresh: a Winpos report arrives once a week.
+     |> assign(:minimossen_sales, Minimossen.recent_minimossen_sales!(actor: socket.assigns.current_user))
      |> refresh()}
   end
 
@@ -108,7 +111,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               expenses={@expenses}
               locale={@locale}
             />
-            <.live_component module={MinimossenCard} id="minimossen-card" current_user={@current_user} locale={@locale} />
+            <MinimossenCard.week :if={@minimossen_sales.periods != []} sales={@minimossen_sales} locale={@locale} />
           </div>
         </div>
       </.admin_page>

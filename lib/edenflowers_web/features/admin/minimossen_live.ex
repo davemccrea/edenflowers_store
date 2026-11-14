@@ -53,7 +53,6 @@ defmodule EdenflowersWeb.Admin.MinimossenLive do
             group={@group}
             at={@at}
             locale={@locale}
-            wide
           />
           <p :if={@sales.periods == []} class="text-base-content/75 text-sm">
             {~t"No Winpos reports imported yet."}
