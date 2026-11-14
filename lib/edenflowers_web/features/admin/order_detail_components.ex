@@ -436,8 +436,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   defp clock(datetime, locale),
     do: datetime |> DateTime.shift_zone!(Edenflowers.ShopTime.timezone()) |> DateTime.to_time() |> Format.time(locale)
 
-  attr :queue, :map, required: true
-  attr :locale, :any, required: true
+  attr :queue, :map, required: true, doc: "the day's orders either side of this one, or nil at either end"
 
   def queue_nav(assigns) do
     ~H"""
@@ -450,21 +449,28 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       <.queue_link
         to={@queue.previous}
         icon="hero-chevron-left"
-        label={~t"Previous order"}
+        label={@queue.previous && ~t"Previous: #{name = EdenflowersWeb.Admin.RouteDrawer.stop_name(@queue.previous)}"}
         arrow_key="ArrowLeft"
         transition="pop"
       />
-      <span class="text-base-content/80 flex items-center px-3 tabular-nums">
-        <span :if={@queue.date} class="mr-1.5">{Format.weekday_day_month(@queue.date, @locale)} ·</span>
-        {~t"#{@queue.position} of #{@queue.total}"}
+      <%!-- Naming where it goes says what the arrows step through better than a count did. --%>
+      <.link
+        :if={@queue.next}
+        id="order-queue-next"
+        navigate={~p"/admin/orders/#{@queue.next.id}"}
+        aria-label={~t"Next: #{name = EdenflowersWeb.Admin.RouteDrawer.stop_name(@queue.next)}"}
+        aria-keyshortcuts="ArrowRight"
+        title={~t"Next order (→)"}
+        data-arrow-key="ArrowRight"
+        data-transition="push"
+        class="text-base-content max-w-56 flex min-w-0 items-center gap-1.5 pr-2 pl-3 transition-colors hover:bg-base-200"
+      >
+        <span class="truncate font-semibold">{EdenflowersWeb.Admin.RouteDrawer.stop_name(@queue.next)}</span>
+        <.icon name="hero-chevron-right" class="h-4 w-4 shrink-0" />
+      </.link>
+      <span :if={!@queue.next} id="order-queue-next" class="text-base-content/60 flex items-center px-3">
+        {~t"Last of the day"}
       </span>
-      <.queue_link
-        to={@queue.next}
-        icon="hero-chevron-right"
-        label={~t"Next order"}
-        arrow_key="ArrowRight"
-        transition="push"
-      />
     </nav>
     <script :type={Phoenix.LiveView.ColocatedHook} name=".ArrowKeyNav">
       /**
@@ -499,9 +505,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
     """
   end
 
-  attr :to, :any, required: true
+  attr :to, :any, required: true, doc: "the order to go to, or nil"
   attr :icon, :string, required: true
-  attr :label, :string, required: true
+  attr :label, :string, default: nil
   attr :arrow_key, :string, required: true
 
   attr :transition, :string,
@@ -519,7 +525,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   def queue_link(assigns) do
     ~H"""
     <.link
-      navigate={~p"/admin/orders/#{@to}"}
+      navigate={~p"/admin/orders/#{@to.id}"}
       class="text-base-content/80 flex w-9 items-center justify-center transition-colors pointer-coarse:w-11 hover:bg-base-200 hover:text-base-content"
       aria-label={@label}
       aria-keyshortcuts={@arrow_key}

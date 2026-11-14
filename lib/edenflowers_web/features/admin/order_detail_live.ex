@@ -78,9 +78,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           title={@order.customer_name || @order.order_reference}
           back={{~t"Orders", ~p"/admin/orders"}}
         >
-          <%!-- A run stop steps through the run bar's list instead. --%>
-          <:nav :if={@queue && !@run}>
-            <.queue_nav queue={@queue} locale={@locale} />
+          <:nav :if={@queue}>
+            <.queue_nav queue={@queue} />
           </:nav>
           <:subtitle>
             <span class="flex flex-col gap-2.5">
@@ -993,20 +992,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   # like fulfilled ones, get no stepping. Computed once at mount so marking this
   # order fulfilled still leaves "next" pointing at the following one.
   defp queue_position(order, actor) do
-    ids = Enum.map(Orders.list_orders_to_fulfil!(%{date: order.fulfillment_date}, actor: actor), & &1.id)
+    orders = Orders.list_orders_to_fulfil!(%{date: order.fulfillment_date}, actor: actor)
 
-    case Enum.find_index(ids, &(&1 == order.id)) do
-      nil ->
-        nil
-
-      index ->
-        %{
-          date: order.fulfillment_date,
-          position: index + 1,
-          total: length(ids),
-          previous: if(index > 0, do: Enum.at(ids, index - 1)),
-          next: Enum.at(ids, index + 1)
-        }
+    case Enum.find_index(orders, &(&1.id == order.id)) do
+      nil -> nil
+      index -> %{previous: if(index > 0, do: Enum.at(orders, index - 1)), next: Enum.at(orders, index + 1)}
     end
   end
 

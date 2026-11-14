@@ -868,7 +868,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       assert has_element?(view, "#run-bar-stop-#{first.id}[aria-current=step]", "Ada")
       assert has_element?(view, "#run-bar-stop-#{last.id} a[href='/admin/orders/#{last.id}']", "Bo")
       refute has_element?(view, "#run-bar-directions")
-      refute has_element?(view, "#order-queue-nav")
+      # The day's queue puts the run first, in its order.
+      assert has_element?(view, ~s|#order-queue-next[href="/admin/orders/#{last.id}"]|, "Bo")
 
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
       view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "true"}) |> render_submit()
@@ -1213,16 +1214,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     earlier = day.("EARLIER", 0)
     current = day.("CURRENT", 1)
-    later = day.("LATER", 2)
+    later = day.("LATER", 2) |> Ash.Seed.update!(%{customer_name: "Lena"})
     next_day = placed_order(order_reference: "NEXT-DAY", fulfillment_date: ~D[2026-06-12])
     placed_order(order_reference: "DONE", fulfillment_date: ~D[2026-06-11], fulfillment_status: :fulfilled)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{current.id}")
 
-    assert has_element?(view, "#order-queue-nav", "11.6.")
-    assert has_element?(view, "#order-queue-nav", "2 of 3")
     assert has_element?(view, ~s|#order-queue-nav a[href="/admin/orders/#{earlier.id}"]|)
-    assert has_element?(view, ~s|#order-queue-nav a[href="/admin/orders/#{later.id}"]|)
+    assert has_element?(view, ~s|#order-queue-next[href="/admin/orders/#{later.id}"]|, "Lena")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{later.id}")
+    assert has_element?(view, "#order-queue-next", "Last of the day")
     refute has_element?(view, ~s|#order-queue-nav a[href="/admin/orders/#{next_day.id}"]|)
   end
 
