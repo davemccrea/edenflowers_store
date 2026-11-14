@@ -1472,8 +1472,8 @@ msgstr "Mottagarens telefon saknas"
 msgid "MobilePay"
 msgstr "MobilePay"
 
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:390
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:400
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:316
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:323
 #: lib/edenflowers_web/features/admin/overview_live.ex:762
 #, elixir-autogen, elixir-format
 msgid "Month"
@@ -3009,8 +3009,8 @@ msgstr "I morgon"
 #: lib/edenflowers_web/features/admin/invoice_live.ex:313
 #: lib/edenflowers_web/features/admin/invoice_live.ex:367
 #: lib/edenflowers_web/features/admin/invoice_live.ex:454
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:300
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:345
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:242
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:288
 #: lib/edenflowers_web/features/admin/order_detail_components.ex:184
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:406
 #: lib/edenflowers_web/features/admin/order_form_live.ex:1087
@@ -4744,7 +4744,7 @@ msgstr "Maila presentkortet igen"
 msgid "Send gift voucher"
 msgstr "Skicka presentkortet"
 
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:458
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:380
 #: lib/edenflowers_web/features/admin/orders_live.ex:102
 #, elixir-autogen, elixir-format
 msgid "Flowers"
@@ -6000,128 +6000,98 @@ msgid "Ignore agreed times"
 msgstr "Bortse från överenskomna tider"
 
 #: lib/edenflowers_web/components/layouts.ex:280
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:167
-#: lib/edenflowers_web/features/admin/minimossen_live.ex:16
-#: lib/edenflowers_web/features/admin/minimossen_live.ex:44
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:48
+#: lib/edenflowers_web/features/admin/minimossen_live.ex:17
+#: lib/edenflowers_web/features/admin/minimossen_live.ex:35
 #, elixir-autogen, elixir-format
 msgid "Minimossen"
 msgstr "Minimossen"
 
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:412
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:334
 #, elixir-autogen, elixir-format
 msgid "Week %{week}"
 msgstr "Vecka %{week}"
 
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:194
-#, elixir-autogen, elixir-format
-msgid "%{change} on the 8-week average"
-msgstr "%{change} jämfört med snittet för 8 veckor"
-
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:169
-#: lib/edenflowers_web/features/admin/minimossen_live.ex:46
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:49
+#: lib/edenflowers_web/features/admin/minimossen_live.ex:37
 #, elixir-autogen, elixir-format
 msgid "Show sales by"
 msgstr "Visa försäljning per"
 
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:390
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:399
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:316
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:322
 #, elixir-autogen, elixir-format
 msgid "Week"
 msgstr "Vecka"
 
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:390
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:401
-#, elixir-autogen, elixir-format
-msgid "Year"
-msgstr "År"
-
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:395
-#, elixir-autogen, elixir-format
-msgid "Sales in %{month}"
-msgstr "Försäljning i %{month}"
-
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:397
-#, elixir-autogen, elixir-format
-msgid "Sales in %{year}"
-msgstr "Försäljning %{year}"
-
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:392
-#, elixir-autogen, elixir-format
-msgid "Sales in week %{week}"
-msgstr "Försäljning vecka %{week}"
-
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:461
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:383
 #, elixir-autogen, elixir-format
 msgid "Books and magazines"
 msgstr "Böcker och tidningar"
 
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:459
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:381
 #, elixir-autogen, elixir-format
 msgid "Pots"
 msgstr "Krukor"
 
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:460
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:382
 #, elixir-autogen, elixir-format
 msgid "Toys"
 msgstr "Leksaker"
 
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:97
+#: lib/edenflowers_web/features/admin/minimossen_live.ex:59
 #, elixir-autogen, elixir-format
 msgid "No Winpos reports imported yet."
 msgstr "Inga Winpos-rapporter har importerats än."
 
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:444
-#, elixir-autogen, elixir-format
-msgid "%{change} on %{month}"
-msgstr "%{change} jämfört med %{month}"
-
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:449
-#, elixir-autogen, elixir-format
-msgid "%{change} on %{year}"
-msgstr "%{change} jämfört med %{year}"
-
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:437
-#, elixir-autogen, elixir-format
-msgid "%{change} on the same week last year"
-msgstr "%{change} jämfört med samma vecka i fjol"
-
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:443
-#, elixir-autogen, elixir-format
-msgid "%{change} on the same weeks of %{month}"
-msgstr "%{change} jämfört med samma veckor i %{month}"
-
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:449
-#, elixir-autogen, elixir-format
-msgid "%{change} on the same weeks of %{year}"
-msgstr "%{change} jämfört med samma veckor %{year}"
-
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:305
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:247
 #, elixir-autogen, elixir-format
 msgid "A year before"
 msgstr "Ett år tidigare"
 
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:452
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:374
 #, elixir-autogen, elixir-format
 msgid "The same week a year before"
 msgstr "Samma vecka ett år tidigare"
 
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:453
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:375
 #, elixir-autogen, elixir-format
 msgid "The same weeks a year before"
 msgstr "Samma veckor ett år tidigare"
 
-#. Beside a month or year whose sales aren't all in: still under way, or begun before the first Winpos report.
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:408
+#. Beside a month whose sales aren't all in: still under way, or begun before the first Winpos report.
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:330
 #, elixir-autogen, elixir-format
 msgid "partial"
 msgstr "delvis"
 
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:347
-#, elixir-autogen, elixir-format
-msgid "vs. 8-week average"
-msgstr "mot snittet för 8 veckor"
-
-#: lib/edenflowers_web/features/admin/minimossen_card.ex:350
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:290
 #, elixir-autogen, elixir-format
 msgid "vs. a year before"
 msgstr "mot ett år tidigare"
+
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:164
+#, elixir-autogen, elixir-format
+msgid "All groups"
+msgstr "Alla grupper"
+
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:162
+#, elixir-autogen, elixir-format
+msgid "Show group"
+msgstr "Visa grupp"
+
+#. A month a year before, counting only the weeks this one has had so far.
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:369
+#, elixir-autogen, elixir-format
+msgid "%{period}, same weeks"
+msgstr "%{period}, samma veckor"
+
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:146
+#, elixir-autogen, elixir-format
+msgid "8-week average"
+msgstr "Snitt 8 veckor"
+
+#: lib/edenflowers_web/features/admin/minimossen_card.ex:365
+#, elixir-autogen, elixir-format
+msgid "Week %{week} last year"
+msgstr "Vecka %{week} i fjol"

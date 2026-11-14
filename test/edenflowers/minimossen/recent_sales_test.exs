@@ -128,19 +128,6 @@ defmodule Edenflowers.Minimossen.RecentSalesTest do
     assert Enum.map(sales.periods, & &1.start) == [~D[2026-01-01], ~D[2026-02-01]]
   end
 
-  test "totals each ISO year from the first with a report" do
-    record(~D[2024-12-23], "3", "7.00")
-    # Week 1 of 2026 starts in December.
-    record(~D[2025-12-29], "3", "100.00")
-    record(~D[2026-11-02], "3", "54.40")
-
-    assert recent(12, :year) == [
-             {~D[2024-01-01], %{"3" => "7.00"}},
-             {~D[2025-01-01], %{"3" => "0"}},
-             {~D[2026-01-01], %{"3" => "154.40"}}
-           ]
-  end
-
   test "compares each week with the week 52 weeks before it" do
     record(~D[2025-11-03], "3", "80.00")
     record(~D[2025-11-03], "6", "5.00")
@@ -153,20 +140,14 @@ defmodule Edenflowers.Minimossen.RecentSalesTest do
     assert {amount(latest.last_year.groups["3"]), amount(latest.last_year.total)} == {"80.00", "85.00"}
   end
 
-  test "a month or year under way compares with the same weeks a year before" do
+  test "a month under way compares with the same weeks a year before" do
     # October 2025: the week 52 weeks before the latest counts, the one after doesn't.
     record(~D[2025-10-20], "3", "30.00")
     record(~D[2025-10-27], "3", "40.00")
-    # Thursday 2025-09-25: September, so only in the year.
-    record(~D[2025-09-22], "3", "7.00")
     record(~D[2026-10-26], "3", "20.00")
 
     assert %{last_year: last_year} = List.last(summary(1, :month).periods)
     assert {last_year.start, amount(last_year.total), last_year.partial?} == {~D[2025-10-01], "70.00", true}
-
-    record(~D[2025-11-03], "3", "1000.00")
-    assert %{last_year: last_year} = List.last(summary(1, :year).periods)
-    assert {last_year.start, amount(last_year.total), last_year.partial?} == {~D[2025-01-01], "77.00", true}
   end
 
   test "a finished month compares with all of that month a year before" do
@@ -192,7 +173,6 @@ defmodule Edenflowers.Minimossen.RecentSalesTest do
 
     record(~D[2026-11-02], "3", "1.00")
     assert List.last(summary(1, :month).periods).partial?
-    assert List.last(summary(1, :year).periods).partial?
     refute List.last(summary(1, :week).periods).partial?
   end
 

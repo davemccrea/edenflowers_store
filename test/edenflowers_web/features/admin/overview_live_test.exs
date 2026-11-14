@@ -618,31 +618,14 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin")
 
-    assert has_element?(view, "#minimossen dt", "Sales in week 45")
+    assert has_element?(view, "#minimossen dt", "Week 45")
     assert has_element?(view, "#minimossen-total", "561,30 €")
-    assert has_element?(view, "#minimossen-change", "+17% (+81,30 €) on the 8-week average")
+    assert has_element?(view, "#minimossen-change", "8-week average 480,00 € +17%")
     assert has_element?(view, "#minimossen-groups div", "Flowers 154,40 € +29%")
     assert has_element?(view, "#minimossen-groups div", "Pots 406,90 € +13%")
-
-    view |> element("#minimossen-groups button", "Flowers") |> render_click()
-    assert has_element?(view, "#minimossen-total", "154,40 €")
-    assert has_element?(view, "#minimossen-change", "+29% (+34,40 €) on the 8-week average")
-
-    view |> element("#minimossen-groups button", "Flowers") |> render_click()
-    assert has_element?(view, "#minimossen-total", "561,30 €")
-
-    week_44 = element(view, "#minimossen-bars button[phx-value-start='2026-10-26']")
-    render_click(week_44)
-    assert has_element?(view, "#minimossen dt", "Sales in week 44")
-    assert has_element?(view, "#minimossen-total", "480,00 €")
-    assert has_element?(view, "#minimossen-groups div", "Pots 360,00 €")
-    refute has_element?(view, "#minimossen-change")
-
-    render_click(week_44)
-    assert has_element?(view, "#minimossen dt", "Sales in week 45")
   end
 
-  test "switches Minimossen's sales to months and years", %{conn: conn} do
+  test "switches Minimossen's sales to months", %{conn: conn} do
     conn = log_in(conn, generate(admin_user()) |> with_token())
 
     for {week_start, gross} <- [{~D[2025-10-27], "40.00"}, {~D[2026-10-19], "100.00"}, {~D[2026-10-26], "20.00"}] do
@@ -655,15 +638,12 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin")
 
     view |> element("#minimossen button", "Month") |> render_click()
-    assert has_element?(view, "#minimossen dt", "Sales in October 2026")
+    assert has_element?(view, "#minimossen dt", "October 2026")
     total = Edenflowers.Format.currency(Decimal.new("120.00"), Edenflowers.Format.locale())
     assert has_element?(view, "#minimossen-total", total)
     refute has_element?(view, "#minimossen-change")
     # Only last October's week up to a year before the latest import, like for like.
-    assert has_element?(view, "#minimossen-last-year", "on the same weeks of October 2025")
-
-    view |> element("#minimossen button", "Year") |> render_click()
-    assert has_element?(view, "#minimossen dt", "Sales in 2026")
-    assert has_element?(view, "#minimossen button[aria-pressed=true]", "Year")
+    assert has_element?(view, "#minimossen-last-year", "October 2025, same weeks")
+    assert has_element?(view, "#minimossen button[aria-pressed=true]", "Month")
   end
 end

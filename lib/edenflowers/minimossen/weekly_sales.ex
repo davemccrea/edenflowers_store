@@ -67,20 +67,20 @@ defmodule Edenflowers.Minimossen.WeeklySales do
 
     action :recent_sales, :map do
       description "The product groups sold in those periods, sorted by code; each group's gross sales and the " <>
-                    "total for each of the last `count` weeks, months or years up to the latest week imported, " <>
-                    "oldest first, from the first with a report, where one without a report reads 0. A week counts in the month and year " <>
+                    "total for each of the last `count` weeks or months up to the latest week imported, " <>
+                    "oldest first, from the first with a report, where one without a report reads 0. A week counts in the month " <>
                     "its Thursday falls in. By week, each week also has the average of the 8 weeks before it, " <>
                     "leaving out weeks without a report. Each period also has `last_year`: the same period a year " <>
                     "before (a week 52 weeks before), counting only weeks up to a year before the latest import, " <>
                     "so a period still under way compares like for like (`partial?`); nil without a report then. " <>
-                    "A month or year is `partial?` itself while still under way or when it began before the first import."
+                    "A month is `partial?` itself while still under way or when it began before the first import."
 
       constraints fields: [
                     groups: [type: {:array, :map}, allow_nil?: false],
                     periods: [type: {:array, :map}, allow_nil?: false]
                   ]
 
-      argument :period, :atom, default: :week, constraints: [one_of: [:week, :month, :year]]
+      argument :period, :atom, default: :week, constraints: [one_of: [:week, :month]]
       argument :count, :integer, default: 12, constraints: [min: 1]
 
       argument :this_year, :boolean do

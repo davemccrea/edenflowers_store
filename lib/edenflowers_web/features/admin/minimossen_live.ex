@@ -1,13 +1,14 @@
 defmodule EdenflowersWeb.Admin.MinimossenLive do
   @moduledoc """
-  Minimossen's sales across the page's full width, the same as the Overview's card,
-  with the card's choices in the URL.
+  Minimossen's sales across the page's full width, by week or month and for all
+  product groups or one, with the choices in the URL.
   """
 
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
   import EdenflowersWeb.Admin.Components
 
+  alias Edenflowers.Minimossen
   alias EdenflowersWeb.Admin.MinimossenCard
   alias EdenflowersWeb.Layouts
 
@@ -16,24 +17,14 @@ defmodule EdenflowersWeb.Admin.MinimossenLive do
     {:ok, assign(socket, page_title: ~t"Minimossen", locale: Localize.get_locale())}
   end
 
-  # A choice that doesn't parse falls back to the card's default.
+  # A period that doesn't parse falls back to weeks.
   @impl true
   def handle_params(params, _uri, socket) do
-    {:noreply,
-     assign(socket,
-       period: Map.get(%{"month" => :month, "year" => :year}, params["period"], :week),
-       group: params["group"],
-       at: date(params["at"])
-     )}
-  end
-
-  defp date(nil), do: nil
-
-  defp date(iso) do
-    case Date.from_iso8601(iso) do
-      {:ok, date} -> date
-      {:error, _reason} -> nil
-    end
+    period = if params["period"] == "month", do: :month, else: :week
+    # This year's months, January on.
+    arguments = [period: period, this_year: period == :month]
+    sales = Minimossen.recent_minimossen_sales!(arguments, actor: socket.assigns.current_user)
+    {:noreply, assign(socket, period: period, group: params["group"], sales: sales)}
   end
 
   @impl true
@@ -46,7 +37,7 @@ defmodule EdenflowersWeb.Admin.MinimossenLive do
             <nav class="flex gap-1" aria-label={~t"Show sales by"}>
               <.link
                 :for={{period, label} <- MinimossenCard.period_choices()}
-                patch={MinimossenCard.path(period: period, group: @group)}
+                patch={MinimossenCard.page_path(period, @group)}
                 aria-current={period == @period && "page"}
                 class="btn btn-sm rounded-full font-normal shadow-none aria-[current=page]:btn-primary not-aria-[current=page]:btn-ghost"
               >
@@ -55,16 +46,19 @@ defmodule EdenflowersWeb.Admin.MinimossenLive do
             </nav>
           </:actions>
         </.admin_page_header>
-        <.live_component
-          module={MinimossenCard}
-          id="minimossen-card"
-          current_user={@current_user}
-          locale={@locale}
-          period={@period}
-          group={@group}
-          at={@at}
-          wide
-        />
+        <.widget id="minimossen">
+          <MinimossenCard.sales
+            :if={@sales.periods != []}
+            period={@period}
+            sales={@sales}
+            group={@group}
+            locale={@locale}
+            wide
+          />
+          <p :if={@sales.periods == []} class="text-base-content/75 text-sm">
+            {~t"No Winpos reports imported yet."}
+          </p>
+        </.widget>
       </.admin_page>
     </Layouts.admin>
     """

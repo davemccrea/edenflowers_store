@@ -1,7 +1,7 @@
 defmodule Edenflowers.Minimossen.Actions.RecentSales do
   @moduledoc """
-  Totals Minimossen's sales by Winpos product group for the last `count` weeks, months
-  or years up to the latest week imported, so the Overview always ends on the newest
+  Totals Minimossen's sales by Winpos product group for the last `count` weeks or
+  months up to the latest week imported, so the Overview always ends on the newest
   report even before Monday comes round. By week, averages the 8 weeks
   before each week as the usual week to compare it with. Each period also compares
   with the same period a year before.
@@ -55,14 +55,14 @@ defmodule Edenflowers.Minimossen.Actions.RecentSales do
           |> Map.put(:last_year, last_year(period, start, sales, latest, codes))
           |> Map.put(:partial?, partial?(period, start, earliest, latest))
         end)
-        # Periods before the first report are left out, so the year view starts at the first import.
+        # Periods before the first report are left out, so the chart starts at the first import.
         |> Enum.drop_while(&Date.before?(elem(weeks(period, &1.start), 1), earliest))
 
       {:ok, %{groups: groups, periods: periods}}
     end
   end
 
-  # Only the weeks up to a year before the latest import, so a month or year still
+  # Only the weeks up to a year before the latest import, so a month still
   # under way compares with the same stretch of last year's. Nil without a report then.
   defp last_year(period, start, sales, latest, codes) do
     last_year_start = if period == :week, do: Date.add(start, -@year_of_weeks), else: Date.shift(start, year: -1)
@@ -81,7 +81,7 @@ defmodule Edenflowers.Minimossen.Actions.RecentSales do
     end
   end
 
-  # A month or year still under way, or one that began before the first import, so its
+  # A month still under way, or one that began before the first import, so its
   # bar can't be read against whole ones. A missed import doesn't make one partial.
   defp partial?(period, start, earliest, latest) do
     {first_week, last_week} = weeks(period, start)
@@ -97,10 +97,9 @@ defmodule Edenflowers.Minimossen.Actions.RecentSales do
     {first, last}
   end
 
-  # A week counts in the month and ISO year its Thursday falls in, as ISO weeks do.
+  # A week counts in the month its Thursday falls in, as ISO weeks do.
   defp period_start(:week, week_start), do: week_start
   defp period_start(:month, week_start), do: week_start |> Date.add(3) |> Date.beginning_of_month()
-  defp period_start(:year, week_start), do: Date.new!(Date.add(week_start, 3).year, 1, 1)
 
   # Sorted by code as a number ("3" before "66"), each named as its latest report names it.
   # A week without sales only has the code as its name, so a real name wins over it.
