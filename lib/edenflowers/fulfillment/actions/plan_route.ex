@@ -54,36 +54,40 @@ defmodule Edenflowers.Fulfillment.Actions.PlanRoute do
 
     case HereAPI.impl().sequence(start, stops, finish, departure, optimise_for) do
       {:ok, route} ->
-        stops =
-          Enum.map(route.stops, fn %{id: id, starts_at: starts_at} ->
-            order = Map.fetch!(by_id, id)
-
-            %{
-              order: order,
-              starts_at: DateTime.shift_zone!(starts_at, ShopTime.timezone()),
-              window: window(order)
-            }
-          end)
-
-        # HERE repeats windows weekly, so a window it can't make today it makes a week later.
-        case if(ignore_times, do: [], else: Enum.filter(stops, &late?/1)) do
-          [] ->
-            %{
-              error: nil,
-              start: start,
-              finish: finish,
-              stops: stops,
-              back_at: DateTime.shift_zone!(route.back_at, ShopTime.timezone()),
-              distance: route.distance,
-              driving: route.driving
-            }
-
-          late ->
-            %{error: {:missed_windows, Enum.map(late, & &1.order)}}
-        end
+        planned(route, by_id, start, finish, ignore_times)
 
       {:error, _reason} ->
         %{error: :route_not_planned}
+    end
+  end
+
+  defp planned(route, by_id, start, finish, ignore_times) do
+    stops =
+      Enum.map(route.stops, fn %{id: id, starts_at: starts_at} ->
+        order = Map.fetch!(by_id, id)
+
+        %{
+          order: order,
+          starts_at: DateTime.shift_zone!(starts_at, ShopTime.timezone()),
+          window: window(order)
+        }
+      end)
+
+    # HERE repeats windows weekly, so a window it can't make today it makes a week later.
+    case if(ignore_times, do: [], else: Enum.filter(stops, &late?/1)) do
+      [] ->
+        %{
+          error: nil,
+          start: start,
+          finish: finish,
+          stops: stops,
+          back_at: DateTime.shift_zone!(route.back_at, ShopTime.timezone()),
+          distance: route.distance,
+          driving: route.driving
+        }
+
+      late ->
+        %{error: {:missed_windows, Enum.map(late, & &1.order)}}
     end
   end
 

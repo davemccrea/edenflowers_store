@@ -839,7 +839,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     test "on today's run, lists its stops with when each is expected, and once delivered offers Directions to the next",
          %{conn: conn} do
       # A whole minute, so the run is 20 min behind until the clock turns the next one.
-      minute = DateTime.utc_now() |> DateTime.truncate(:second) |> Map.put(:second, 0)
+      minute = DateTime.utc_now(:second) |> Map.put(:second, 0)
       clock = &(&1 |> DateTime.shift_zone!("Europe/Helsinki") |> Calendar.strftime("%H:%M"))
 
       run_stop = fn position, attrs ->
