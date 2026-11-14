@@ -26,6 +26,10 @@ defmodule Edenflowers.Orders do
       define :list_my_orders, action: :mine
       define :list_orders_for_admin, action: :admin_list
       define :list_orders_due_soon, action: :due_soon
+      define :list_route_stops, action: :route_stops, args: [:ids, :date]
+      define :list_delivery_run, action: :delivery_run, args: [:date]
+      define :start_delivery_run, action: :start_delivery_run, args: [:date, :order_ids]
+      define :set_route_position, action: :set_route_position, args: [:route_position]
       define :list_orders_to_fulfil, action: :to_fulfil
       define :list_unsettled_orders, action: :unsettled
       define :sales_summary, action: :sales_summary, args: [:from, :to]

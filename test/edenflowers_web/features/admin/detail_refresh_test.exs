@@ -25,7 +25,7 @@ defmodule EdenflowersWeb.Admin.DetailRefreshTest do
            [Events.admin_customer(customer.id), Events.admin_orders(), Events.admin_subscriptions()]},
           {SubscriptionDetailLive, subscription.id,
            [Events.admin_subscription(subscription.id), Events.admin_orders(), Events.shop_calendar_changed()]},
-          {OrderDetailLive, order.id, [Events.admin_order(order.id), Events.admin_orders(), Events.admin_pass_it_on()]}
+          {OrderDetailLive, order.id, [Events.admin_order(order.id), Events.admin_pass_it_on()]}
         ] do
       socket = %Phoenix.LiveView.Socket{
         assigns: %{__changed__: %{}, current_user: admin, flash: %{}},
@@ -55,15 +55,23 @@ defmodule EdenflowersWeb.Admin.DetailRefreshTest do
       assert unchanged.assigns == socket.assigns
 
       if module == OrderDetailLive do
-        notification = %Phoenix.Socket.Broadcast{
-          topic: Events.topic(Events.admin_orders()),
-          event: "record_receipt_email_failure",
+        email_sent = %Phoenix.Socket.Broadcast{
+          topic: Events.topic(Events.admin_order(order.id)),
+          event: "send_fulfillment_email",
           payload: %{}
         }
 
-        {:noreply, warned} = module.handle_info(notification, socket)
-        assert warned.assigns.stale
-        refute warned.assigns.flash["error"]
+        {:noreply, unchanged} = module.handle_info(email_sent, socket)
+        refute unchanged.assigns.stale
+
+        other_order = %Phoenix.Socket.Broadcast{
+          topic: Events.topic(Events.admin_orders()),
+          event: "mark_fulfilled",
+          payload: %{data: placed_order()}
+        }
+
+        {:noreply, unchanged} = module.handle_info(other_order, socket)
+        refute unchanged.assigns.stale
       end
     end
   end

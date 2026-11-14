@@ -701,7 +701,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       assert email.text_body == "Thank you for choosing us."
     end)
 
-    assert has_element?(view, "#editor-stale-notice")
+    refute has_element?(view, "#editor-stale-notice")
     {:ok, view, _} = live(conn, ~p"/admin/orders/#{order.id}")
     assert has_element?(view, "#order-log li", ~r/Delivered email sent.*Your flowers arrived/s)
     assert has_element?(view, "#order-log li", ~r/Delivered email sent.*Thank you for choosing us\./s)
@@ -835,6 +835,60 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       assert file =~ ~r/\A\d{8}-\d{6}_#{reloaded.order_reference}\.jpg\z/
       refute reloaded.email_delivery_photo
     end
+
+    test "on today's run, lists its stops with when each is expected, and once delivered offers Directions to the next",
+         %{conn: conn} do
+      # A whole minute, so the run is 20 min behind until the clock turns the next one.
+      minute = DateTime.utc_now() |> DateTime.truncate(:second) |> Map.put(:second, 0)
+      clock = &(&1 |> DateTime.shift_zone!("Europe/Helsinki") |> Calendar.strftime("%H:%M"))
+
+      run_stop = fn position, attrs ->
+        placed_order(
+          [
+            fulfillment_method: :delivery,
+            fulfillment_status: :ready,
+            fulfillment_date: Edenflowers.ShopTime.today(),
+            route_position: position,
+            route_planned_at: DateTime.add(minute, position * 20 - 40, :minute),
+            route_planned_back_at: DateTime.add(minute, 1, :hour),
+            geocoded_address: "Stop #{position}, Vasa"
+          ] ++ attrs
+        )
+      end
+
+      first = run_stop.(1, customer_name: "Ada")
+      last = run_stop.(2, customer_name: "Bo")
+
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{first.id}")
+      assert has_element?(view, "#run-bar-title", "Stop 1 of 2")
+      assert has_element?(view, "#run-bar-behind", "20 min behind")
+      # Planned back an hour from now, and the next stop at now, both pushed back by the 20 minutes behind.
+      assert has_element?(view, "#run-bar-back", clock.(DateTime.add(minute, 80, :minute)))
+      assert has_element?(view, "#run-bar-stop-#{last.id}", clock.(DateTime.add(minute, 20, :minute)))
+      assert has_element?(view, "#run-bar-stop-#{first.id}[aria-current=step]", "Ada")
+      assert has_element?(view, "#run-bar-stop-#{last.id} a[href='/admin/orders/#{last.id}']", "Bo")
+      refute has_element?(view, "#run-bar-directions")
+      refute has_element?(view, "#order-queue-nav")
+
+      view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+      view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "true"}) |> render_submit()
+
+      assert has_element?(view, "#run-bar-stop-#{first.id}", "Delivered")
+      # Stop 2 is planned for now, so the run is back on time.
+      assert has_element?(view, "#run-bar-on-time")
+
+      assert has_element?(
+               view,
+               "#run-bar-stop-#{last.id} a#run-bar-directions[href*='destination=Stop+2%2C+Vasa']",
+               "Directions"
+             )
+
+      Ash.Seed.update!(last, %{fulfillment_status: :fulfilled})
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{last.id}")
+      assert has_element?(view, "#run-bar-title", "Stop 2 of 2")
+      assert has_element?(view, "#run-bar-done", "That was the run's last stop.")
+      refute has_element?(view, "#run-bar-back")
+    end
   end
 
   describe "choosing whether to email the customer" do
@@ -951,6 +1005,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|#order-customer a[href="tel:040 123 4567"]|)
     refute has_element?(view, ~s|#order-recipient a[href^="tel:"]|)
     assert has_element?(view, "#order-fulfillment-summary", "Pickup")
+    assert has_element?(view, "#order-fulfillment-recipient", "Grace Hopper")
     # Gift is also surfaced prominently in the header, matching the Overview.
     assert has_element?(view, "header", "Grace Hopper")
   end
@@ -1117,6 +1172,20 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
            )
   end
 
+  test "directs to the address HERE resolved, so Google Maps names the street", %{conn: conn} do
+    order =
+      placed_order(
+        fulfillment_method: :delivery,
+        delivery_address: "Kauppapuistikko 20, Vaasa",
+        geocoded_address: "Kauppapuistikko 20, 65100 Vaasa",
+        position: "63.0951,21.6165"
+      )
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, "#order-directions a[href*='destination=Kauppapuistikko+20%2C+65100+Vaasa']")
+  end
+
   test "uses driving directions for a geocoded delivery order", %{conn: conn} do
     order =
       placed_order(
@@ -1133,23 +1202,41 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
            )
   end
 
-  test "steps through the orders still to fulfil by fulfillment date", %{conn: conn} do
-    later = placed_order(order_reference: "LATER", fulfillment_date: ~D[2026-06-12])
-    current = placed_order(order_reference: "CURRENT", fulfillment_date: ~D[2026-06-11])
-    earlier = placed_order(order_reference: "EARLIER", fulfillment_date: ~D[2026-06-10])
+  test "steps through the orders still to fulfil on the order's day", %{conn: conn} do
+    # Same day, so they're stepped through in the order they were placed.
+    day =
+      &placed_order(
+        order_reference: &1,
+        fulfillment_date: ~D[2026-06-11],
+        ordered_at: ~U[2026-06-01 09:00:00Z] |> DateTime.add(&2, :hour)
+      )
+
+    earlier = day.("EARLIER", 0)
+    current = day.("CURRENT", 1)
+    later = day.("LATER", 2)
+    next_day = placed_order(order_reference: "NEXT-DAY", fulfillment_date: ~D[2026-06-12])
     placed_order(order_reference: "DONE", fulfillment_date: ~D[2026-06-11], fulfillment_status: :fulfilled)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{current.id}")
 
+    assert has_element?(view, "#order-queue-nav", "11.6.")
     assert has_element?(view, "#order-queue-nav", "2 of 3")
     assert has_element?(view, ~s|#order-queue-nav a[href="/admin/orders/#{earlier.id}"]|)
     assert has_element?(view, ~s|#order-queue-nav a[href="/admin/orders/#{later.id}"]|)
+    refute has_element?(view, ~s|#order-queue-nav a[href="/admin/orders/#{next_day.id}"]|)
   end
 
-  test "keeps stepping after marking an order fulfilled and counts what is left", %{conn: conn} do
-    current = placed_order(fulfillment_status: :ready, order_reference: "CURRENT", fulfillment_date: ~D[2026-06-11])
-    later = placed_order(order_reference: "LATER", fulfillment_date: ~D[2026-06-12])
-    placed_order(order_reference: "LATEST", fulfillment_date: ~D[2026-06-13])
+  test "keeps stepping after marking an order fulfilled", %{conn: conn} do
+    current =
+      placed_order(
+        fulfillment_status: :ready,
+        order_reference: "CURRENT",
+        fulfillment_date: ~D[2026-06-11],
+        ordered_at: ~U[2026-06-01 09:00:00Z]
+      )
+
+    later =
+      placed_order(order_reference: "LATER", fulfillment_date: ~D[2026-06-11], ordered_at: ~U[2026-06-01 10:00:00Z])
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{current.id}")
 
@@ -1159,8 +1246,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     view |> form("#confirm-fulfillment-form") |> render_submit()
 
-    assert has_element?(view, "#order-queue-nav", "Fulfilled · 2 left")
-    refute has_element?(view, "#order-queue-nav", "1 of 3")
     assert has_element?(view, ~s|#order-queue-nav a[href="/admin/orders/#{later.id}"]|)
   end
 

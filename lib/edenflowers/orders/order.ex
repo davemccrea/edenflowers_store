@@ -172,6 +172,21 @@ defmodule Edenflowers.Orders.Order do
       description "The address's coordinates as HERE gave them: \"latitude,longitude\"."
     end
 
+    attribute :route_position, :integer do
+      description "The delivery's stop number in its day's Delivery run, from 1, or nil when it isn't on one. " <>
+                    "Lists of orders to fulfil follow it within a day."
+    end
+
+    attribute :route_planned_at, :utc_datetime do
+      description "When the Delivery run's plan has Jennie starting this stop, after any wait for its agreed " <>
+                    "time. Only meaningful while `route_position` is set."
+    end
+
+    attribute :route_planned_back_at, :utc_datetime do
+      description "When the Delivery run's plan has her back where it ends, the same on every stop of the run. " <>
+                    "Only meaningful while `route_position` is set."
+    end
+
     # Step 4 - Payment
     attribute :payment_intent_id, :string
 
@@ -1090,6 +1105,8 @@ defmodule Edenflowers.Orders.Order do
 
     bypass actor_attribute_equals(:admin, true) do
       authorize_if action([
+                     :start_delivery_run,
+                     :set_route_position,
                      :mark_fulfilled,
                      :mark_ready,
                      :undo_ready,

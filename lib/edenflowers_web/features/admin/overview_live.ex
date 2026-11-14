@@ -20,8 +20,10 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   alias Edenflowers.Orders
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.BankConnection
+  alias EdenflowersWeb.Admin.OrderDetailComponents
   alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Admin.PushSubscriptions
+  alias EdenflowersWeb.Admin.RouteDrawer
   alias EdenflowersWeb.Layouts
 
   @store_presence Events.topic(Events.store_presence())
@@ -48,6 +50,8 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
      |> assign(:locale, Localize.get_locale())
      |> assign(:vapid_public_key, Edenflowers.WebPush.public_key())
      |> assign(:connected_customers, EdenflowersWeb.Presence.connected_customers())
+     |> assign(route_date: nil, route_form: nil, route: nil, route_stale?: false)
+     |> assign(:mapbox_token, Application.get_env(:edenflowers, :mapbox_token))
      |> refresh()}
   end
 
@@ -69,6 +73,8 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         </.admin_page_header>
 
         <.notifications_offer :if={@vapid_public_key} vapid_public_key={@vapid_public_key} />
+
+        <.delivery_run run={@delivery_run} locale={@locale} />
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:grid-rows-[max-content_max-content_1fr] xl:items-start">
           <.attention_widget :if={@attention != []} groups={@attention} locale={@locale} />
@@ -102,6 +108,17 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           </div>
         </div>
       </.admin_page>
+      <RouteDrawer.route_drawer
+        date={@route_date}
+        orders={Map.get(@orders_by_date, @route_date, [])}
+        form={@route_form}
+        places={Fulfillment.route_places()}
+        route={@route}
+        route_stale?={@route_stale?}
+        run={if @route_date == @today, do: run_left(@delivery_run), else: []}
+        map_token={@mapbox_token}
+        locale={@locale}
+      />
     </Layouts.admin>
     """
   end
@@ -157,6 +174,79 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   end
 
   def handle_event("connect_bank", _params, socket), do: BankConnection.connect(socket)
+
+  def handle_event("open_route", %{"date" => date}, socket) do
+    date = Date.from_iso8601!(date)
+    orders = Map.get(socket.assigns.orders_by_date, date, [])
+    run = if date == socket.assigns.today, do: run_left(socket.assigns.delivery_run), else: []
+
+    {:noreply,
+     socket
+     |> assign(
+       route_date: date,
+       route_form: RouteDrawer.form(orders, date, run),
+       route: nil,
+       route_stale?: false
+     )
+     |> push_event("js-exec", %{to: "#route-drawer", attr: "phx-show"})}
+  end
+
+  def handle_event("close_route", _params, socket),
+    do: {:noreply, assign(socket, route_date: nil, route_form: nil, route: nil, route_stale?: false)}
+
+  # A changed form no longer matches the planned route: it stays to compare against, marked out of date.
+  def handle_event("change_route", %{"route" => params}, socket),
+    do: {:noreply, assign(socket, route_form: to_form(params, as: :route), route_stale?: socket.assigns.route != nil)}
+
+  def handle_event("plan_route", %{"route" => params}, socket) do
+    %{route_date: date, current_user: actor} = socket.assigns
+    form = to_form(params, as: :route)
+
+    # An input the browser let through, like a cleared time, shows as a route that couldn't be planned.
+    route =
+      case Fulfillment.plan_route(
+             RouteDrawer.ticked(form),
+             date,
+             params["start"],
+             params["finish"],
+             params["departure"],
+             actor: actor
+           ) do
+        {:ok, route} -> route
+        {:error, _error} -> %{error: :invalid}
+      end
+
+    {:noreply, assign(socket, route_form: form, route: route, route_stale?: false)}
+  end
+
+  def handle_event("end_run", _params, socket) do
+    case Orders.start_delivery_run(Edenflowers.ShopTime.today(), [], actor: socket.assigns.current_user) do
+      :ok -> {:noreply, refresh(socket)}
+      {:error, _error} -> {:noreply, put_flash(socket, :error, ~t"The delivery run couldn't be ended. Try again.")}
+    end
+  end
+
+  def handle_event("start_run", _params, socket) do
+    %{route_date: date, route: %{stops: stops, back_at: back_at}, route_stale?: false, current_user: actor} =
+      socket.assigns
+
+    case Orders.start_delivery_run(
+           date,
+           Enum.map(stops, & &1.order.id),
+           %{planned_at: Enum.map(stops, & &1.starts_at), planned_back_at: back_at},
+           actor: actor
+         ) do
+      # The run's own first stop: one planned first may have been handed over since.
+      :ok ->
+        case Orders.list_delivery_run!(date, actor: actor) do
+          [first | _] -> {:noreply, push_navigate(socket, to: ~p"/admin/orders/#{first.id}")}
+          [] -> {:noreply, refresh(socket)}
+        end
+
+      {:error, _error} ->
+        {:noreply, put_flash(socket, :error, ~t"The delivery run couldn't be started. Plan the route again.")}
+    end
+  end
 
   # Only today, so a page left open overnight can't toggle yesterday.
   def handle_event("toggle-date", %{"date" => date}, socket) do
@@ -255,6 +345,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     |> assign(:orders_by_date, Enum.group_by(due, & &1.fulfillment_date))
     |> assign(:attention, attention)
     |> assign(:today, today)
+    |> assign(:delivery_run, Orders.list_delivery_run!(today, actor: actor))
     |> assign(:owed, owed |> Enum.filter(&(&1.kind == :order)) |> sum_amounts())
     |> assign(:sales, Orders.sales_summary!(Date.beginning_of_month(today), today, actor: actor))
     |> assign(:expenses, Expenses.expenses_paid_totals!(Date.beginning_of_month(today), today, actor: actor))
@@ -753,6 +844,32 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     |> String.slice(0, 7)
   end
 
+  # The stops still to deliver; handed-over ones stay in the run only to count progress.
+  defp run_left(run), do: Enum.filter(run, & &1.fulfillable?)
+
+  attr :run, :list, required: true, doc: "today's `Orders.list_delivery_run`"
+  attr :locale, :any, required: true
+
+  # Shown while stops are left; the order pages say when the last one is delivered.
+  defp delivery_run(assigns) do
+    ~H"""
+    <OrderDetailComponents.run_bar :if={run_left(@run) != []} id="delivery-run" run={@run} locale={@locale}>
+      <:actions>
+        <.button
+          id="end-delivery-run"
+          type="button"
+          variant="ghost"
+          size="sm"
+          phx-click="end_run"
+          data-confirm={~t"End the delivery run? Its orders stay as they are, still due today."}
+        >
+          {~t"End run"}
+        </.button>
+      </:actions>
+    </OrderDetailComponents.run_bar>
+    """
+  end
+
   attr :groups, :list, required: true, doc: "`{key, icon, title, rows}`, each with at least one row"
   attr :locale, :any, required: true
 
@@ -855,6 +972,17 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             <span class="text-base-content/75 text-sm tabular-nums">
               {~t"#{ready = Enum.count(orders, & &1.can_undo_ready?)} of #{total = length(orders)} ready"}
             </span>
+            <.button
+              :if={method == :delivery}
+              id={"#{@id}-route"}
+              type="button"
+              variant="ghost"
+              size="sm"
+              phx-click="open_route"
+              phx-value-date={Date.to_iso8601(@date)}
+            >
+              <.icon name="hero-map" class="h-4 w-4" /> {~t"Plan route"}
+            </.button>
             <.day_booking_controls :if={index == 0} id={@id} date={@date} booking={@booking} />
           </div>
           <ul class="divide-base-content/12 -mx-4 divide-y sm:-mx-5">

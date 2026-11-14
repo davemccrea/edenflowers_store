@@ -32,6 +32,9 @@ vault_stripe_webhook_secret: "whsec_..."
 # HERE Maps API (https://platform.here.com)
 vault_here_api_key: "your_here_api_key"
 
+# Jennie's home as "latitude,longitude", where a delivery route can start or end.
+vault_home_position: "63.0000,21.0000"
+
 # Mapbox public token for the admin order map (https://console.mapbox.com).
 # Rendered into page HTML, so restrict it to your domains in the Mapbox console.
 vault_mapbox_token: "pk...."

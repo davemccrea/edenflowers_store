@@ -29,6 +29,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   @photo_field "fulfillment[photo]"
 
+  @all_orders_topic Events.topic(Events.admin_orders())
+
+  @email_sent_events ~w(send_receipt_email send_order_details_email send_order_updated_email
+                        send_payment_failed_email send_payment_received_email send_fulfillment_email)
+
   @impl true
   def mount(%{"id" => id}, _session, socket) do
     case Orders.get_order_for_admin(id, actor: socket.assigns.current_user) do
@@ -73,8 +78,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           title={@order.customer_name || @order.order_reference}
           back={{~t"Orders", ~p"/admin/orders"}}
         >
-          <:nav :if={@queue}>
-            <.queue_nav queue={@queue} fulfilled={@order.fulfillment_status == :fulfilled} />
+          <%!-- A run stop steps through the run bar's list instead. --%>
+          <:nav :if={@queue && !@run}>
+            <.queue_nav queue={@queue} locale={@locale} />
           </:nav>
           <:subtitle>
             <span class="flex flex-col gap-2.5">
@@ -197,6 +203,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           preview={@preview}
         />
 
+        <.run_bar :if={@run} run={@run} order={@order} locale={@locale} />
+
         <%!-- The job on the left, read at the bench; the money, people and history on the right, read at the desk. --%>
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
           <div class="space-y-6">
@@ -243,6 +251,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                     class="whitespace-normal"
                   />
                 </.summary_fact>
+                <%!-- Beside the job so the gift's recipient isn't missed, not only in the sidebar below the buyer. --%>
+                <.summary_fact :if={@order.gift && present?(@order.recipient_name)} label={~t"Gift for"}>
+                  <span id="order-fulfillment-recipient" class="flex items-center gap-1.5">
+                    <.icon name="hero-gift" class="h-4 w-4 shrink-0" />
+                    {@order.recipient_name}
+                  </span>
+                  <.phone_link
+                    :if={present?(@order.recipient_phone_number)}
+                    phone_number={@order.recipient_phone_number}
+                  />
+                </.summary_fact>
               </div>
 
               <.delivery_location
@@ -250,6 +269,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 position={parse_position(@order.position)}
                 token={@mapbox_token}
                 address={@order.delivery_address}
+                geocoded_address={@order.geocoded_address}
                 distance_km={@order.distance_km}
               />
 
@@ -777,6 +797,18 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   @impl true
+  # A sent email only stamps when it went, which nobody edits here, so it can't
+  # be overwritten. Marking delivered would otherwise warn as its email goes out.
+  def handle_info(%Phoenix.Socket.Broadcast{event: event}, socket) when event in @email_sent_events,
+    do: {:noreply, socket}
+
+  # Other orders only show on this page when they redeem its Pass It On card.
+  def handle_info(%Phoenix.Socket.Broadcast{topic: @all_orders_topic} = notification, socket) do
+    if redeems_card?(notification.payload, socket.assigns.order),
+      do: {:noreply, PubSub.mark_stale(socket, notification)},
+      else: {:noreply, socket}
+  end
+
   def handle_info(%Phoenix.Socket.Broadcast{event: event} = notification, socket) do
     socket = PubSub.mark_stale(socket, notification)
 
@@ -791,6 +823,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_info(_message, socket), do: {:noreply, socket}
+
+  defp redeems_card?(%{data: %Order{promotion_id: card_id}}, %Order{pass_it_on_card: %{id: card_id}}), do: true
+  defp redeems_card?(_payload, _order), do: false
 
   defp flash_payment_result(socket, {:success, message}) do
     socket
@@ -885,7 +920,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     |> assign(:payment_message_urls, payment_message_urls(order))
     |> assign(:payments, payments)
     |> assign(:log, order_log(order, payments, socket.assigns.locale))
+    |> assign(:run, run(order, actor))
   end
+
+  # A stop of today's Delivery run shows where the run stands.
+  defp run(%{route_position: n, fulfillment_date: date, state: :placed}, actor) when is_integer(n) do
+    if date == ShopTime.today(), do: Orders.list_delivery_run!(date, actor: actor)
+  end
+
+  defp run(_order, _actor), do: nil
 
   defp voucher_form(%{gift_voucher_line: %{gift_voucher: %{last_day_changeable?: true} = voucher}}, actor),
     do: voucher |> AshPhoenix.Form.for_update(:change_last_day, as: "voucher", actor: actor) |> to_form()
@@ -946,11 +989,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   # Muted rows inherit the row's own muted tone.
 
-  # Steps through the same queue the orders list opens on. Orders outside it,
+  # Steps through the orders still to fulfil on this order's day. Orders outside it,
   # like fulfilled ones, get no stepping. Computed once at mount so marking this
   # order fulfilled still leaves "next" pointing at the following one.
   defp queue_position(order, actor) do
-    ids = Enum.map(Orders.list_orders_to_fulfil!(actor: actor), & &1.id)
+    ids = Enum.map(Orders.list_orders_to_fulfil!(%{date: order.fulfillment_date}, actor: actor), & &1.id)
 
     case Enum.find_index(ids, &(&1 == order.id)) do
       nil ->
@@ -958,6 +1001,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
       index ->
         %{
+          date: order.fulfillment_date,
           position: index + 1,
           total: length(ids),
           previous: if(index > 0, do: Enum.at(ids, index - 1)),

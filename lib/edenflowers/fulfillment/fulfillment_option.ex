@@ -166,6 +166,19 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       argument :fulfillment_option_id, :uuid, allow_nil?: false
       run Actions.CalculateDelivery
     end
+
+    action :plan_route, :map do
+      description "Orders the day's chosen deliveries into the fastest drive with HERE, from the shop or " <>
+                    "Jennie's home and back to either. A route that can't be planned, or that misses an " <>
+                    "agreed time, is returned as `%{error: reason}` rather than failing."
+
+      argument :order_ids, {:array, :uuid}, allow_nil?: false
+      argument :date, :date, allow_nil?: false
+      argument :start, :atom, allow_nil?: false, constraints: [one_of: [:shop, :home]]
+      argument :finish, :atom, allow_nil?: false, constraints: [one_of: [:shop, :home]]
+      argument :departure, :time, allow_nil?: false
+      run Actions.PlanRoute
+    end
   end
 
   validations do
@@ -189,6 +202,11 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
 
     policy action_type(:action) do
       authorize_if always()
+    end
+
+    # Jennie's alone: it reads delivery addresses and spends a HERE request.
+    policy action(:plan_route) do
+      forbid_if always()
     end
 
     policy action_type([:create, :update, :destroy]) do

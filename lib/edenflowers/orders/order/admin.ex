@@ -128,12 +128,17 @@ defmodule Edenflowers.Orders.Order.Admin do
   actions do
     read :due_soon do
       description "The admin Overview's list: unfinished placed orders up to 8 days ahead, overdue included, " <>
-                    "by date, time and distance."
+                    "by date, then a day's Delivery run, time and distance."
 
       filter expr(fulfillable? and fulfillment_date <= date_add(helsinki_today(), 8, :day))
 
       prepare build(
-                sort: [fulfillment_date: :asc, fulfillment_time_start: :asc_nils_last, distance: :asc_nils_last],
+                sort: [
+                  fulfillment_date: :asc,
+                  route_position: :asc_nils_last,
+                  fulfillment_time_start: :asc_nils_last,
+                  distance: :asc_nils_last
+                ],
                 load: [
                   :customer_name,
                   :order_reference,
@@ -156,6 +161,58 @@ defmodule Edenflowers.Orders.Order.Admin do
                   :line_items
                 ]
               )
+    end
+
+    read :route_stops do
+      description "The day's deliveries among `ids` that a route can visit: not yet handed over, with a " <>
+                    "geocoded position."
+
+      argument :ids, {:array, :uuid}, allow_nil?: false
+      argument :date, :date, allow_nil?: false
+
+      filter expr(
+               id in ^arg(:ids) and fulfillment_date == ^arg(:date) and fulfillment_method == :delivery and
+                 fulfillable? and not is_nil(position)
+             )
+
+      prepare build(load: [:customer_name, :order_reference])
+    end
+
+    read :delivery_run do
+      description "A day's Delivery run in stop order, delivered stops included, so its progress can be counted."
+
+      argument :date, :date, allow_nil?: false
+
+      filter expr(state == :placed and fulfillment_date == ^arg(:date) and not is_nil(route_position))
+
+      prepare build(
+                sort: [route_position: :asc],
+                load: [:customer_name, :recipient_name, :gift, :fulfillable?]
+              )
+    end
+
+    action :start_delivery_run do
+      description "Jennie sets off on today's deliveries in the order `order_ids` gives, usually HERE's: each " <>
+                    "becomes that stop of the day's Delivery run, and any the run no longer includes leaves it. " <>
+                    "No `order_ids` ends the day's run."
+
+      argument :date, :date, allow_nil?: false
+      argument :order_ids, {:array, :uuid}, allow_nil?: false
+
+      argument :planned_at, {:array, :utc_datetime},
+        default: [],
+        description: "When the plan has her starting each stop, in `order_ids`' order."
+
+      argument :planned_back_at, :utc_datetime, description: "When the plan has her back where the run ends."
+      transaction? true
+      run Actions.StartDeliveryRun
+    end
+
+    update :set_route_position do
+      description "Puts a delivery at a stop of its day's Delivery run, or takes it off with nil. Not logged: " <>
+                    "the run is Jennie's plan for the drive, not something that happens to the order."
+
+      accept [:route_position, :route_planned_at, :route_planned_back_at]
     end
 
     # Kept apart from :due_soon so the table's loads and sorting stay out of
@@ -251,10 +308,14 @@ defmodule Edenflowers.Orders.Order.Admin do
     end
 
     read :to_fulfil do
-      description "Placed orders still to deliver or collect, prepared or not, paid or not, soonest first."
+      description "Placed orders still to deliver or collect, prepared or not, paid or not, soonest first, a " <>
+                    "day's Delivery run in its order. Only one fulfillment date's when `date` is given."
+
+      argument :date, :date
+
       # Unpaid custom orders still have to be made (ADR 0001).
-      filter expr(fulfillable?)
-      prepare build(sort: [fulfillment_date: :asc, ordered_at: :asc, id: :asc])
+      filter expr(fulfillable? and (is_nil(^arg(:date)) or fulfillment_date == ^arg(:date)))
+      prepare build(sort: [fulfillment_date: :asc, route_position: :asc_nils_last, ordered_at: :asc, id: :asc])
     end
 
     read :admin_show do
@@ -484,6 +545,11 @@ defmodule Edenflowers.Orders.Order.Admin do
       change Changes.PriceFulfillment
       change set_attribute(:user_id, nil), where: [changing(:customer_email)]
       change Changes.UpsertUserAndAssignToOrder, where: [present(:customer_email)]
+
+      # An order moved to another day or to pickup leaves today's Delivery run.
+      change set_attribute(:route_position, nil),
+        where: [any([changing(:fulfillment_date), changing(:fulfillment_method)])]
+
       # The old lines go back on the shelf before the new ones are taken.
       change {Changes.AdjustStock, direction: :return}
 

@@ -437,6 +437,40 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     end
   end
 
+  describe "an order on a Delivery run" do
+    test "keeps its stop through an edit, and leaves the run when moved to another day", ctx do
+      {:ok, order} = place(ctx)
+      order = Orders.set_route_position!(order, 1, actor: ctx.admin)
+
+      {:ok, order} = Orders.edit_order(order, params(ctx, %{florist_note: "Ring first"}), actor: ctx.admin)
+      assert order.route_position == 1
+
+      {:ok, order} =
+        Orders.edit_order(order, params(ctx, %{fulfillment_date: Date.add(tomorrow(), 1)}), actor: ctx.admin)
+
+      assert order.route_position == nil
+    end
+
+    test "stays on the run through another delivery option, and leaves it for pickup", ctx do
+      stub_geocoding(8_000)
+      delivery = %{fulfillment_option_id: ctx.delivery.id, delivery_address: "Kyrkvägen 5"}
+
+      flat =
+        generate(fulfillment_option(tax_rate_id: ctx.tax_rate.id, fulfillment_method: :delivery, base_price: "9.00"))
+
+      {:ok, order} = place(ctx, delivery)
+      order = Orders.set_route_position!(order, 1, actor: ctx.admin)
+
+      {:ok, order} =
+        Orders.edit_order(order, params(ctx, %{delivery | fulfillment_option_id: flat.id}), actor: ctx.admin)
+
+      assert order.route_position == 1
+
+      {:ok, order} = Orders.edit_order(order, params(ctx), actor: ctx.admin)
+      assert order.route_position == nil
+    end
+  end
+
   describe "a delivery" do
     test "saves without a recipient phone, and is flagged until it has one", ctx do
       stub_geocoding(8_000)

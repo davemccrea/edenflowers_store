@@ -312,8 +312,132 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
     """
   end
 
+  attr :id, :string, default: "run-bar"
+  attr :run, :list, required: true, doc: "today's `Orders.list_delivery_run`, delivered stops included"
+  attr :order, Order, default: nil, doc: "the stop the page shows, if it shows one"
+  attr :locale, :any, required: true
+  slot :actions
+
+  @doc """
+  Today's Delivery run, read standing at the car: every stop with when it's expected and the delivered ones
+  ticked, and Directions beside the next stop. On a stop's own page it marks that stop, and offers Directions
+  only once it's delivered. A stop's address, phone and agreed time are a tap away on its own page.
+  """
+  def run_bar(assigns) do
+    next = Enum.find(assigns.run, & &1.fulfillable?)
+    behind = behind_seconds(next, DateTime.utc_now())
+    planned_back_at = hd(assigns.run).route_planned_back_at
+
+    assigns =
+      assign(assigns,
+        next: next,
+        behind: behind,
+        back_at: next && planned_back_at && DateTime.add(planned_back_at, behind),
+        delivered: Enum.count(assigns.run, &(not &1.fulfillable?)),
+        directions?: is_nil(assigns.order) or not assigns.order.fulfillable?
+      )
+
+    ~H"""
+    <section
+      id={@id}
+      aria-labelledby={"#{@id}-title"}
+      class="admin-card shadow-[inset_4px_0_0_var(--color-primary)] mb-6 p-4 sm:p-5"
+    >
+      <div class="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h2 id={"#{@id}-title"} class="text-base-content flex items-center gap-2 text-base font-semibold">
+          <.icon name="hero-truck" class="text-base-content/60 h-5 w-5" />
+          <%= if @order do %>
+            {~t"Stop #{position = @order.route_position} of #{total = length(@run)}"}
+          <% else %>
+            {~t"Delivery run"}
+          <% end %>
+        </h2>
+        <span :if={!@order} id={"#{@id}-progress"} class="text-base-content/75 text-sm tabular-nums">
+          {~t"#{delivered = @delivered} of #{total = length(@run)} delivered"}
+        </span>
+        <p :if={@back_at} id={"#{@id}-back"} class="ml-auto text-sm tabular-nums">
+          <span class="text-base-content/75">{~t"Back about #{time = clock(@back_at, @locale)}"}</span>
+          <span :if={@behind >= 5 * 60} id={"#{@id}-behind"} class="text-warning-content font-semibold">
+            · {~t"#{minutes = div(@behind, 60)} min behind"}
+          </span>
+          <span :if={@behind < 5 * 60} id={"#{@id}-on-time"} class="text-success font-semibold">
+            · {~t"On time"}
+          </span>
+        </p>
+        <div :if={@actions != []} class={[!@back_at && "ml-auto"]}>{render_slot(@actions)}</div>
+      </div>
+
+      <ol id={"#{@id}-stops"} class="divide-base-content/12 divide-y text-sm">
+        <li
+          :for={stop <- @run}
+          id={"#{@id}-stop-#{stop.id}"}
+          aria-current={@order && stop.id == @order.id && "step"}
+          class={["py-1.5", !stop.fulfillable? && "text-base-content/60"]}
+        >
+          <%!-- Tall enough for the Directions button, so every row is the same height. --%>
+          <div class="min-h-8 flex items-center gap-3">
+            <span class={["flex w-5 shrink-0 tabular-nums", if(@order && stop.id == @order.id, do: "text-primary font-semibold", else: "text-base-content/60")]}>
+              <%= if stop.fulfillable? do %>
+                {stop.route_position}
+              <% else %>
+                <.icon name="hero-check" class="text-success h-4 w-4" />
+                <span class="sr-only">{~t"Delivered"}</span>
+              <% end %>
+            </span>
+            <span
+              :if={@order && stop.id == @order.id}
+              class="text-base-content min-w-0 flex-1 truncate font-semibold"
+            >
+              {EdenflowersWeb.Admin.RouteDrawer.stop_name(stop)}
+            </span>
+            <.link
+              :if={!@order || stop.id != @order.id}
+              navigate={~p"/admin/orders/#{stop.id}"}
+              class={["min-w-0 flex-1 truncate", !@order && stop == @next && "text-base-content font-semibold"]}
+            >
+              {EdenflowersWeb.Admin.RouteDrawer.stop_name(stop)}
+            </.link>
+            <span :if={stop.fulfillable? && stop.route_planned_at} class="shrink-0 tabular-nums">
+              {clock(DateTime.add(stop.route_planned_at, @behind), @locale)}
+            </span>
+            <.button
+              :if={@directions? && stop == @next}
+              id={"#{@id}-directions"}
+              href={directions_url(stop.geocoded_address, parse_position(stop.position), stop.delivery_address)}
+              target="_blank"
+              rel="noopener"
+              variant="primary"
+              size="sm"
+              class="shrink-0"
+            >
+              <.icon name="hero-map-pin" class="h-4 w-4" /> {~t"Directions"}
+            </.button>
+          </div>
+        </li>
+      </ol>
+
+      <p
+        :if={!@next}
+        id={"#{@id}-done"}
+        class="text-base-content border-base-content/12 mt-1 flex items-center gap-2 border-t pt-3 font-semibold"
+      >
+        <.icon name="hero-check-circle" class="text-success h-5 w-5" /> {~t"That was the run's last stop."}
+      </p>
+    </section>
+    """
+  end
+
+  # How far past its planned start the next stop is, which pushes it and the rest of the run back as far.
+  # shortcut: assumes later stops lose the same time, though a stop's wait for its agreed time can absorb some;
+  # upgrade to asking HERE again if Jennie finds the estimate too pessimistic.
+  defp behind_seconds(%{route_planned_at: %DateTime{} = planned}, now), do: max(DateTime.diff(now, planned), 0)
+  defp behind_seconds(_next, _now), do: 0
+
+  defp clock(datetime, locale),
+    do: datetime |> DateTime.shift_zone!(Edenflowers.ShopTime.timezone()) |> DateTime.to_time() |> Format.time(locale)
+
   attr :queue, :map, required: true
-  attr :fulfilled, :boolean, required: true
+  attr :locale, :any, required: true
 
   def queue_nav(assigns) do
     ~H"""
@@ -331,11 +455,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         transition="pop"
       />
       <span class="text-base-content/80 flex items-center px-3 tabular-nums">
-        <%= if @fulfilled do %>
-          {~t"Fulfilled · #{remaining_to_fulfil(@queue)} left"}
-        <% else %>
-          {~t"#{@queue.position} of #{@queue.total}"}
-        <% end %>
+        <span :if={@queue.date} class="mr-1.5">{Format.weekday_day_month(@queue.date, @locale)} ·</span>
+        {~t"#{@queue.position} of #{@queue.total}"}
       </span>
       <.queue_link
         to={@queue.next}
@@ -489,10 +610,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   attr :position, :any, required: true
   attr :token, :string, default: nil
   attr :address, :string, default: nil
+  attr :geocoded_address, :string, default: nil, doc: "the address as HERE resolved it, which directions prefer"
   attr :distance_km, :any, default: nil
 
   def delivery_location(assigns) do
-    assigns = assign(assigns, :directions, directions_url(assigns.position, assigns.address))
+    assigns =
+      assign(assigns, :directions, directions_url(assigns.geocoded_address, assigns.position, assigns.address))
 
     ~H"""
     <div
@@ -749,9 +872,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       else: OrderLog.payment_method_label(method)
   end
 
-  # The queue was counted at mount with this order still in it.
-  def remaining_to_fulfil(queue), do: queue.total - 1
-
   def arrow_symbol("ArrowLeft"), do: "←"
   def arrow_symbol("ArrowRight"), do: "→"
 
@@ -812,13 +932,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       "?access_token=#{token}&logo=false&attribution=false"
   end
 
-  # Falls back to the typed address when an order hasn't been geocoded yet.
-  def directions_url({lat, lng}, _address), do: maps_dir_url("#{lat},#{lng}")
+  # HERE's address, so Google Maps names the street; then its coordinates; then
+  # the typed address when an order hasn't been geocoded yet.
+  def directions_url(geocoded, _position, _address) when is_binary(geocoded) and geocoded != "",
+    do: maps_dir_url(geocoded)
 
-  def directions_url(nil, address) when is_binary(address) and address != "",
+  def directions_url(_geocoded, {lat, lng}, _address), do: maps_dir_url("#{lat},#{lng}")
+
+  def directions_url(_geocoded, nil, address) when is_binary(address) and address != "",
     do: maps_dir_url(address)
 
-  def directions_url(_position, _address), do: nil
+  def directions_url(_geocoded, _position, _address), do: nil
 
   # No origin, so Google Maps starts from the device's current location.
   def maps_dir_url(destination) do

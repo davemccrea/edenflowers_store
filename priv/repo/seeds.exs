@@ -297,8 +297,12 @@ seeded_at = fn date, days_before, key ->
   date |> DateTime.new!(time, "Europe/Helsinki") |> DateTime.shift_zone!("Etc/UTC")
 end
 
+this_month = Date.beginning_of_month(Date.utc_today())
+
 # These expenses cover sure and unsure extractions and the unpaid, overdue
-# and paid states. The last expense is from a vendor without a VAT number.
+# and paid states. The pizza is from a vendor without a VAT number. The last
+# two were paid this month, in euros and kronor, for the Overview's expenses
+# paid this month and this month's report.
 for {document_id, vendor, vat, date, total, vat_amount, currency, category, description, sure, paid_on, due_on} <-
       [
         {"doc-001", "Pohjanmaan Kukkutukku", "FI89012345", ~D[2026-04-03], "875.00", "178.65", :eur,
@@ -306,7 +310,11 @@ for {document_id, vendor, vat, date, total, vat_amount, currency, category, desc
         {"doc-002", "Ravintola Faros", "FI34567890", ~D[2026-01-22], "68.40", "13.96", :eur, :entertainment,
          "Lunch with wedding client", false, nil, ~D[2026-02-05]},
         {"doc-003", "Kotipizza", nil, ~D[2026-03-19], "31.50", "6.43", :eur, :entertainment,
-         "Lunch with venue coordinator", false, ~D[2026-03-19], nil}
+         "Lunch with venue coordinator", false, ~D[2026-03-19], nil},
+        {"doc-004", "Pohjanmaan Kukkutukku", "FI89012345", this_month, "412.00", "84.12", :eur, :flowers_and_plants,
+         "Chrysanthemums and greenery", true, this_month, nil},
+        {"doc-005", "Blomsterlandet Umeå", "SE556123456701", this_month, "1250.00", "250.00", :sek, :florist_supplies,
+         "Vases and floral foam", true, this_month, nil}
       ] do
   Expense
   |> Ash.Changeset.for_create(:ingest, %{
@@ -333,12 +341,14 @@ end
 
 # Bank payments the sync would have kept. The supplier payment misses its
 # invoice, which the picker offers; the fuel one has no expense near it; the
-# bank fee is dismissed; and the pizza is linked to its till receipt.
+# bank fee is dismissed; and the pizza and this month's flowers are linked to
+# their receipts, so the report shows their archive IDs.
 for {bank_id, payee, booked_on, amount, message} <- [
       {"seed-tx-1", "Pohjanmaan Kukkutukku", ~D[2026-04-07], "875.00", "Lasku 1043"},
       {"seed-tx-2", "Neste Vaasa", Date.add(Date.utc_today(), -9), "54.20", nil},
       {"seed-tx-3", "S-Pankki", Date.add(Date.utc_today(), -20), "6.00", "Palvelumaksu"},
-      {"seed-tx-4", "Kotipizza", ~D[2026-03-20], "31.50", nil}
+      {"seed-tx-4", "Kotipizza", ~D[2026-03-20], "31.50", nil},
+      {"seed-tx-5", "Pohjanmaan Kukkutukku", this_month, "412.00", "Lasku 1187"}
     ] do
   Ash.Seed.seed!(Edenflowers.Bank.Transaction, %{
     bank_id: bank_id,
@@ -351,10 +361,12 @@ for {bank_id, payee, booked_on, amount, message} <- [
   })
 end
 
-Expense
-|> Ash.Query.filter(document_id == "doc-003")
-|> Ash.read_one!(authorize?: false)
-|> Ash.Seed.update!(%{bank_transaction_id: "seed-tx-4"})
+for {document_id, bank_id} <- [{"doc-003", "seed-tx-4"}, {"doc-004", "seed-tx-5"}] do
+  Expense
+  |> Ash.Query.filter(document_id == ^document_id)
+  |> Ash.read_one!(authorize?: false)
+  |> Ash.Seed.update!(%{bank_transaction_id: bank_id})
+end
 
 # Dates are relative to today so a fresh seed always has one course filled by
 # the bookings below, one open, one already held, and a draft.
@@ -864,6 +876,78 @@ for {attrs, index} <- Enum.with_index(orders) do
       payment_card: Enum.at([{"visa", "4242"}, {"mastercard", "4444"}, {"amex", "0005"}], rem(index, 3))
     })
   )
+end
+
+# Tomorrow's deliveries, with Anders's, give the Overview's route planner each
+# kind of stop: Ready ones start ticked and Ville's, not yet Ready, doesn't.
+# Matti's tight window and Lotta's single time constrain the order, and Pekka's
+# address HERE couldn't find, so his order stays off the route. Positions and
+# distances are HERE's for each address.
+#
+# Today's untimed deliveries aren't on the started run below, so the route
+# drawer can plan them in: Kaisa's and Johan's are Ready, Leena's isn't.
+todays_deliveries = [
+  {"Kaisa Mäkelä", "kaisa.makela@example.fi", "Pitkäkatu 40, 65100 Vaasa", "63.09539,21.61913", 4150,
+   [fulfillment_status: :ready]},
+  {"Johan Sjöberg", "johan.sjoberg@example.fi", "Gerbyntie 18, 65230 Vaasa", "63.11646,21.61816", 1656,
+   [fulfillment_status: :ready]},
+  {"Leena Koskinen", "leena.koskinen@example.fi", "Palosaarentie 58, 65200 Vaasa", "63.1133,21.60582", 1583, []}
+]
+
+tomorrows_deliveries = [
+  {"Aino Virtanen", "aino.virtanen@example.fi", "Hovioikeudenpuistikko 9, 65100 Vaasa", "63.0957,21.61003", 4161,
+   [fulfillment_status: :ready]},
+  {"Matti Laine", "matti.laine@example.fi", "Koulukatu 44, 65100 Vaasa", "63.09004,21.61049", 4885,
+   [fulfillment_status: :ready, fulfillment_time_start: ~T[09:30:00], fulfillment_time_end: ~T[10:00:00]]},
+  {"Lotta Westerlund", "lotta.westerlund@example.fi", "Kuninkaantie 22, 65320 Vaasa", "63.09472,21.66741", 6085,
+   [fulfillment_status: :ready, fulfillment_time_start: ~T[13:00:00]]},
+  {"Ville Heikkinen", "ville.heikkinen@example.fi", "Vanhan Vaasan katu 20, 65370 Vaasa", "63.08621,21.72555", 8909,
+   []},
+  {"Pekka Rinne", "pekka.rinne@example.fi", "Sommarstugan vid ån, Replot", nil, nil, [fulfillment_status: :ready]}
+]
+
+for {date, deliveries} <- [{today, todays_deliveries}, {Date.add(today, 1), tomorrows_deliveries}],
+    {name, email, address, position, distance, extra} <- deliveries do
+  user = Accounts.upsert_user!(email, name, actor: Actors.system_actor())
+
+  seed_placed_order.(
+    Map.merge(
+      %{
+        user_id: user.id,
+        customer_name: name,
+        customer_email: email,
+        fulfillment_option: home_delivery,
+        fulfillment_date: date,
+        delivery_address: address,
+        geocoded_address: position && address,
+        position: position,
+        distance: distance,
+        gift: false,
+        payment_card: {"visa", "4242"},
+        items: [line_item.("Bouquet 1", :medium, 1)]
+      },
+      Map.new(extra)
+    )
+  )
+end
+
+# Today's two deliveries are on a started Delivery run, in the order HERE gives
+# for leaving the shop at 9: Sofia's far one first, then Elin's 10-12 window.
+# The Overview's day list and the order page's next arrow follow it. Sofia's is
+# Ready; Jennie ticked Elin's by hand, so the Overview can still mark it Ready.
+# The plan has her back at the shop at 10:30, which the order pages' run bar shows.
+planned = fn time -> DateTime.new!(today, time, Edenflowers.ShopTime.timezone()) end
+
+for {recipient, attrs} <- [
+      {"Sofia Lindholm", %{route_position: 1, route_planned_at: planned.(~T[09:25:00]), fulfillment_status: :ready}},
+      {"Elin Järvinen", %{route_position: 2, route_planned_at: planned.(~T[10:00:00])}}
+    ] do
+  attrs = Map.put(attrs, :route_planned_back_at, planned.(~T[10:30:00]))
+
+  Order
+  |> Ash.Query.filter(fulfillment_date == ^today and recipient_name == ^recipient)
+  |> Ash.read_one!(authorize?: false)
+  |> Ash.Seed.update!(attrs)
 end
 
 # These subscriptions cover each state shown in the admin list and account page.

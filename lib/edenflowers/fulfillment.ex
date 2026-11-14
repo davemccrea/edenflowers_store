@@ -17,6 +17,13 @@ defmodule Edenflowers.Fulfillment do
 
   def shop_address, do: "Muurahaistie 1, 65230 Vaasa"
 
+  @doc "Where a delivery route can start or finish: the shop always, and Jennie's home when it's configured."
+  def route_places, do: if(route_place_position(:home), do: [:shop, :home], else: [:shop])
+
+  @doc "A route place's coordinates, \"latitude,longitude\", or nil when home isn't configured."
+  def route_place_position(:shop), do: Edenflowers.External.HereAPI.shop_position()
+  def route_place_position(:home), do: Application.get_env(:edenflowers, :home_position)
+
   @doc "Returns the distance-priced delivery option, or nil."
   def distance_priced_delivery do
     Enum.find(list_options!(authorize?: false), &(&1.fulfillment_method == :delivery and &1.rate_type == :dynamic))
@@ -37,6 +44,7 @@ defmodule Edenflowers.Fulfillment do
       define :get_option_by_id, action: :read, get_by: [:id]
       define :update_pricing, action: :update_pricing
       define :calculate_delivery, action: :calculate_delivery, args: [:delivery_address, :fulfillment_option_id]
+      define :plan_route, action: :plan_route, args: [:order_ids, :date, :start, :finish, :departure]
     end
 
     resource Edenflowers.Fulfillment.ShopCalendar do

@@ -34,6 +34,7 @@ stripe_webhook_secret: "{{ vault_stripe_webhook_secret }}"
 
 # Here
 here_api_key: "{{ vault_here_api_key }}"
+home_position: "{{ vault_home_position }}"
 
 # Mapbox
 mapbox_token: "{{ vault_mapbox_token }}"

@@ -17,6 +17,10 @@ if config_env() in [:prod, :dev] do
          :here_api_key,
          System.get_env("HERE_API_KEY") || raise("environment variable HERE_API_KEY is missing.")
 
+  # Jennie's home as "latitude,longitude", where a delivery route can start or
+  # end. Kept out of the public repository; without it routes use the shop only.
+  config :edenflowers, :home_position, System.get_env("HOME_POSITION")
+
   # Used by the admin order page's delivery map and `mix fetch_map`. Not
   # raised on absence so contributors can start the app without one; the order
   # page just hides the map.
