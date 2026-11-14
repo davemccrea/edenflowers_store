@@ -621,6 +621,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
     """
   end
 
+  # What the customer typed, then HERE's name in the language they checked out in, then the other language.
+  defp address_lines(address, order) do
+    names =
+      if String.starts_with?(order.locale, "sv"),
+        do: [order.geocoded_address_sv, order.geocoded_address],
+        else: [order.geocoded_address, order.geocoded_address_sv]
+
+    [address | names] |> Enum.filter(&present?/1) |> Enum.uniq()
+  end
+
   attr :position, :any, required: true
   attr :token, :string, default: nil
   attr :address, :string, default: nil
@@ -647,10 +657,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
     >
       <div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <.summary_fact label={~t"Deliver to"}>
-          {@address}
-          <span :if={@order.geocoded_address} class="text-base-content/75 block text-sm font-normal">
-            <.geocoded_address order={@order} />
-          </span>
+          <span
+            :for={{line, i} <- Enum.with_index(address_lines(@address, @order))}
+            class={i > 0 && "text-base-content/75 block text-sm font-normal"}
+          >{line}</span>
           <span :if={@distance_km} class="text-base-content/75 block text-sm font-normal tabular-nums">
             {@distance_km} km
           </span>

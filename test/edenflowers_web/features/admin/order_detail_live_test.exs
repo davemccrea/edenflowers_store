@@ -1187,6 +1187,24 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#order-directions a[href*='destination=Kauppapuistikko+20%2C+65100+Vaasa']")
   end
 
+  test "shows the address once, with the other language's name underneath", %{conn: conn} do
+    order =
+      placed_order(
+        fulfillment_method: :delivery,
+        locale: "fi",
+        delivery_address: "Pitkäkatu 40, 65100 Vaasa",
+        geocoded_address: "Pitkäkatu 40, 65100 Vaasa",
+        geocoded_address_sv: "Storalånggatan 40, 65100 Vasa",
+        position: "63.0951,21.6165"
+      )
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    html = view |> element("#order-directions") |> render()
+
+    assert length(String.split(html, "Pitkäkatu 40")) == 2
+    assert html =~ "Storalånggatan 40, 65100 Vasa"
+  end
+
   test "uses driving directions for a geocoded delivery order", %{conn: conn} do
     order =
       placed_order(
