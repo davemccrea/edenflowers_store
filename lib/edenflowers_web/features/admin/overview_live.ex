@@ -30,6 +30,10 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
   @store_presence Events.topic(Events.store_presence())
 
+  # Minimossen's group rows double as its chart's legend, so each group keeps its colour in both.
+  # shortcut: colours repeat past 8 groups, add more if Winpos ever has that many.
+  @group_colours ~w(bg-primary bg-amber-400 bg-sky-600 bg-rose-400 bg-violet-500 bg-teal-400 bg-orange-600 bg-slate-400)
+
   @impl true
   def mount(_params, _session, socket) do
     if connected?(socket) do
@@ -109,6 +113,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             />
             <.minimossen_widget
               :if={@minimossen.weeks != []}
+              groups={@minimossen.groups}
               weeks={@minimossen.weeks}
               average={@minimossen.average}
               year={@minimossen.year}
@@ -716,6 +721,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
   defp svg_path([{x, y} | rest]), do: Enum.reduce(rest, "M#{x},#{y}", fn {x, y}, path -> path <> " L#{x},#{y}" end)
 
+  attr :groups, :list, required: true, doc: "the product groups, from `recent_minimossen_weeks`"
   attr :weeks, :list, required: true, doc: "oldest first, from `recent_minimossen_weeks`"
   attr :average, :map, required: true, doc: "the usual week to compare with, or nil before there is one"
   attr :year, :map, required: true, doc: "the year's total so far, from the first week imported in it"
@@ -728,9 +734,13 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       assign(assigns,
         latest: List.last(assigns.weeks),
         average_height: assigns.average && bar_height(assigns.average.total, highest),
+        groups:
+          assigns.groups
+          |> Enum.with_index()
+          |> Enum.map(fn {group, index} -> Map.put(group, :colour, group_colour(index)) end),
         bars:
           Enum.map(assigns.weeks, fn week ->
-            %{flowers: bar_height(week.flowers, highest), shop: bar_height(week.shop, highest)}
+            Map.new(week.groups, fn {code, gross} -> {code, bar_height(gross, highest)} end)
           end)
       )
 
@@ -747,18 +757,13 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       </dl>
 
       <dl id="minimossen-groups" class="mt-3 space-y-1 text-sm tabular-nums">
-        <div class="flex items-baseline gap-3">
-          <dt class="text-base-content/75 flex-1">{~t"Flowers"}</dt>
-          <dd class="font-semibold">{Format.currency(@latest.flowers, @locale)}</dd>
+        <div :for={group <- @groups} class="flex items-baseline gap-3">
+          <dt class="text-base-content/75 flex flex-1 items-center gap-1.5">
+            <span class={[group.colour, "h-2.5 w-2.5 shrink-0 rounded-sm"]} /> {group.name}
+          </dt>
+          <dd class="font-semibold">{Format.currency(@latest.groups[group.code], @locale)}</dd>
           <dd :if={@average} class="text-base-content/75 w-24 text-right">
-            {change(@latest.flowers, @average.flowers, @locale)}
-          </dd>
-        </div>
-        <div class="flex items-baseline gap-3">
-          <dt class="text-base-content/75 flex-1">{~t"Shop"}</dt>
-          <dd class="font-semibold">{Format.currency(@latest.shop, @locale)}</dd>
-          <dd :if={@average} class="text-base-content/75 w-24 text-right">
-            {change(@latest.shop, @average.shop, @locale)}
+            {change(@latest.groups[group.code], @average.groups[group.code], @locale)}
           </dd>
         </div>
       </dl>
@@ -766,18 +771,17 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       <figure class="border-base-content/12 mt-4 border-t pt-3" aria-hidden="true">
         <figcaption class="text-base-content/75 mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
           <span class="text-base-content mr-auto">{~t"Last 12 weeks"}</span>
-          <span class="flex items-center gap-1.5"><span class="bg-primary h-2.5 w-2.5 rounded-sm" /> {~t"Flowers"}</span>
-          <span class="flex items-center gap-1.5">
-            <span class="bg-base-content/25 h-2.5 w-2.5 rounded-sm" /> {~t"Shop"}
-          </span>
           <span :if={@average} class="flex items-center gap-1.5">
             <span class="border-base-content/40 w-4 border-t border-dashed" /> {~t"8-week average"}
           </span>
         </figcaption>
         <div class="border-base-content/12 relative flex h-24 items-end gap-1 border-b">
           <div :for={bar <- @bars} class="flex h-full flex-1 flex-col justify-end">
-            <div class="bg-base-content/25 rounded-t-sm" style={"height: #{bar.shop}%"} />
-            <div class="bg-primary" style={"height: #{bar.flowers}%"} />
+            <div
+              :for={group <- Enum.reverse(@groups)}
+              class={[group.colour, "first:rounded-t-sm"]}
+              style={"height: #{bar[group.code]}%"}
+            />
           </div>
           <div
             :if={@average}
@@ -801,6 +805,8 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     </.widget>
     """
   end
+
+  defp group_colour(index), do: Enum.at(@group_colours, rem(index, length(@group_colours)))
 
   # How much more or less than the usual week, signed, e.g. "+37,00 €".
   defp change(now, usual, locale) do

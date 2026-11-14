@@ -56,7 +56,7 @@ Jennie sells flowers and refurbished shop items through Minimossen's shared till
 - [x] #1 Winpos emails filed in the Fastmail folder `Winpos` are imported and moved to `Winpos/Importerade`
 - [x] #2 Each week's gross sales are stored per product group, and importing the same report again overwrites instead of duplicating
 - [x] #3 A report that doesn't match the expected layout fails the job with an alert and saves nothing
-- [x] #4 The Overview shows the latest week's Minimossen sales against the 8-week average, split into Flowers and Shop, with the last 12 weeks as stacked bars and the year's total so far
+- [x] #4 The Overview shows the latest week's Minimossen sales against the 8-week average, split by product group, each in its own colour, with the last 12 weeks as stacked bars and the year's total so far
 - [x] #5 Both 2.-8.11.2026 reports are test fixtures
 <!-- AC:END -->
 
@@ -70,4 +70,6 @@ Built as the `Edenflowers.Minimossen` domain: `WeeklySales` (one row per week an
 Before it works in production: create the Fastmail folders `Winpos` and `Winpos/Importerade`, and a filter moving mail from `noreply@stormossen.fi` into `Winpos`.
 
 Reviewed 2026-11-14: the card compares the latest week with the average of the 8 weeks before it rather than with the week before, since one week is too noisy to judge by. Weeks without a report are left out of the average. The average is drawn as a light dashed line across the bars. A last line gives the year's total so far, by ISO week year, labelled with the weeks it covers (e.g. "This year, weeks 34–45") until older reports are backfilled.
+
+Changed 2026-11-14: the card splits by Winpos product group instead of Flowers and Shop. Each group gets a row, named as Winpos names it, and its own colour in the bars; the rows double as the chart's legend.
 <!-- SECTION:NOTES:END -->

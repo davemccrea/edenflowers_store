@@ -599,7 +599,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     assert has_element?(view, "#revenue-pace", "Last month")
   end
 
-  test "compares Minimossen's latest week with the 8-week average, split into flowers and shop", %{conn: conn} do
+  test "compares Minimossen's latest week with the 8-week average, split by product group", %{conn: conn} do
     conn = log_in(conn, generate(admin_user()) |> with_token())
     {:ok, view, _html} = live(conn, ~p"/admin")
     refute has_element?(view, "#minimossen")
@@ -621,8 +621,8 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     assert has_element?(view, "#minimossen dt", "Sales in week 45")
     assert has_element?(view, "#minimossen-total", "561,30 €")
     assert has_element?(view, "#minimossen-change", "+81,30 € on the 8-week average")
-    assert has_element?(view, "#minimossen-groups div", "Flowers 154,40 € +34,40 €")
-    assert has_element?(view, "#minimossen-groups div", "Shop 406,90 € +46,90 €")
+    assert has_element?(view, "#minimossen-groups div", "Group 3 154,40 € +34,40 €")
+    assert has_element?(view, "#minimossen-groups div", "Group 6 406,90 € +46,90 €")
 
     year_total = Edenflowers.Format.currency(Decimal.new("1041.30"), Edenflowers.Format.locale())
     assert has_element?(view, "#minimossen-year", "This year, weeks 44–45 #{year_total}")

@@ -66,13 +66,15 @@ defmodule Edenflowers.Minimossen.WeeklySales do
     end
 
     action :recent_weeks, :map do
-      description "Flowers and shop gross sales for each of the last `count` weeks up to the latest week " <>
+      description "The product groups sold in those weeks, sorted by code; each group's gross sales and the " <>
+                    "total for each of the last `count` weeks up to the latest week " <>
                     "imported, oldest first, where a week without a report reads 0; and the average of the " <>
                     "8 weeks before the latest, leaving out weeks without a report; and the total for the latest " <>
                     "week's year, from the first week imported in it. No weeks or year before any import, and no " <>
                     "average without an earlier report."
 
       constraints fields: [
+                    groups: [type: {:array, :map}, allow_nil?: false],
                     weeks: [type: {:array, :map}, allow_nil?: false],
                     average: [type: :map, allow_nil?: true],
                     year: [type: :map, allow_nil?: true]
