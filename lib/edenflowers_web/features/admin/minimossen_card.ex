@@ -157,20 +157,25 @@ defmodule EdenflowersWeb.Admin.MinimossenCard do
             {Format.currency(@shown_total, @locale)}
           </dd>
         </dl>
-        <%!-- What the shown period is compared with, so a percentage on a small amount reads for what it is. --%>
-        <table :if={@shown.average || @shown.last_year} class="mt-2 text-sm tabular-nums">
+        <%!-- The change leads, as the answer; what it's measured against follows, so a
+        percentage on a small amount reads for what it is. --%>
+        <table :if={@shown.average || @shown.last_year} class="mt-3 text-sm tabular-nums">
           <tbody>
             <tr :if={@shown.average} id="minimossen-change">
-              <th scope="row" class="text-base-content/75 pr-6 text-left font-normal">{~t"8-week average"}</th>
-              <td class="text-base-content/75 pr-6 text-right">{Format.currency(@average_total, @locale)}</td>
-              <td class="text-right"><.change now={@shown_total} usual={@average_total} locale={@locale} /></td>
+              <td class="w-16 py-0.5 pr-3 text-right font-semibold">
+                <.change now={@shown_total} usual={@average_total} locale={@locale} />
+              </td>
+              <th scope="row" class="text-base-content/75 py-0.5 pr-3 text-left font-normal">{~t"8-week average"}</th>
+              <td class="text-base-content/60 py-0.5 text-right">{Format.currency(@average_total, @locale)}</td>
             </tr>
             <tr :if={@shown.last_year} id="minimossen-last-year">
-              <th scope="row" class="text-base-content/75 pr-6 text-left font-normal">
+              <td class="w-16 py-0.5 pr-3 text-right font-semibold">
+                <.change now={@shown_total} usual={@last_year_total} locale={@locale} />
+              </td>
+              <th scope="row" class="text-base-content/75 py-0.5 pr-3 text-left font-normal">
                 {last_year_label(@period, @shown.last_year, @locale)}
               </th>
-              <td class="text-base-content/75 pr-6 text-right">{Format.currency(@last_year_total, @locale)}</td>
-              <td class="text-right"><.change now={@shown_total} usual={@last_year_total} locale={@locale} /></td>
+              <td class="text-base-content/60 py-0.5 text-right">{Format.currency(@last_year_total, @locale)}</td>
             </tr>
           </tbody>
         </table>
