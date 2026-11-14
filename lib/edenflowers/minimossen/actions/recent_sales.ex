@@ -2,8 +2,8 @@ defmodule Edenflowers.Minimossen.Actions.RecentSales do
   @moduledoc """
   Totals Minimossen's sales by Winpos product group for the last `count` weeks, months
   or years up to the latest week imported, so the Overview always ends on the newest
-  report even before Monday comes round. By week, averages the 8 weeks before the
-  latest as the usual week to compare with. Totals the year so far.
+  report even before Monday comes round. By week, averages the 8 weeks before each
+  week as the usual week to compare it with. Totals the year so far.
   """
   use Ash.Resource.Actions.Implementation
 
@@ -18,7 +18,7 @@ defmodule Edenflowers.Minimossen.Actions.RecentSales do
     opts = Ash.Context.to_opts(context)
 
     case WeeklySales |> Ash.Query.sort(week_start: :desc) |> Ash.Query.limit(1) |> Ash.read_one(opts) do
-      {:ok, nil} -> {:ok, %{groups: [], periods: [], average: nil, year: nil}}
+      {:ok, nil} -> {:ok, %{groups: [], periods: [], year: nil}}
       {:ok, latest} -> summary(input.arguments.period, latest.week_start, input.arguments.count, opts)
       {:error, error} -> {:error, error}
     end
@@ -27,34 +27,27 @@ defmodule Edenflowers.Minimossen.Actions.RecentSales do
   defp summary(period, last, count, opts) do
     last_start = period_start(period, last)
     starts = for back <- (count - 1)..0//-1, do: Date.shift(last_start, [{period, -back}])
-    average_from = Date.add(last, -7 * @average_weeks)
-    # A week whose Thursday is in the first period starts up to 3 days before it.
-    first_week = Date.add(Enum.min([hd(starts), average_from], Date), -3)
+    # A week whose Thursday is in the first period starts up to 3 days before it,
+    # and the first week's average needs the 8 weeks before it.
+    first_week = if period == :week, do: Date.add(hd(starts), -7 * @average_weeks), else: Date.add(hd(starts), -3)
 
     with {:ok, sales} <- WeeklySales |> Ash.Query.filter(week_start >= ^first_week) |> Ash.read(opts),
          {:ok, year} <- year(last, opts) do
       groups = groups(sales)
       codes = Enum.map(groups, & &1.code)
       by_period = Enum.group_by(sales, &period_start(period, &1.week_start))
-      by_week = Enum.group_by(sales, & &1.week_start)
 
-      usual_weeks =
-        for week_start <- Date.range(average_from, Date.add(last, -7), 7),
-            sales = Map.get(by_week, week_start, []),
-            sales != [],
-            do: totals(week_start, sales, codes)
+      periods =
+        starts
+        |> Enum.map(fn start ->
+          start
+          |> totals(Map.get(by_period, start, []), codes)
+          |> Map.put(:average, if(period == :week, do: average(usual_weeks(start, by_period, codes), codes)))
+        end)
+        # Periods before the first report are left out, so the year view starts at the first import.
+        |> Enum.drop_while(&(not &1.reported?))
 
-      {:ok,
-       %{
-         groups: groups,
-         # Periods before the first report are left out, so the year view starts at the first import.
-         periods:
-           starts
-           |> Enum.map(&totals(&1, Map.get(by_period, &1, []), codes))
-           |> Enum.drop_while(&(not &1.reported?)),
-         average: if(period == :week, do: average(usual_weeks, codes)),
-         year: year
-       }}
+      {:ok, %{groups: groups, periods: periods, year: year}}
     end
   end
 
@@ -103,6 +96,14 @@ defmodule Edenflowers.Minimossen.Actions.RecentSales do
   end
 
   # A week without a report is left out, so a missed import doesn't pull the usual week down.
+  defp usual_weeks(week_start, by_week, codes) do
+    for before <- @average_weeks..1//-1,
+        week = Date.add(week_start, -7 * before),
+        sales = Map.get(by_week, week, []),
+        sales != [],
+        do: totals(week, sales, codes)
+  end
+
   defp average([], _codes), do: nil
 
   defp average(weeks, codes) do

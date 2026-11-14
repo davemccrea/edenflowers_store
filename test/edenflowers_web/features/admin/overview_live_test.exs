@@ -633,6 +633,16 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
     view |> element("#minimossen-groups button", "Flowers") |> render_click()
     assert has_element?(view, "#minimossen-total", "561,30 €")
+
+    week_44 = element(view, "#minimossen-bars button[phx-value-start='2026-10-26']")
+    render_click(week_44)
+    assert has_element?(view, "#minimossen dt", "Sales in week 44")
+    assert has_element?(view, "#minimossen-total", "480,00 €")
+    assert has_element?(view, "#minimossen-groups div", "Pots 360,00 €")
+    refute has_element?(view, "#minimossen-change")
+
+    render_click(week_44)
+    assert has_element?(view, "#minimossen dt", "Sales in week 45")
   end
 
   test "switches Minimossen's sales to months and years", %{conn: conn} do

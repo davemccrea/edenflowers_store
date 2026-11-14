@@ -23,7 +23,7 @@ defmodule Edenflowers.Minimossen.RecentSalesTest do
   end
 
   defp average(count) do
-    case summary(count).average do
+    case List.last(summary(count).periods).average do
       nil -> nil
       average -> {amount(average.groups["3"]), amount(average.groups["6"]), amount(average.total)}
     end
@@ -88,6 +88,16 @@ defmodule Edenflowers.Minimossen.RecentSalesTest do
     assert average(1) == {"75.50", "275.00", "350.50"}
   end
 
+  test "each week compares with the 8 weeks before it" do
+    record(~D[2026-10-12], "3", "40.00")
+    record(~D[2026-10-19], "3", "100.00")
+    record(~D[2026-10-26], "3", "999.00")
+
+    assert [first, second, _latest] = summary(3).periods
+    assert first.average == nil
+    assert amount(second.average.total) == "40.00"
+  end
+
   test "no average without a report before the latest" do
     record(~D[2026-11-02], "3", "154.40")
 
@@ -119,7 +129,7 @@ defmodule Edenflowers.Minimossen.RecentSalesTest do
              {~D[2026-10-01], %{"3" => "150.00", "6" => "5.00"}}
            ]
 
-    assert summary(3, :month).average == nil
+    assert Enum.all?(summary(3, :month).periods, &(&1.average == nil))
   end
 
   test "totals each ISO year from the first with a report" do
@@ -136,7 +146,7 @@ defmodule Edenflowers.Minimossen.RecentSalesTest do
   end
 
   test "nothing before the first import" do
-    assert summary(12) == %{groups: [], periods: [], average: nil, year: nil}
+    assert summary(12) == %{groups: [], periods: [], year: nil}
   end
 
   test "only admins see them" do
