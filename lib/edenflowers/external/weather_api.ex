@@ -61,8 +61,7 @@ defmodule Edenflowers.External.WeatherAPI do
         high: round(Enum.max(temperatures)),
         low: round(Enum.min(temperatures)),
         condition: condition(symbol),
-        # Names MET Norway's icon in priv/static/images/weather.
-        symbol: symbol
+        night?: String.ends_with?(symbol, "_night")
       }
 
       :persistent_term.put(__MODULE__, {weather, now})
