@@ -377,7 +377,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:121
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:329
-#: lib/edenflowers_web/features/admin/overview_live.ex:1329
+#: lib/edenflowers_web/features/admin/overview_live.ex:1326
 #, elixir-autogen, elixir-format
 msgid "Card to write"
 msgstr ""
@@ -721,7 +721,7 @@ msgstr ""
 msgid "Deliver to"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:1373
+#: lib/edenflowers_web/features/admin/overview_live.ex:1370
 #, elixir-autogen, elixir-format
 msgid "Deliveries"
 msgstr ""
@@ -1216,13 +1216,13 @@ msgid "Gift"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/components/components.ex:329
-#: lib/edenflowers_web/features/admin/overview_live.ex:1324
+#: lib/edenflowers_web/features/admin/overview_live.ex:1321
 #, elixir-autogen, elixir-format
 msgid "Gift for %{order_recipient_name}"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/components/components.ex:329
-#: lib/edenflowers_web/features/admin/overview_live.ex:1325
+#: lib/edenflowers_web/features/admin/overview_live.ex:1322
 #, elixir-autogen, elixir-format
 msgid "Gift order"
 msgstr ""
@@ -2018,7 +2018,7 @@ msgstr ""
 msgid "Pickup for today %{order_order_reference}"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:1374
+#: lib/edenflowers_web/features/admin/overview_live.ex:1371
 #, elixir-autogen, elixir-format
 msgid "Pickups"
 msgstr ""
@@ -5098,12 +5098,12 @@ msgid "All unfinished"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:143
-#: lib/edenflowers_web/features/admin/overview_live.ex:1358
+#: lib/edenflowers_web/features/admin/overview_live.ex:1355
 #, elixir-autogen, elixir-format
 msgid "Mark as ready"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:1356
+#: lib/edenflowers_web/features/admin/overview_live.ex:1353
 #, elixir-autogen, elixir-format
 msgid "Mark order %{order_order_reference} as ready"
 msgstr ""
@@ -5968,14 +5968,14 @@ msgstr ""
 msgid "Next: %{name}"
 msgstr ""
 
-#. Today's highest temperature, before e.g. "3°" in the Overview's weather.
+#. Short for today's highest temperature, before e.g. "3°" in the Overview's weather. One letter.
 #: lib/edenflowers_web/features/admin/overview_live.ex:1112
 #, elixir-autogen, elixir-format
-msgid "High"
+msgid "H"
 msgstr ""
 
-#. Today's lowest temperature, before e.g. "-1°" in the Overview's weather.
+#. Short for today's lowest temperature, before e.g. "-1°" in the Overview's weather. One letter.
 #: lib/edenflowers_web/features/admin/overview_live.ex:1114
 #, elixir-autogen, elixir-format
-msgid "Low"
+msgid "L"
 msgstr ""

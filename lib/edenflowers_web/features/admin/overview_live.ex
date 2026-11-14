@@ -1108,28 +1108,22 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   attr :weather, :map, required: true
 
   defp weather(assigns) do
-    gettext_comment("Today's highest temperature, before e.g. \"3°\" in the Overview's weather.")
-    high = ~t"High"
-    gettext_comment("Today's lowest temperature, before e.g. \"-1°\" in the Overview's weather.")
-    low = ~t"Low"
+    gettext_comment("Short for today's highest temperature, before e.g. \"3°\" in the Overview's weather. One letter.")
+    high = ~t"H"
+    gettext_comment("Short for today's lowest temperature, before e.g. \"-1°\" in the Overview's weather. One letter.")
+    low = ~t"L"
     assigns = assign(assigns, label: weather_condition(assigns.weather.condition), high: high, low: low)
 
     ~H"""
     <span id="today-weather" class="flex items-center gap-1.5 tabular-nums">
-      <svg
-        role="img"
-        aria-label={@label}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.75"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="text-base-content/60 size-5"
-      >
-        <title>{@label}</title>
-        <path :for={d <- weather_icon(@weather.condition, @weather.night?)} d={d} />
-      </svg>
+      <img
+        src={~p"/images/weather/#{@weather.symbol <> ".svg"}"}
+        alt={@label}
+        title={@label}
+        width="28"
+        height="28"
+        class="size-7 -translate-y-0.5"
+      />
       <span class="text-base-content/60 text-sm">{@high}</span>
       <span class="text-base-content text-sm">{@weather.high}°</span>
       <span class="text-base-content/60 ml-1 text-sm">{@low}</span>
@@ -1137,57 +1131,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     </span>
     """
   end
-
-  # Lucide's weather icons (ISC licence, lucide.dev), as their paths.
-  @cloud "M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"
-
-  defp weather_icon(:thunder, _night?),
-    do: ["M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973", "m13 12-3 5h4l-3 5"]
-
-  defp weather_icon(:sleet, _night?),
-    do: [@cloud, "M16 14v2", "M8 14v2", "M16 20h.01", "M8 20h.01", "M12 16v2", "M12 22h.01"]
-
-  defp weather_icon(:snow, _night?),
-    do: [@cloud, "M8 15h.01", "M8 19h.01", "M12 17h.01", "M12 21h.01", "M16 15h.01", "M16 19h.01"]
-
-  defp weather_icon(:rain, _night?), do: [@cloud, "M16 14v6", "M8 14v6", "M12 16v6"]
-  defp weather_icon(:fog, _night?), do: [@cloud, "M16 17H7", "M17 21H9"]
-
-  defp weather_icon(:partly_cloudy, true),
-    do: [
-      "M13 16a3 3 0 0 1 0 6H7a5 5 0 1 1 4.9-6z",
-      "M18.376 14.512a6 6 0 0 0 3.461-4.127c.148-.625-.659-.97-1.248-.714a4 4 0 0 1-5.259-5.26c.255-.589-.09-1.395-.716-1.248a6 6 0 0 0-4.594 5.36"
-    ]
-
-  defp weather_icon(:partly_cloudy, false),
-    do: [
-      "M12 2v2",
-      "m4.93 4.93 1.41 1.41",
-      "M20 12h2",
-      "m19.07 4.93-1.41 1.41",
-      "M15.947 12.65a4 4 0 0 0-5.925-4.128",
-      "M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"
-    ]
-
-  defp weather_icon(:cloudy, _night?), do: ["M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"]
-
-  defp weather_icon(:clear, true),
-    do: [
-      "M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"
-    ]
-
-  defp weather_icon(:clear, false),
-    do: [
-      "M16 12a4 4 0 1 1-8 0a4 4 0 1 1 8 0",
-      "M12 2v2",
-      "M12 20v2",
-      "m4.93 4.93 1.41 1.41",
-      "m17.66 17.66 1.41 1.41",
-      "M2 12h2",
-      "M20 12h2",
-      "m6.34 17.66-1.41 1.41",
-      "m19.07 4.93-1.41 1.41"
-    ]
 
   defp weather_condition(:thunder), do: ~t"Thunder"
   defp weather_condition(:sleet), do: ~t"Sleet"

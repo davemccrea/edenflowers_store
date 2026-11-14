@@ -73,8 +73,8 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin")
 
       render_async(view)
-      assert has_element?(view, "header #today-weather", "High -2° Low -2°")
-      assert has_element?(view, ~s(header #today-weather svg[aria-label="Rain"]))
+      assert has_element?(view, "header #today-weather", "H -2° L -2°")
+      assert has_element?(view, ~s(header #today-weather img[alt="Rain"][src*="/images/weather/heavyrain"]))
     end
 
     test "refreshes a note from another page", %{conn: conn, admin: admin} do
