@@ -620,13 +620,13 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
     assert has_element?(view, "#minimossen dt", "Sales in week 45")
     assert has_element?(view, "#minimossen-total", "561,30 €")
-    assert has_element?(view, "#minimossen-change", "+81,30 € on the 8-week average")
-    assert has_element?(view, "#minimossen-groups div", "Flowers 154,40 € +34,40 €")
-    assert has_element?(view, "#minimossen-groups div", "Pots 406,90 € +46,90 €")
+    assert has_element?(view, "#minimossen-change", "+17% (+81,30 €) on the 8-week average")
+    assert has_element?(view, "#minimossen-groups div", "Flowers 154,40 € +29%")
+    assert has_element?(view, "#minimossen-groups div", "Pots 406,90 € +13%")
 
     view |> element("#minimossen-groups button", "Flowers") |> render_click()
     assert has_element?(view, "#minimossen-total", "154,40 €")
-    assert has_element?(view, "#minimossen-change", "+34,40 € on the 8-week average")
+    assert has_element?(view, "#minimossen-change", "+29% (+34,40 €) on the 8-week average")
 
     view |> element("#minimossen-groups button", "Flowers") |> render_click()
     assert has_element?(view, "#minimossen-total", "561,30 €")
@@ -659,6 +659,8 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     total = Edenflowers.Format.currency(Decimal.new("120.00"), Edenflowers.Format.locale())
     assert has_element?(view, "#minimossen-total", total)
     refute has_element?(view, "#minimossen-change")
+    # Only last October's week up to a year before the latest import, like for like.
+    assert has_element?(view, "#minimossen-last-year", "on the same weeks of October 2025")
 
     view |> element("#minimossen button", "Year") |> render_click()
     assert has_element?(view, "#minimossen dt", "Sales in 2026")

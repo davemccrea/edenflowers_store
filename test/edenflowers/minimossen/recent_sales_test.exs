@@ -120,6 +120,14 @@ defmodule Edenflowers.Minimossen.RecentSalesTest do
     assert Enum.all?(summary(3, :month).periods, &(&1.average == nil))
   end
 
+  test "this year's months start at January" do
+    record(~D[2025-12-01], "3", "1.00")
+    record(~D[2026-02-02], "3", "1.00")
+
+    sales = Minimossen.recent_minimossen_sales!([period: :month, this_year: true], actor: generate(admin_user()))
+    assert Enum.map(sales.periods, & &1.start) == [~D[2026-01-01], ~D[2026-02-01]]
+  end
+
   test "totals each ISO year from the first with a report" do
     record(~D[2024-12-23], "3", "7.00")
     # Week 1 of 2026 starts in December.
@@ -131,6 +139,61 @@ defmodule Edenflowers.Minimossen.RecentSalesTest do
              {~D[2025-01-01], %{"3" => "0"}},
              {~D[2026-01-01], %{"3" => "154.40"}}
            ]
+  end
+
+  test "compares each week with the week 52 weeks before it" do
+    record(~D[2025-11-03], "3", "80.00")
+    record(~D[2025-11-03], "6", "5.00")
+    record(~D[2026-10-26], "3", "1.00")
+    record(~D[2026-11-02], "3", "100.00")
+
+    assert [first, latest] = summary(2).periods
+    assert first.last_year == nil
+    assert latest.last_year.start == ~D[2025-11-03]
+    assert {amount(latest.last_year.groups["3"]), amount(latest.last_year.total)} == {"80.00", "85.00"}
+  end
+
+  test "a month or year under way compares with the same weeks a year before" do
+    # October 2025: the week 52 weeks before the latest counts, the one after doesn't.
+    record(~D[2025-10-20], "3", "30.00")
+    record(~D[2025-10-27], "3", "40.00")
+    # Thursday 2025-09-25: September, so only in the year.
+    record(~D[2025-09-22], "3", "7.00")
+    record(~D[2026-10-26], "3", "20.00")
+
+    assert %{last_year: last_year} = List.last(summary(1, :month).periods)
+    assert {last_year.start, amount(last_year.total), last_year.partial?} == {~D[2025-10-01], "70.00", true}
+
+    record(~D[2025-11-03], "3", "1000.00")
+    assert %{last_year: last_year} = List.last(summary(1, :year).periods)
+    assert {last_year.start, amount(last_year.total), last_year.partial?} == {~D[2025-01-01], "77.00", true}
+  end
+
+  test "a finished month compares with all of that month a year before" do
+    record(~D[2025-09-01], "3", "10.00")
+    record(~D[2025-09-22], "3", "15.00")
+    record(~D[2026-09-07], "3", "1.00")
+    record(~D[2026-10-26], "3", "1.00")
+
+    assert [%{start: ~D[2026-09-01], last_year: last_year}, _october] = summary(2, :month).periods
+    assert {amount(last_year.total), last_year.partial?} == {"25.00", false}
+  end
+
+  test "a month is partial while under way or when it began before the first import" do
+    # Thursday 2026-09-10: the first import is September's second week.
+    record(~D[2026-09-07], "3", "1.00")
+    # The last week counted in October.
+    record(~D[2026-10-26], "3", "1.00")
+
+    assert Enum.map(summary(3, :month).periods, &{&1.start, &1.partial?}) == [
+             {~D[2026-09-01], true},
+             {~D[2026-10-01], false}
+           ]
+
+    record(~D[2026-11-02], "3", "1.00")
+    assert List.last(summary(1, :month).periods).partial?
+    assert List.last(summary(1, :year).periods).partial?
+    refute List.last(summary(1, :week).periods).partial?
   end
 
   test "nothing before the first import" do

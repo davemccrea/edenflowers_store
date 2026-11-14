@@ -676,7 +676,8 @@ defmodule EdenflowersWeb.Admin.Components do
   end
 
   attr :id, :string, default: nil
-  attr :title, :string, required: true
+  attr :title, :string, default: nil, doc: "left out where the page's own header already names it"
+  attr :navigate, :string, default: nil, doc: "a page that shows more, linked from the title"
   attr :count, :integer, default: nil, doc: "shown as a count badge beside the title"
   attr :class, :any, default: nil
   slot :inner_block, required: true
@@ -689,8 +690,14 @@ defmodule EdenflowersWeb.Admin.Components do
   def widget(assigns) do
     ~H"""
     <section id={@id} class={["admin-card p-4 sm:p-5", @class]}>
-      <div class="mb-4 flex items-start justify-between gap-3">
-        <h2 class="text-base-content text-base font-semibold">{@title}</h2>
+      <div :if={@title} class="mb-4 flex items-start justify-between gap-3">
+        <h2 class="text-base-content text-base font-semibold">
+          <.link :if={@navigate} navigate={@navigate} class="group inline-flex items-center gap-1 hover:underline">
+            {@title}
+            <.icon name="hero-chevron-right" class="text-base-content/50 h-4 w-4 group-hover:text-base-content" />
+          </.link>
+          <span :if={!@navigate}>{@title}</span>
+        </h2>
         <.count_badge :if={@count != nil} count={@count} active={@count > 0} />
       </div>
       {render_slot(@inner_block)}
