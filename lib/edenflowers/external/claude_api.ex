@@ -27,7 +27,7 @@ defmodule Edenflowers.External.ClaudeAPI do
   alias ReqLLM.Context
   alias ReqLLM.Message.ContentPart
 
-  @model "anthropic:claude-sonnet-4-6"
+  @model "anthropic:claude-sonnet-5-5"
 
   @schema [
     vendor_name: [type: :string, doc: "Name of the vendor or supplier."],
