@@ -12,6 +12,10 @@ colors:
   cream-content: "oklch(30% 0.05 60)"
   forest: "oklch(26% 0.05 152)"
   forest-content: "oklch(94% 0.02 80)"
+  dusk: "oklch(41% 0.058 247)"
+  dusk-content: "oklch(96% 0.015 80)"
+  night: "oklch(16% 0.012 290)"
+  night-content: "oklch(94% 0.02 80)"
   link-underline: "oklch(81% 0.15 93)"
 typography:
   display:
@@ -101,7 +105,7 @@ components:
 
 Everything sits on warm oat paper. A single serif, EB Garamond, carries the shop's voice, and its italic is the closest thing the system has to handwriting. Sections are separated by a one-pixel rule, never by a card, a shadow, or a change of background that doesn't mean something. Photographs run to the edge of the container or past it, and the interface never frames them. The page is paper; the flowers are the ink.
 
-The palette is one warm family. Every neutral sits at hue ~75 (oat, cream, near-black), so nothing reads as cold grey. Forest green appears only where a section reverses out entirely, and the deep green primary only on things that act. One amber-honey stroke does all the interactive work: a 2px underline, and nothing else.
+The palette is one warm family. Every neutral sits at hue ~75 (oat, cream, near-black), so nothing reads as cold grey. Forest green appears only where a section reverses out entirely, and the deep green primary only on things that act. Two cool surfaces are borrowed from photographs: the footer is the slate-blue dusk of the home hero's sky, and the home page's wedding photos sit on their own night wall. One amber-honey stroke does all the interactive work: a 2px line, and nothing else.
 
 Density is generous and editorial. Interaction is quiet and physical: hover underlines fade in, presses land instantly with a 1px drop and an opacity dip. Motion is for arrival and photography, and almost nowhere else.
 
@@ -125,27 +129,29 @@ Paper at hue ~75 and forest at hue ~150, with one amber accent reserved for inte
 - **Near-White** (`{colors.primary-content}`): text on primary. The one token without the warm hue, because it sits on green rather than paper.
 
 ### Secondary
-- **Amber Honey** (`{colors.link-underline}`): the hover underline on headings and links, and the snapped underline on an active index entry or size. Nothing else.
+- **Amber Honey** (`{colors.link-underline}`): the hover underline on headings and links, the snapped underline on an active index entry or size word, and the same 2px bar along the bottom edge of a chosen size card. Nothing else.
 
 ### Tertiary
-- **Warm Cream** (`{colors.cream}`): the editorial surface for the footer, callouts, banners, empty states, and behind photographs while they load. Warmer than `base-200`, so a cream block reads as deliberate.
+- **Warm Cream** (`{colors.cream}`): the editorial surface for callouts, banners, empty states, and behind photographs while they load. Warmer than `base-200`, so a cream block reads as deliberate.
 - **Dark Warm Brown** (`{colors.cream-content}`): text on cream.
 - **Deep Forest Green** (`{colors.forest}`): reverse-out sections, used sparingly, and the admin chrome.
 - **Pale Warm Cream** (`{colors.forest-content}`): text and flower marks on forest.
+- **Dusk Slate** (`{colors.dusk}`): the footer only, the slate blue of the home hero's sky, under a speckled grain and two hazy corner glows. The footer re-points `primary` to `dusk-content`, so buttons and focus rings turn light on it.
+- **Night** (`{colors.night}`): the wall behind the home page's wedding photos, matched to the photos so they have no visible edge. Nowhere else.
 
 ### Neutral
 - **Warm Off-White** (`{colors.base-100}`): the page, the header, inputs.
 - **Light Warm Oat** (`{colors.base-200}`): the first tonal step: recessed areas.
-- **Warm Oat** (`{colors.base-300}`): soft edges that are not structure: the resting border of a choice that turns primary when selected, floating menus, admin secondary buttons, admin hover fills. Too faint to structure a page.
+- **Warm Oat** (`{colors.base-300}`): soft edges that are not structure: the resting border of a choice (radio card, size card, gift voucher field), floating menus, the pressed fill of admin secondary buttons, admin hover fills. The admin darkens it slightly (`oklch(90% 0.014 75)`) to hold against its tinted page. Too faint to structure a page.
 - **Near-Black Warm Grey** (`{colors.base-content}`): all text, and through opacity, every secondary text, rule and decoration.
 
 ### Named Rules
 
-**The One Family Rule.** Every surface, text and border colour sits at hue 60–80 or ~150. Anything else is a defect, unless it is an admin status colour.
+**The One Family Rule.** Every surface, text and border colour sits at hue 60–80 or ~150. The exceptions are named: `dusk` and `night`, which are taken from photographs; the status colours (`success`, `info`, `error`), darkened in the theme so they pass AA as text; and the admin status colours below. Anything else is a defect.
 
-**The Admin Status Carve-out.** Admin status colours are bright Tailwind palette (emerald, amber, orange, red), re-pointed under `.admin-theme`, so a problem reads as one before any row is opened. That vividness never leaks into the storefront.
+**The Admin Status Carve-out.** Admin status colours are bright Tailwind palette (emerald, amber, orange, red, sky), re-pointed under `.admin-theme`, so a problem reads as one before any row is opened. That vividness never leaks into the storefront.
 
-**The Honey-Only Rule.** The amber accent is a 2px text-decoration at a 0.3em offset and nothing else: never a fill, border, text colour or badge. Its scarcity is what makes an underline read as "this responds to you".
+**The Honey-Only Rule.** The amber accent is a 2px text-decoration at a 0.3em offset, or on a size card a 2px inset bar along the bottom edge (40% strength on hover), and nothing else: never a fill, full border, text colour or badge. Its scarcity is what makes an underline read as "this responds to you".
 
 **The Opacity-Not-New-Token Rule.** Secondary text, rules and decoration are `base-content` at an opacity: roughly `/85` to `/60` for secondary text, `/50` to `/15` for faint text and decoration, `/20` and `/12` for rules. Reach for an existing step before proposing a new colour.
 
@@ -163,7 +169,7 @@ Paper at hue ~75 and forest at hue ~150, with one amber accent reserved for inte
 - **Headline** (`page-title`: serif, 400, 2.5rem → 3rem): an ordinary page's `h1`.
 - **Section** (`section-title`: serif, 400, 1.875rem → 2.25rem): section `h2`s.
 - **Pull quote** (`pull-quote`: serif, 400, 1.875rem → 2.25rem): standalone editorial statements.
-- **Title** (`card-title` / `tile-title`: serif, 400, 1.5rem): product names and tile labels.
+- **Title** (`card-heading` / `tile-title`: serif, 400, 1.5rem, wide tracking from `sm`): product, course and order names, and tile labels.
 - **Footer line** (`footer-line`: serif, 1.125rem): addresses, hours, the footer's facts.
 - **Body** (sans, 400, 1rem/1.5): default. Prose pages step up to 1.125rem, relaxed leading, `max-w-2xl`.
 - **Label** (`eyebrow`: sans, 600, 0.75rem, uppercase, 0.18em): category labels, footer headings, the "From" before a price.
@@ -178,13 +184,14 @@ Paper at hue ~75 and forest at hue ~150, with one amber accent reserved for inte
 
 **The Eyebrow Rule.** A category label above a heading is the eyebrow at `/70`. Never a smaller heading, a coloured chip or a pill.
 
-**The Balanced Heading Rule.** Every heading utility carries `text-balance`, and body copy `text-wrap: pretty`. Swedish and Finnish strings run much longer than English and break first.
+**The Balanced Heading Rule.** Every heading utility but `tile-title` carries `text-balance`, and paragraphs in `main` get `text-wrap: pretty`. Swedish and Finnish strings run much longer than English and break first.
 
 ## Layout
 
 One centred container (`mx-auto px-4 sm:px-8`) sets the horizontal rhythm; full-bleed sections break out of it on purpose.
 
-- **Header:** fixed and *shy*: it slides out on scroll-down and back on scroll-up. It publishes its visible height as `--shy-header-offset`, so sticky elements sit just below it. Page tops clear it with `--header-clearance`, and anchors with `.scroll-anchor-below-header`; never hand-compute the offset.
+- **Header:** fixed and *shy*: it slides out on scroll-down and back on scroll-up. It publishes its visible height as `--shy-header-offset`, so sticky elements sit just below it. Page tops clear it with `--header-clearance`, and anchors with `.scroll-anchor-below-header`; never hand-compute the offset. Over the home hero's opening photo (`data-header-overlay`) it turns see-through with white marks and a faint top gradient, and goes solid once the photo scrolls away.
+- **Notice bar:** a 2.25rem sans line inside the fixed header, above the nav, with a `/12` rule beneath; pages move down by its height.
 - **Sections:** 5rem to 9rem of vertical padding, separated by `not-last:border-b`.
 - **Navigation breakpoint:** the desktop nav appears at `xl`; below that it is a drawer, because eight items in three languages don't fit.
 - **Reference pages:** a sticky section index beside the content from `md`.
@@ -200,13 +207,13 @@ One centred container (`mx-auto px-4 sm:px-8`) sets the horizontal rhythm; full-
 
 Flat by default. Depth comes from the one-pixel rule, the tonal steps between `base-100`, `base-200`, `cream` and `forest`, and the photograph itself. There is no elevation scale and none should be created.
 
-The shadows that exist each answer a question: the flash toast floats over any page; the admin sidebar's edge stays visible beside sticky headers; an admin page casts a shadow during its push transition; a compact admin table shows that it scrolls; the lightbox credit stays legible over any photograph.
+The shadows that exist each answer a question: the flash toast floats over any page; the admin sidebar's edge stays visible beside sticky headers; an admin page casts a shadow during its push transition; a compact admin table shows that it scrolls; the lightbox credit and the notice bar stay legible over any photograph. Paper objects that stand for something physical also cast one: a gift voucher preview, and the greeting cards in the store's card fan.
 
 ### Named Rules
 
 **The Functional-Shadow Rule.** A shadow must answer "what would the user not know without this?" Floating layers, overflow and legibility over photography qualify. Cards, buttons, inputs, tiles and images do not.
 
-**The Gradient-For-Legibility Rule.** Text set over a photograph on a page is made legible by a bottom-up gradient scrim (`from-black/50 via-black/15 to-transparent`), never a solid box, a blur panel or a text shadow. The lightbox credit is the exception: there is no room for a scrim.
+**The Gradient-For-Legibility Rule.** Text set over a photograph on a page is made legible by a bottom-up gradient scrim (`from-black/50 via-black/15 to-transparent`), never a solid box, a blur panel or a text shadow. The lightbox credit and the notice bar over the home hero are the exceptions: there is no room for a scrim.
 
 ## Shapes
 
@@ -214,11 +221,11 @@ Square is the system: a rectangle and a hairline. Line-drawn flower SVGs, at low
 
 ### Named Rules
 
-**The Square Edge Rule.** Radius is `0`, set at the token (`--radius-field` and `--radius-box`), so markup never has to say so. Two exceptions: `--radius-selector` keeps daisyUI's `0.5rem`, because a square radio reads as a checkbox and status badges read as tags; and `rounded-full`, for things whose roundness is their meaning (count badges, avatars, dots, the contact portrait). `rounded-full` is the only radius utility allowed; `DesignRulesTest` enforces it.
+**The Square Edge Rule.** Radius is `0`, set at the token (`--radius-field` and `--radius-box`), so markup never has to say so. Two exceptions: `--radius-selector` keeps daisyUI's `0.5rem`, because a square radio reads as a checkbox and status badges read as tags; and `rounded-full`, for things whose roundness is their meaning (count badges, avatars, dots, the contact portrait). `rounded-full` is the only radius utility allowed, apart from `rounded-none` to undo it and the admin colour picker's panel.
 
 **The Orphan Rule.** A hand-written value that duplicates a token is a future defect. A `0.25rem` once hand-matched to daisyUI's old field radius went unnoticed until the token moved, and a soft radio card then sat above a square input in the same form. If a token already sets the value, don't type it.
 
-**The Hairline Rule.** Borders are 1px. A boundary that needs more weight needs a different surface, not a thicker border. Weight comes from colour: ink for the rule between full-width page sections, `base-content/12` for every rule inside content and in the admin, and `base-content/20` for the admin navigation's edge. Never draw a line in `base-300`; `DesignRulesTest` enforces it.
+**The Hairline Rule.** Borders are 1px. A boundary that needs more weight needs a different surface, not a thicker border. Weight comes from colour: ink for the rule between full-width page sections, `base-content/12` for every rule inside content and in the admin, and `base-content/20` for the admin navigation's edge. `base-300` is only the resting edge of a choice, never a rule between content. The toast's 4px status edge is the one thicker line: it is a colour signal, not a boundary.
 
 ## Components
 
@@ -227,7 +234,7 @@ Square is the system: a rectangle and a hairline. Line-drawn flower SVGs, at low
 ### Buttons
 - **Shape:** square, no shadow, sans 600, normal case.
 - **Primary:** green fill, near-white text.
-- **Secondary:** green outline on the storefront; a `base-200` fill with a `base-300` edge in the admin.
+- **Secondary:** green outline on the storefront; a `base-200` fill with a `/12` hairline in the admin, pressing to `base-300`.
 - **Inverse:** a white outline over photography that fills white on hover, with a white focus ring via `--focus-color`.
 - **Text:** not a button: an inline link with the static underline.
 
@@ -250,7 +257,7 @@ Size follows place: `sm` in page headers, cards and table rows; `md` for a form'
 - **Radio card:** a square row with a `base-300` edge that turns primary with a 5% tint when checked.
 
 ### Cards / Containers
-The storefront has no cards. A product card is a link, an unframed photograph on a cream ground, the name in `card-title` with the honey underline on hover, and the price. Nothing is laid over the photograph. Focus frames the whole card.
+The storefront has no cards. A product card is a link, an unframed photograph on a cream ground, the name in `card-heading` with the honey underline on hover, and the price. Nothing is laid over the photograph. Focus frames the whole card.
 
 The admin groups its forms and tables in `admin-card`, a `base-100` panel with a `/12` hairline that runs edge to edge on phones. The sign-in pages centre their lone form in the same panel. Nowhere else.
 
@@ -264,7 +271,7 @@ Admin history uses `timeline` and `timeline_item` from `EdenflowersWeb.Admin.Com
 - **Drawers:** one open at a time.
 
 ### Signature components
-- **Size picker:** three serif words, the active one underlined in honey like the category index.
+- **Size picker:** for flowers, three square size cards, each a line-drawn bouquet in primary over the size and price in serif, on a `base-300` edge, the chosen one marked by a honey bar along its bottom. Other products use serif words, the active one underlined in honey like the category index.
 - **Carousels:** Embla on phones, bleeding to the viewport edge with neighbours scaled and faded around the focused slide; a plain row from `sm` (Favourites) or `md` (customer quotes).
 - **Customer quotes:** a figure, not a card: the quote in serif in its original language with the customer's own words and emojis, an italic English translation on `/en`, and the name as an eyebrow. One faint flower mark sits above the section heading, not one per quote.
 - **FAQ accordion:** native `<details>` separated by `/12` rules, with no box or fill.
@@ -275,13 +282,13 @@ Admin history uses `timeline` and `timeline_item` from `EdenflowersWeb.Admin.Com
 
 **The Breathe-Don't-Pop Rule.** Hover underlines are always present and transparent; only their colour transitions in. Active underlines snap. Hover is an invitation; active is a fact.
 
-**The Quiet Disconnect Rule.** While LiveView is disconnected, the page dims to 0.7 after 400ms, so brief socket flaps never show, and stops taking clicks at once. The "Connection lost" toast stays crisp. Nothing else dims the page.
+**The Quiet Disconnect Rule.** While LiveView is disconnected, the page stops taking clicks, so they don't queue ambiguous actions, and a "Connection lost" toast appears; the toasts stay clickable. Nothing dims. The store's product grid is the one thing that fades (to 0.5) while a filter patch loads.
 
 ## Do's and Don'ts
 
 ### Do:
 - **Do** set every new storefront heading in EB Garamond, and every label, button and nav item in Open Sans.
-- **Do** separate sections with a rule, and reach for `cream` or `forest` only when a section is genuinely different.
+- **Do** separate sections with a rule, and reach for `cream` or `forest` only when a section is genuinely different. `dusk` and `night` are taken; don't reuse them.
 - **Do** let the radius tokens carry squareness.
 - **Do** express secondary text and decoration as an existing opacity step on `base-content`.
 - **Do** run photographs full-bleed and unframed, with the gradient scrim for any text over them.
@@ -298,7 +305,7 @@ Admin history uses `timeline` and `timeline_item` from `EdenflowersWeb.Admin.Com
 - **Don't** drift toward the generic florist template: no pastel pinks, script fonts, pill buttons, heart icons, soft drop shadows or stock bouquet photography.
 - **Don't** bring SaaS dashboard chrome onto the storefront: no cards-in-cards, elevated panels, gradient CTAs or coloured status pills.
 - **Don't** reach for luxury pastiche: no thin all-caps sans at large sizes, no black-and-gold, no borrowed-prestige letter-spacing.
-- **Don't** use any radius utility but `rounded-full`, or draw a line in `base-300`.
+- **Don't** use any radius utility but `rounded-full`, or draw a rule between content in `base-300`.
 - **Don't** hand-write a value a token already sets.
 - **Don't** square `--radius-selector`.
 - **Don't** transition an active state.
