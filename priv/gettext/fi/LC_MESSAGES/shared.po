@@ -190,22 +190,17 @@ msgstr "Merkityille kimpuille toimituksen ensimmäiset %{km} km Minimossenista o
 msgid "Available from %{date}"
 msgstr "Saatavilla %{date} alkaen"
 
-#: lib/edenflowers/catalog/bow_colour.ex:13
-#, elixir-autogen, elixir-format
-msgid "Blue bow"
-msgstr "Sininen rusetti"
-
-#: lib/edenflowers/catalog/bow_colour.ex:11
-#, elixir-autogen, elixir-format
-msgid "Red bow"
-msgstr "Punainen rusetti"
-
-#: lib/edenflowers/catalog/bow_colour.ex:12
-#, elixir-autogen, elixir-format
-msgid "Yellow bow"
-msgstr "Keltainen rusetti"
-
 #: lib/edenflowers/catalog/product_type.ex:21
 #, elixir-autogen, elixir-format
 msgid "Diameter (cm)"
 msgstr "Halkaisija (cm)"
+
+#: lib/edenflowers/catalog/bow_colour.ex:12
+#, elixir-autogen, elixir-format
+msgid "Jute bow"
+msgstr "Juuttirusetti"
+
+#: lib/edenflowers/catalog/bow_colour.ex:11
+#, elixir-autogen, elixir-format
+msgid "Red satin bow"
+msgstr "Punainen satiinirusetti"

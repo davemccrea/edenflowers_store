@@ -420,7 +420,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
     test "a catalogue line can carry the bow colour the product offers", ctx do
       wreath =
-        generate(product(tax_rate_id: ctx.tax_rate.id, name: "Christmas wreath", bow_colours: [:red, :yellow, :blue]))
+        generate(product(tax_rate_id: ctx.tax_rate.id, name: "Christmas wreath", bow_colours: [:red_satin, :jute]))
 
       variant = generate(product_variant(product_id: wreath.id, size: nil, price: "45.00"))
 
@@ -446,7 +446,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
                      "0" => %{
                        "product_variant_id" => variant.id,
                        "quantity" => "1",
-                       "bow_colour" => "yellow"
+                       "bow_colour" => "jute"
                      }
                    }
                  }
@@ -455,11 +455,11 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       order = Orders.get_order_for_admin!(id, actor: ctx.admin) |> Ash.load!(:line_items, authorize?: false)
 
-      assert [%{bow_colour: :yellow}] = order.line_items
+      assert [%{bow_colour: :jute}] = order.line_items
     end
 
     test "a catalogue line may leave the bow to Jennie", ctx do
-      wreath = generate(product(tax_rate_id: ctx.tax_rate.id, bow_colours: [:red, :yellow]))
+      wreath = generate(product(tax_rate_id: ctx.tax_rate.id, bow_colours: [:red_satin, :jute]))
       variant = generate(product_variant(product_id: wreath.id, size: nil, price: "45.00"))
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")

@@ -386,15 +386,15 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     wreaths = generate(product_category(product_type: :wreath))
     {:ok, view, _html} = live(conn, ~p"/admin/products/#{wreath.id}")
 
-    refute has_element?(view, ~s|button[phx-value-colour="red"]|)
+    refute has_element?(view, ~s|button[phx-value-colour="red_satin"]|)
     assert has_element?(view, ~s|input[name="form[subscribable]"]|)
 
     view |> form("#product-form", form: %{product_category_id: wreaths.id}) |> render_change()
     refute has_element?(view, ~s|input[name="form[subscribable]"]|)
-    view |> element(~s|button[phx-value-colour="red"]|) |> render_click()
+    view |> element(~s|button[phx-value-colour="red_satin"]|) |> render_click()
     view |> form("#product-form") |> render_submit()
 
-    assert Ash.get!(Product, wreath.id, authorize?: false).bow_colours == [:red]
+    assert Ash.get!(Product, wreath.id, authorize?: false).bow_colours == [:red_satin]
   end
 
   defp uploaded_content("local:///uploads/" <> filename),

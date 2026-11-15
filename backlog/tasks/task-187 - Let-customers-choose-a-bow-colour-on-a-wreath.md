@@ -4,7 +4,7 @@ title: Let customers choose a bow colour on a wreath
 status: done
 assignee: []
 created_date: '2026-11-10 11:05'
-updated_date: '2026-11-10 13:03'
+updated_date: '2026-11-15 19:13'
 labels:
   - spec
   - customers
@@ -69,4 +69,6 @@ Tests: line item rules (choice, refusal, merging, shared stock on add and +, adm
 Verification: `mix test` 2213 tests, 0 failures, 1 skipped; `mix ash.codegen --check`, `mix format --check-formatted`, `mix gettext.check` pass; `mix credo --strict` only the pre-existing seeds_test issue. Receipt and invoice samples render with Typst, and a bow receipt was checked visually.
 
 Not verified in a browser: the product page and admin screens were covered by LiveView tests, no manual visual pass.
+
+2026-11-15: the placeholder colours (red, yellow, blue) are replaced by the bows Jennie actually offers: `:red_satin` ("Red satin bow" / "Röd satinrosett" / "Punainen satiinirusetti") and `:jute` ("Jute bow" / "Juterosett" / "Juuttirusetti", her "juteband"). Production had never stored a bow, so no data migration was needed.
 <!-- SECTION:FINAL_SUMMARY:END -->

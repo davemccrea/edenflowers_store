@@ -323,8 +323,8 @@ defmodule Edenflowers.Catalog.ProductTest do
   end
 
   test "only a wreath category keeps a product's bow colours" do
-    wreath = generate(product(bow_colours: [:red, :blue]))
-    assert wreath.bow_colours == [:red, :blue]
+    wreath = generate(product(bow_colours: [:red_satin, :jute]))
+    assert wreath.bow_colours == [:red_satin, :jute]
 
     bouquets = generate(product_category())
     assert update!(wreath, %{product_category_id: bouquets.id}).bow_colours == []
@@ -335,7 +335,7 @@ defmodule Edenflowers.Catalog.ProductTest do
     bouquet = generate(product(subscribable: true))
 
     refute update!(bouquet, %{product_category_id: wreaths.id}).subscribable
-    refute update!(generate(product(bow_colours: [:red])), %{subscribable: true}).subscribable
+    refute update!(generate(product(bow_colours: [:red_satin])), %{subscribable: true}).subscribable
   end
 
   defp update(product, params),

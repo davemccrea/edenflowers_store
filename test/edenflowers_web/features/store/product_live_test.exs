@@ -493,29 +493,29 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
   end
 
   test "asks for the bow colour a product offers and adds the chosen one", %{conn: conn, order: order} do
-    product = generate(product(draft: false, bow_colours: [:red, :yellow, :blue]))
+    product = generate(product(draft: false, bow_colours: [:red_satin, :jute]))
     generate(product_variant(product_id: product.id, size: nil, price: "45.00"))
 
     {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}")
 
-    assert has_element?(view, "[data-testid=bow-colour-option-red][checked]")
-    assert has_element?(view, "[data-testid=bow-colour-option-blue]")
+    assert has_element?(view, "[data-testid=bow-colour-option-red_satin][checked]")
+    assert has_element?(view, "[data-testid=bow-colour-option-jute]")
 
     view
-    |> form("[data-testid=product-form]", %{bow_colour: "yellow"})
+    |> form("[data-testid=product-form]", %{bow_colour: "jute"})
     |> render_change()
 
-    assert has_element?(view, "[data-testid=bow-colour-option-yellow][checked]")
+    assert has_element?(view, "[data-testid=bow-colour-option-jute][checked]")
 
     view |> form("[data-testid=product-form]") |> render_submit()
 
-    assert [%LineItem{bow_colour: :yellow}] = line_items(order)
+    assert [%LineItem{bow_colour: :jute}] = line_items(order)
   end
 
   test "another bow of one already in the cart can be added as its own line", %{conn: conn, order: order} do
-    product = generate(product(draft: false, bow_colours: [:red, :yellow]))
+    product = generate(product(draft: false, bow_colours: [:red_satin, :jute]))
     variant = generate(product_variant(product_id: product.id, size: nil))
-    Orders.add_line_item!(order.id, variant.id, 1, %{bow_colour: :red}, authorize?: false)
+    Orders.add_line_item!(order.id, variant.id, 1, %{bow_colour: :red_satin}, authorize?: false)
 
     {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}")
 
@@ -523,14 +523,14 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     assert has_element?(view, "[data-testid=add-to-cart-button]", "Show cart")
 
     view
-    |> form("[data-testid=product-form]", %{bow_colour: "yellow"})
+    |> form("[data-testid=product-form]", %{bow_colour: "jute"})
     |> render_change()
 
     assert has_element?(view, "[data-testid=add-to-cart-button]", "Add to cart")
 
     view |> form("[data-testid=product-form]") |> render_submit()
 
-    assert Enum.sort(Enum.map(line_items(order), & &1.bow_colour)) == [:red, :yellow]
+    assert Enum.sort(Enum.map(line_items(order), & &1.bow_colour)) == [:jute, :red_satin]
   end
 
   test "a product with no bow colour asks for none", %{conn: conn, order: order} do

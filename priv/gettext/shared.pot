@@ -194,22 +194,17 @@ msgstr ""
 msgid "Available from %{date}"
 msgstr ""
 
-#: lib/edenflowers/catalog/bow_colour.ex:13
+#: lib/edenflowers/catalog/product_type.ex:21
 #, elixir-autogen, elixir-format
-msgid "Blue bow"
-msgstr ""
-
-#: lib/edenflowers/catalog/bow_colour.ex:11
-#, elixir-autogen, elixir-format
-msgid "Red bow"
+msgid "Diameter (cm)"
 msgstr ""
 
 #: lib/edenflowers/catalog/bow_colour.ex:12
 #, elixir-autogen, elixir-format
-msgid "Yellow bow"
+msgid "Jute bow"
 msgstr ""
 
-#: lib/edenflowers/catalog/product_type.ex:21
+#: lib/edenflowers/catalog/bow_colour.ex:11
 #, elixir-autogen, elixir-format
-msgid "Diameter (cm)"
+msgid "Red satin bow"
 msgstr ""

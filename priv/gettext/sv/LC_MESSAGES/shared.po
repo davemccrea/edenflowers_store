@@ -190,22 +190,17 @@ msgstr "För märkta buketter är de första %{km} km av leveransen från Minimo
 msgid "Available from %{date}"
 msgstr "Tillgänglig från %{date}"
 
-#: lib/edenflowers/catalog/bow_colour.ex:13
-#, elixir-autogen, elixir-format
-msgid "Blue bow"
-msgstr "Blå rosett"
-
-#: lib/edenflowers/catalog/bow_colour.ex:11
-#, elixir-autogen, elixir-format
-msgid "Red bow"
-msgstr "Röd rosett"
-
-#: lib/edenflowers/catalog/bow_colour.ex:12
-#, elixir-autogen, elixir-format
-msgid "Yellow bow"
-msgstr "Gul rosett"
-
 #: lib/edenflowers/catalog/product_type.ex:21
 #, elixir-autogen, elixir-format
 msgid "Diameter (cm)"
 msgstr "Diameter (cm)"
+
+#: lib/edenflowers/catalog/bow_colour.ex:12
+#, elixir-autogen, elixir-format
+msgid "Jute bow"
+msgstr "Juterosett"
+
+#: lib/edenflowers/catalog/bow_colour.ex:11
+#, elixir-autogen, elixir-format
+msgid "Red satin bow"
+msgstr "Röd satinrosett"
