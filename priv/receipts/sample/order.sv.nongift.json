@@ -44,6 +44,7 @@
       "gross": "65,90 €"
     }
   ],
+  "course_name": null,
   "venue_name": null,
   "venue_address": null,
   "payments": [],

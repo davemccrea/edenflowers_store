@@ -266,6 +266,37 @@ defmodule Edenflowers.Orders.ReceiptTest do
 
       assert Receipt.build_payload(%{registration | payments: []}).payments == []
     end
+
+    test "words a course receipt as a booking of places on the named course" do
+      registration = %CourseRegistration{
+        locale: "sv-FI",
+        reference: "1440",
+        name: "Anna Lindqvist",
+        email: "anna.lindqvist@example.fi",
+        seats: 3,
+        amount: Decimal.new("255.00"),
+        tax_rate: Decimal.new("0.255"),
+        confirmed_at: ~U[2026-09-22 15:40:00Z],
+        upcoming?: true,
+        payments: [],
+        course: %Course{
+          name: "Adventskransar",
+          date: ~D[2026-11-14],
+          start_time: ~T[10:00:00],
+          end_time: ~T[14:00:00],
+          location_name: "Minimossen",
+          location_address: "Myrvägen 1, 65230 Vasa"
+        }
+      }
+
+      payload = Receipt.build_payload(registration)
+      fixture = read_fixture("order.sv.course.json")
+
+      assert_same_keys(payload, fixture)
+      assert payload.labels == fixture["labels"]
+      assert payload.course_name == "Adventskransar"
+      assert [%{product_name: "Adventskransar – kursplats", quantity: 3}] = payload.line_items
+    end
   end
 
   describe "generate/1" do

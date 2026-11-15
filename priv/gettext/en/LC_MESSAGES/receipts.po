@@ -38,6 +38,7 @@ msgid "Cash"
 msgstr ""
 
 #: lib/edenflowers/orders/receipt_labels.ex:18
+#: lib/edenflowers/orders/receipt_labels.ex:81
 #, elixir-autogen, elixir-format
 msgid "Course"
 msgstr ""
@@ -135,7 +136,7 @@ msgstr ""
 msgid "Qty"
 msgstr ""
 
-#: lib/edenflowers/orders/receipt_labels.ex:73
+#: lib/edenflowers/orders/receipt_labels.ex:103
 #, elixir-autogen, elixir-format
 msgid "Questions or changes? Reply to your confirmation email and Jennie will get back to you."
 msgstr ""
@@ -272,7 +273,7 @@ msgstr ""
 msgid "Late payment interest"
 msgstr ""
 
-#: lib/edenflowers/orders/receipt_labels.ex:81
+#: lib/edenflowers/orders/receipt_labels.ex:111
 #, elixir-autogen, elixir-format
 msgid "Questions? Just reply to the email this came with, or write to info@edenflowers.fi."
 msgstr ""
@@ -384,4 +385,34 @@ msgstr ""
 #: lib/edenflowers/payments/gift_voucher_pdf.ex:52
 #, elixir-autogen, elixir-format
 msgid "Your message here"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:97
+#, elixir-autogen, elixir-format
+msgid "%{course} – course place"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:79
+#, elixir-autogen, elixir-format
+msgid "Booking"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:80
+#, elixir-autogen, elixir-format
+msgid "Booking date"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:82
+#, elixir-autogen, elixir-format
+msgid "Booking total"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:85
+#, elixir-autogen, elixir-format
+msgid "Places"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:83
+#, elixir-autogen, elixir-format
+msgid "Thank you for your booking"
 msgstr ""

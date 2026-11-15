@@ -69,6 +69,7 @@ defmodule Edenflowers.Orders.Receipt do
       delivery_address: order.delivery_address,
       delivery_instructions: order.delivery_instructions,
       card_message: order.card_message,
+      course_name: nil,
       venue_name: nil,
       venue_address: nil,
       line_items: Enum.map(order.line_items, &line_item_payload(&1, locale)),
@@ -93,7 +94,7 @@ defmodule Edenflowers.Orders.Receipt do
 
     %{
       lang: lang_from_locale(locale),
-      labels: ReceiptLabels.for_receipt(locale, registration.upcoming?),
+      labels: ReceiptLabels.for_course_receipt(locale, registration.upcoming?),
       seller: seller(),
       order_reference: registration.reference,
       ordered_at: Format.datetime(registration.confirmed_at || registration.inserted_at, locale),
@@ -103,6 +104,7 @@ defmodule Edenflowers.Orders.Receipt do
       fulfillment_date:
         "#{Format.weekday_date(course.date, locale)}, " <>
           "#{Format.time(course.start_time, locale)}–#{Format.time(course.end_time, locale)}",
+      course_name: course.name,
       venue_name: course.location_name,
       venue_address: course.location_address,
       recipient_name: nil,
@@ -113,7 +115,7 @@ defmodule Edenflowers.Orders.Receipt do
       card_message: nil,
       line_items: [
         %{
-          product_name: course.name,
+          product_name: ReceiptLabels.course_place(locale, course.name),
           variant_size: nil,
           bow_colour: nil,
           quantity: registration.seats,

@@ -68,6 +68,36 @@ defmodule Edenflowers.Orders.ReceiptLabels do
     locale |> for_locale() |> Map.put("closing-line", closing_line(locale, upcoming?))
   end
 
+  @doc """
+  A course booking's receipt labels: the same receipt, worded as a booking of
+  places rather than an order of products.
+  """
+  def for_course_receipt(locale, upcoming?) do
+    booking_labels =
+      EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
+        %{
+          "order" => dgettext("receipts", "Booking"),
+          "order-date" => dgettext("receipts", "Booking date"),
+          "item" => dgettext("receipts", "Course"),
+          "total-paid" => dgettext("receipts", "Booking total"),
+          "thank-you" => dgettext("receipts", "Thank you for your booking"),
+          # Translators: Column heading in the receipt PDF for how many course places were booked. Keep it short.
+          "quantity" => dgettext("receipts", "Places")
+        }
+      end)
+
+    locale |> for_receipt(upcoming?) |> Map.merge(booking_labels)
+  end
+
+  @doc ~s(The receipt line for a course booking, as "Christmas door wreath – course place".)
+  def course_place(locale, course_name) do
+    EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
+      # Translators: Receipt line item for booked places on a course; the quantity column gives how many.
+      # %{course} is the course name.
+      dgettext("receipts", "%{course} – course place", course: course_name)
+    end)
+  end
+
   defp closing_line(locale, true = _upcoming?) do
     EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
       dgettext("receipts", "Questions or changes? Reply to your confirmation email and Jennie will get back to you.")

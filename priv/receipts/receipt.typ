@@ -25,7 +25,7 @@
     "recipient_name", "contact_phone_number",
     "delivery_address", "delivery_instructions",
     "fulfillment_fee", "discount",
-    "venue_name", "venue_address",
+    "course_name", "venue_name", "venue_address",
     "vat_note",
   )
   for key in required {
@@ -155,9 +155,11 @@
       if order.at("collect_voucher_card", default: false) { t("voucher-collect") } else { t("voucher-emailed") },
     )
   } else if order.fulfillment_method == "course" {
-    // Courses move between venues, so the receipt says where this one is.
+    // Name the course first, so the line below reads as places on it rather
+    // than a product. Courses move between venues, so say where this one is.
     (
-      text(weight: "semibold")[#order.venue_name],
+      text(weight: "semibold")[#order.course_name],
+      order.venue_name,
       order.venue_address,
     )
   } else {

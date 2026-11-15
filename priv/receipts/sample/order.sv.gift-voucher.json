@@ -28,6 +28,7 @@
   "lang": "sv",
   "vat_note": "gift-voucher",
   "vat_breakdown": [],
+  "course_name": null,
   "venue_name": null,
   "venue_address": null,
   "payments": [],
