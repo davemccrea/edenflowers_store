@@ -22,6 +22,7 @@ mix usage_rules.search_docs "search term" -p localize
 
 - `mix localize.download_inflection` - Downloads inflection data files from the Localize CDN
 - `mix localize.download_locales` - Downloads locale ETF files from the Localize CDN
+- `mix localize.gen_unicode_categories` - Generates the Unicode category table the number lexer reads
 - `mix localize.unit.gen_conversions` - Generates a dependency-free unit conversion module for embedded targets
 - `mix localize.verify_locales` - Verifies locale ETF files against the bundled hash manifest
 <!-- usage-rules-skill-end -->
