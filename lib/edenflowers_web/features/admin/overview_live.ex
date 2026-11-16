@@ -54,6 +54,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
      |> assign(:vapid_public_key, Edenflowers.WebPush.public_key())
      |> assign(:connected_customers, EdenflowersWeb.Presence.connected_customers())
      |> assign(route_date: nil, route_form: nil, route: nil, route_stale?: false)
+     |> assign(:ready_undo_id, nil)
      |> assign(:mapbox_token, Application.get_env(:edenflowers, :mapbox_token))
      # Once per visit, not on each refresh: a Winpos report arrives once a week.
      |> assign(:minimossen_sales, Minimossen.recent_minimossen_sales!(actor: socket.assigns.current_user))
@@ -116,6 +117,19 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           </div>
         </div>
       </.admin_page>
+      <:flash_action :if={@ready_undo_id && Phoenix.Flash.get(@flash, :success) == ready_message()}>
+        <.button
+          id="undo-ready"
+          type="button"
+          variant="ghost"
+          size="sm"
+          class="-my-1"
+          phx-click="undo_ready"
+          phx-value-id={@ready_undo_id}
+        >
+          {~t"Undo"}
+        </.button>
+      </:flash_action>
       <RouteDrawer.route_drawer
         date={@route_date}
         orders={Map.get(@orders_by_date, @route_date, [])}
@@ -167,17 +181,35 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       end
 
     case result do
-      {:ok, _order} ->
+      {:ok, order} ->
         {:noreply,
          socket
-         |> put_flash(:success, ~t"Order marked as ready.")
+         |> assign(:ready_undo_id, order.id)
+         |> put_flash(:success, ready_message())
          |> push_event("order-ready", %{})}
 
       {:error, _error} ->
+        {:noreply, order_changed(socket)}
+    end
+  end
+
+  def handle_event("undo_ready", %{"id" => id}, socket) do
+    actor = socket.assigns.current_user
+
+    result =
+      with {:ok, order} <- Orders.get_order_by_id(id, actor: actor) do
+        Orders.undo_order_ready(order, actor: actor)
+      end
+
+    case result do
+      {:ok, _order} ->
         {:noreply,
          socket
-         |> refresh()
-         |> put_flash(:error, ~t"The order has changed. Check its status and try again.")}
+         |> assign(:ready_undo_id, nil)
+         |> put_flash(:success, ~t"Order returned to To make.")}
+
+      {:error, _error} ->
+        {:noreply, order_changed(socket)}
     end
   end
 
@@ -1244,51 +1276,88 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
   attr :order, :map, required: true
 
-  # What the florist needs to act on, in reading order: whose order, what to make,
-  # whether there's a card to write, and when it leaves the shop. Price lives on the
+  # A to-do list: the leading circle marks the order made, then turns into a tick. What
+  # the florist needs follows in reading order: whose order and when, what to make,
+  # where it goes, her note, and whether there's a card to write. Price lives on the
   # order page; it doesn't change what gets made.
   defp order_row(assigns) do
-    assigns = assign(assigns, :items, Enum.reject(assigns.order.line_items, & &1.is_card))
+    assigns =
+      assign(assigns,
+        items: Enum.reject(assigns.order.line_items, & &1.is_card),
+        time: Format.fulfillment_time_range(assigns.order, Format.locale()),
+        whereabouts:
+          Enum.reject(
+            [assigns.order.delivery_area, assigns.order.distance_km && "#{assigns.order.distance_km} km"],
+            &is_nil/1
+          )
+      )
 
     ~H"""
     <li
       id={"day-order-#{@order.id}"}
-      class="transition-colors focus-within:bg-base-200/60 hover:bg-base-200/60"
+      class="relative flex items-start gap-3 px-4 py-4 transition-colors focus-within:bg-base-200/60 hover:bg-base-200/60 sm:px-5"
     >
-      <.link
-        navigate={~p"/admin/orders/#{@order.id}"}
-        class="block px-4 pt-4 pb-2 focus-visible:-outline-offset-2 sm:px-5"
+      <button
+        :if={@order.can_mark_ready?}
+        type="button"
+        phx-click="mark_ready"
+        phx-value-id={@order.id}
+        aria-label={~t"Mark order #{@order.order_reference} as ready"}
+        class="touch-target border-base-content/35 group size-6 relative z-10 mt-px grid shrink-0 place-items-center rounded-full border-2 hover:border-primary hover:bg-primary/5 active:translate-y-px active:opacity-90"
       >
-        <div class="grid-cols-[minmax(0,1fr)_auto] grid items-baseline gap-x-3 gap-y-1">
-          <span class="text-base-content min-w-0 break-words font-semibold">
+        <.icon name="hero-check-mini" class="text-primary size-4 opacity-0 group-hover:opacity-100" />
+      </button>
+      <button
+        :if={@order.can_undo_ready?}
+        type="button"
+        phx-click="undo_ready"
+        phx-value-id={@order.id}
+        aria-label={~t"Undo ready for order #{@order.order_reference}"}
+        class="touch-target text-primary size-6 relative z-10 mt-px grid shrink-0 place-items-center rounded-full hover:opacity-75 active:translate-y-px active:opacity-90"
+      >
+        <.icon name="hero-check-circle-solid" class="size-6" />
+      </button>
+
+      <div class="min-w-0 flex-1">
+        <div class="flex items-baseline justify-between gap-x-3">
+          <%!-- Its ::before covers the row, so a tap anywhere opens the order; the circle sits above it. --%>
+          <.link
+            navigate={~p"/admin/orders/#{@order.id}"}
+            class="text-base-content min-w-0 break-words font-semibold before:absolute before:inset-0"
+          >
             {@order.customer_name || ~t"Unnamed customer"}
-          </span>
+          </.link>
           <span
-            :if={Format.fulfillment_time_range(@order, Format.locale())}
-            class="text-base-content col-start-2 row-start-1 flex items-center justify-end gap-1 whitespace-nowrap text-xs tabular-nums sm:text-sm"
+            :if={@time}
+            class="text-base-content flex shrink-0 items-center gap-1 whitespace-nowrap text-sm font-medium tabular-nums"
             data-testid="fulfillment-time"
           >
             <.icon name="hero-clock" class="text-base-content/50 h-3.5 w-3.5" />
-            {Format.fulfillment_time_range(@order, Format.locale())}
-          </span>
-
-          <ul :if={@items != []} class="text-base-content col-start-1 row-start-2 min-w-0 space-y-0.5 text-sm">
-            <li :for={item <- @items} class="break-words" phx-no-format>
-              <span class="tabular-nums">{item.quantity} ×</span>
-              <span>{item.product_name}</span><span :if={item.variant_size || item.bow_colour} class="text-base-content/75">, {Format.line_item_choices(item)}</span>
-            </li>
-          </ul>
-          <span
-            :if={@order.distance_km}
-            class="text-base-content/75 col-start-2 row-start-2 text-right text-xs tabular-nums"
-          >
-            {@order.distance_km} km
+            {@time}
           </span>
         </div>
 
+        <ul
+          :if={@items != []}
+          class={["mt-0.5 min-w-0 space-y-0.5 text-sm", if(@order.can_mark_ready?, do: "text-base-content", else: "text-base-content/75")]}
+        >
+          <li :for={item <- @items} class="break-words" phx-no-format>
+            <span class="tabular-nums">{item.quantity} ×</span>
+            <span>{item.product_name}</span><span :if={item.variant_size || item.bow_colour} class="text-base-content/75">, {Format.line_item_choices(item)}</span>
+          </li>
+        </ul>
+
+        <p
+          :if={@whereabouts != []}
+          class="text-base-content/75 mt-1 flex items-center gap-1 text-xs tabular-nums"
+        >
+          <.icon name="hero-map-pin" class="h-3.5 w-3.5 shrink-0" />
+          {Enum.join(@whereabouts, " · ")}
+        </p>
+
         <p
           :if={present?(@order.florist_note)}
-          class="text-base-content/85 line-clamp-2 mt-1 text-sm italic"
+          class="text-base-content/85 line-clamp-2 mt-1.5 text-sm italic"
           data-testid="florist-note"
         >
           <.icon name="hero-chat-bubble-bottom-center-text" class="text-base-content/50 align-[-2px] mr-1 h-3.5 w-3.5" />{@order.florist_note}
@@ -1296,7 +1365,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
         <div
           :if={@order.gift or present?(@order.card_message)}
-          class="text-base-content/75 mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs"
+          class="text-base-content/75 mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs"
         >
           <span :if={@order.gift} class="inline-flex min-w-0 items-baseline gap-1.5">
             <.icon name="hero-gift" class="h-3.5 w-3.5 shrink-0 self-center" />
@@ -1310,37 +1379,36 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             <.icon name="hero-pencil-square" class="h-3.5 w-3.5 shrink-0" /> {~t"Card to write"}
           </span>
         </div>
-      </.link>
-      <div class="flex flex-wrap items-center gap-2 px-4 pt-1 pb-4 sm:px-5">
-        <.badge :if={@order.missing_delivery_phone?} tone={:warning} icon="hero-phone-x-mark">
-          {~t"Missing recipient phone"}
-        </.badge>
-        <.badge :if={@order.to_collect?} tone={:warning}>
-          <%= if Decimal.positive?(@order.amount_paid) do %>
-            {~t"To collect #{amount = Format.currency(@order.balance, Format.locale())}"}
-          <% else %>
-            {~t"Unpaid"}
-          <% end %>
-        </.badge>
-        <.fulfillment_status_badge
-          :if={!@order.can_mark_ready?}
-          status={@order.fulfillment_status}
-          method={@order.fulfillment_method}
-        />
-        <.button
-          :if={@order.can_mark_ready?}
-          type="button"
-          variant="secondary"
-          size="sm"
-          phx-click="mark_ready"
-          phx-value-id={@order.id}
-          aria-label={~t"Mark order #{@order.order_reference} as ready"}
+
+        <div
+          :if={@order.to_collect? or !@order.can_mark_ready?}
+          class="mt-2 flex flex-wrap items-center gap-2"
         >
-          {~t"Mark as ready"}
-        </.button>
+          <.fulfillment_status_badge
+            :if={!@order.can_mark_ready?}
+            status={@order.fulfillment_status}
+            method={@order.fulfillment_method}
+          />
+          <.badge :if={@order.to_collect?} tone={:warning}>
+            <%= if Decimal.positive?(@order.amount_paid) do %>
+              {~t"To collect #{amount = Format.currency(@order.balance, Format.locale())}"}
+            <% else %>
+              {~t"Unpaid"}
+            <% end %>
+          </.badge>
+        </div>
       </div>
     </li>
     """
+  end
+
+  defp ready_message, do: ~t"Order marked as ready."
+
+  defp order_changed(socket) do
+    socket
+    |> assign(:ready_undo_id, nil)
+    |> refresh()
+    |> put_flash(:error, ~t"The order has changed. Check its status and try again.")
   end
 
   # Deliveries go out on a run, so they come first; the read already sorts each by time and distance.

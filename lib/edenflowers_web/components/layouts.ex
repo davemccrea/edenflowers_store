@@ -174,6 +174,7 @@ defmodule EdenflowersWeb.Layouts do
   controls, and stack in one container instead of overlapping.
   """
   attr :flash, :map, required: true
+  attr :success_action, :list, default: [], doc: "a slot rendered in the success flash, such as an Undo button"
 
   def flash_group(assigns) do
     ~H"""
@@ -182,7 +183,7 @@ defmodule EdenflowersWeb.Layouts do
       aria-live="polite"
       class="toast bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 max-sm:inset-x-4 max-sm:w-auto sm:end-6 sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]"
     >
-      <.flash kind={:success} flash={@flash} />
+      <.flash kind={:success} flash={@flash} action={@success_action} />
       <.flash kind={:info} flash={@flash} />
       <.flash kind={:error} flash={@flash} />
       <.flash
@@ -249,6 +250,7 @@ defmodule EdenflowersWeb.Layouts do
   attr :search_term, :string, default: nil, doc: "prefills the header search, so a results page shows its query"
 
   slot :inner_block, required: true
+  slot :flash_action, doc: "a button for the success flash, such as an Undo"
 
   def admin(assigns) do
     nav_sections = [
@@ -291,7 +293,7 @@ defmodule EdenflowersWeb.Layouts do
       |> assign(:system_nav, system_nav)
 
     ~H"""
-    <.flash_group flash={@flash} />
+    <.flash_group flash={@flash} success_action={@flash_action} />
 
     <div
       id="admin-app"

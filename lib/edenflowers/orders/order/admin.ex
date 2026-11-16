@@ -152,10 +152,10 @@ defmodule Edenflowers.Orders.Order.Admin do
                   :balance,
                   :to_collect?,
                   :distance_km,
+                  :delivery_area,
                   :gift,
                   :recipient_name,
                   :card_message,
-                  :missing_delivery_phone?,
                   :can_mark_ready?,
                   :can_undo_ready?,
                   :line_items

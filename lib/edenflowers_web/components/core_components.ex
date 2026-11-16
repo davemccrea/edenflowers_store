@@ -104,6 +104,8 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :kind, :atom, values: [:success, :info, :error], doc: "used for styling and flash lookup"
   attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
 
+  attr :action, :list, default: [], doc: "a slot rendered beside the message, such as an Undo button"
+
   slot :inner_block, doc: "the optional inner block that renders the flash message"
 
   def flash(assigns) do
@@ -127,6 +129,7 @@ defmodule EdenflowersWeb.CoreComponents do
           <p :if={@title} class="font-semibold">{@title}</p>
           <p>{msg}</p>
         </div>
+        {render_slot(@action)}
         <button
           type="button"
           class="text-base-content/50 touch-target size-8 -my-1 grid shrink-0 place-items-center hover:text-base-content"

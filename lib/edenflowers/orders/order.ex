@@ -429,6 +429,23 @@ defmodule Edenflowers.Orders.Order do
                     "distance was measured."
     end
 
+    calculate :delivery_area,
+              :string,
+              fn records, _context ->
+                Enum.map(records, fn record ->
+                  address = record.geocoded_address_sv || record.geocoded_address || record.delivery_address
+
+                  if record.fulfillment_method == :delivery and is_binary(address) do
+                    address |> String.split(",") |> List.last() |> String.trim()
+                  end
+                end)
+              end do
+      load [:fulfillment_method, :geocoded_address_sv, :geocoded_address, :delivery_address]
+
+      description "Where a delivery goes, for planning the run: the address's last part, usually postcode and " <>
+                    ~s(town as in "65230 Vasa", in Swedish when HERE gave one. Nil for a pickup.)
+    end
+
     calculate :contact_phone_number,
               :string,
               expr(

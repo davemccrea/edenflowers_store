@@ -27,24 +27,53 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin")
       row = "#day-order-#{order.id}"
 
-      view |> element("#{row} button", "Mark as ready") |> render_click()
+      mark = ~s|#{row} button[aria-label="Mark order #{order.order_reference} as ready"]|
+      undo = ~s|#{row} button[aria-label="Undo ready for order #{order.order_reference}"]|
+
+      view |> element(mark) |> render_click()
       assert_push_event(view, "order-ready", %{})
       assert Edenflowers.Orders.get_order_for_admin!(order.id, actor: admin).fulfillment_status == :ready
 
       eventually(fn ->
         assert has_element?(view, row, "Ready for delivery")
         assert has_element?(view, "#{row} a", "To prepare")
-
-        # The order page is where readiness is undone; the overview only moves work forward.
-        refute has_element?(view, "#{row} button")
+        refute has_element?(view, mark)
       end)
 
-      order = Edenflowers.Orders.get_order_by_id!(order.id, actor: admin)
-      {:ok, _order} = Edenflowers.Orders.undo_order_ready(order, actor: admin)
+      view |> element("#flash-success #undo-ready", "Undo") |> render_click()
+      assert Edenflowers.Orders.get_order_for_admin!(order.id, actor: admin).fulfillment_status == :pending
+      assert has_element?(view, "#flash-success", "Order returned to To make.")
+      refute has_element?(view, "#undo-ready")
 
-      eventually(fn ->
-        assert has_element?(view, "#{row} button")
-      end)
+      eventually(fn -> assert has_element?(view, mark) end)
+
+      view |> element(mark) |> render_click()
+      eventually(fn -> assert has_element?(view, undo) end)
+
+      view |> element(undo) |> render_click()
+      assert Edenflowers.Orders.get_order_for_admin!(order.id, actor: admin).fulfillment_status == :pending
+      eventually(fn -> assert has_element?(view, mark) end)
+    end
+
+    test "says where a delivery goes", %{conn: conn} do
+      order =
+        generate(
+          order(
+            state: :placed,
+            customer_name: "Far Away",
+            fulfillment_method: :delivery,
+            fulfillment_date: Edenflowers.ShopTime.today(),
+            fulfillment_status: :pending,
+            delivery_address: "Gerbyntie 16, 65230 Vaasa",
+            geocoded_address: "Gerbyntie 16, 65230 Vaasa",
+            geocoded_address_sv: "Gerbyvägen 16, 65230 Vasa",
+            distance: 4900
+          )
+        )
+
+      {:ok, view, _html} = live(conn, ~p"/admin")
+
+      assert has_element?(view, "#day-order-#{order.id}", "65230 Vasa · 4.9 km")
     end
 
     test "shows today's weather under the greeting", %{conn: conn} do
@@ -120,7 +149,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       refute_push_event(view, "order-ready", %{})
       assert has_element?(view, "#flash-error", "The order has changed")
       assert has_element?(view, "#day-order-#{order.id}", "Ready for delivery")
-      refute has_element?(view, "#day-order-#{order.id} button")
+      refute has_element?(view, ~s|#day-order-#{order.id} button[phx-click="mark_ready"]|)
     end
 
     test "rejects a cart id sent as a readiness event", %{conn: conn, admin: admin} do
@@ -233,27 +262,6 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     end
   end
 
-  test "flags a delivery with no phone to call", %{conn: conn} do
-    admin = generate(admin_user()) |> with_token()
-    conn = log_in(conn, admin)
-
-    attrs = [
-      state: :placed,
-      fulfillment_method: :delivery,
-      fulfillment_date: Edenflowers.ShopTime.today(),
-      fulfillment_status: :pending,
-      gift: true
-    ]
-
-    missing = generate(order([customer_name: "No Phone"] ++ attrs))
-    phoned = generate(order([customer_name: "Has Phone", recipient_phone_number: "+358401234567"] ++ attrs))
-
-    {:ok, view, _html} = live(conn, ~p"/admin")
-
-    assert has_element?(view, ~s|#day-order-#{missing.id}|, "Missing recipient phone")
-    refute has_element?(view, ~s|#day-order-#{phoned.id}|, "Missing recipient phone")
-  end
-
   test "says what an order still owes, and nothing once it's refunded in full", %{conn: conn} do
     conn = log_in(conn, generate(admin_user()) |> with_token())
     attrs = [fulfillment_date: Edenflowers.ShopTime.today(), fulfillment_status: :pending]
@@ -325,7 +333,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       refute has_element?(view, "#still-owed")
     end
 
-    test "lists overdue orders but leaves a missing phone to the order row badge", %{conn: conn} do
+    test "lists overdue orders", %{conn: conn} do
       today = Edenflowers.ShopTime.today()
 
       overdue =
@@ -338,24 +346,11 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
           )
         )
 
-      generate(
-        order(
-          state: :placed,
-          customer_name: "No Phone",
-          fulfillment_method: :delivery,
-          fulfillment_date: today,
-          fulfillment_status: :pending,
-          gift: true
-        )
-      )
-
       {:ok, view, _html} = live(conn, ~p"/admin")
 
       assert has_element?(view, "#attention-overdue-orders summary", "Overdue orders 1")
       assert has_element?(view, "#attention-overdue-orders summary .badge", "1")
       assert has_element?(view, ~s|#attention-overdue-orders a[href="/admin/orders/#{overdue.id}"]|, "Late")
-      refute has_element?(view, "#attention-missing-phone")
-      assert render(view) =~ "Missing recipient phone"
     end
 
     test "lists subscriptions whose payment failed", %{conn: conn} do
