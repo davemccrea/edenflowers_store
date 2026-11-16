@@ -164,6 +164,18 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                     class="input w-full"
                   />
                 </div>
+                <div class="mt-6 sm:max-w-xs">
+                  <.input
+                    field={@form[:lead_days]}
+                    type="number"
+                    min="0"
+                    label={~t"Days' notice"}
+                    class="input w-full"
+                  />
+                  <p class="text-base-content/75 mt-1 text-sm">
+                    {~t"How many days ahead customers must order it. 0 allows same-day delivery."}
+                  </p>
+                </div>
                 <div :if={offers_bows?(@form, @categories)} class="mt-6">
                   <p class="text-base-content/75 mb-2 text-sm">{~t"Bow colours"}</p>
                   <input type="hidden" name={@form[:bow_colours].name <> "[]"} value="" />

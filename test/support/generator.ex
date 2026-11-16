@@ -110,6 +110,7 @@ defmodule Generator do
         slug: nil,
         photo_slugs: ["image.png"],
         free_delivery: false,
+        lead_days: 0,
         subscribable: false,
         bow_colours: []
       },

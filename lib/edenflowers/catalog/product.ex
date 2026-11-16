@@ -89,6 +89,15 @@ defmodule Edenflowers.Catalog.Product do
                     "flowers, after the next flower delivery. Nil, or a day already past, when it can be made now. " <>
                     "Customers can still order it, for that day or later."
     end
+
+    attribute :lead_days, :integer do
+      description "Its Lead time: how many days ahead customers must order it, like 1 for a wreath that can't " <>
+                    "go out the same day. 0 when it can. Orders Jennie creates in admin aren't held to it."
+
+      allow_nil? false
+      default 0
+      constraints min: 0
+    end
   end
 
   relationships do
@@ -282,6 +291,7 @@ defmodule Edenflowers.Catalog.Product do
         :subscribable,
         :bow_colours,
         :available_from,
+        :lead_days,
         :translations,
         :slug
       ]
@@ -320,6 +330,7 @@ defmodule Edenflowers.Catalog.Product do
         :subscribable,
         :bow_colours,
         :available_from,
+        :lead_days,
         :translations,
         :slug
       ]

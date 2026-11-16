@@ -964,10 +964,11 @@ defmodule Edenflowers.Orders.Order do
       default Decimal.new("0")
     end
 
-    max :available_from, [:line_items, :product], :waiting_until do
-      description "The latest Available from among its products: the first day Jennie can make every line, once " <>
-                    "the flowers she ran out of arrive. Checkout refuses an earlier fulfillment date; Custom Orders " <>
-                    "and Occurrences aren't held to it. Nil when nothing waits."
+    max :available_from, :line_items, :available_from do
+      description "The latest Available from among its lines: the first day Jennie can make every line, once " <>
+                    "the flowers she ran out of arrive and each product's Lead time has passed. Checkout refuses " <>
+                    "an earlier fulfillment date; Custom Orders and Occurrences aren't held to it. Nil when " <>
+                    "nothing waits."
     end
 
     sum :total_items_in_cart, :line_items, :quantity do
