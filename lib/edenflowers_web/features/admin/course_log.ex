@@ -44,6 +44,7 @@ defmodule EdenflowersWeb.Admin.CourseLog do
   defp title(%{version_action_name: :email_payment_link}), do: ~t"Payment link emailed"
   defp title(%{version_action_name: :send_payment_reminder}), do: ~t"Payment reminder emailed"
   defp title(%{version_action_name: :send_payment_received_email}), do: ~t"Payment received emailed"
+  # Course reminders were removed; their past entries stay in the history.
   defp title(%{version_action_name: :send_reminder_email}), do: ~t"Course reminder emailed"
   defp title(%{version_action_name: :remove_seat}), do: ~t"Seat removed"
   defp title(%{version_action_name: :cancel}), do: ~t"Cancelled"

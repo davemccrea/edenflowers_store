@@ -12,7 +12,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   import EdenflowersWeb.Admin.CourseBookingDrawers
 
   alias Edenflowers.Courses
-  alias Edenflowers.Email.Preview
   alias Edenflowers.Events
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
@@ -45,8 +44,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
          |> assign(:locale, Localize.get_locale())
          |> assign(settling_id: nil, settlement_mode: :settle, refund_form: nil, payment_form: nil)
          |> assign(cancelling: nil, cancel_form: nil)
-         |> assign(email_form: nil, email_kind: nil, emailing_id: nil, preview: nil)
-         |> assign(reminder_form: nil, reminder_previews: [], reminder_error: nil)}
+         |> assign(email_form: nil, email_kind: nil, emailing_id: nil, preview: nil)}
 
       :error ->
         {:ok,
@@ -95,14 +93,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
           </:actions>
           <:menu :if={@registrations != []}>
             <.actions_menu id="course-actions">
-              <.actions_menu_button
-                :if={!@course.ended?}
-                menu="course-actions"
-                phx-click="open_course_reminders"
-                aria-haspopup="dialog"
-              >
-                {~t"Send course reminder"}
-              </.actions_menu_button>
               <li>
                 <.link
                   href={fastmail_compose(bcc: @bcc)}
@@ -195,56 +185,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
           <.blank :if={@log == []} />
         </.widget>
       </.admin_page>
-      <.admin_drawer
-        id="course-reminder-drawer"
-        title={~t"Send course reminder"}
-        stale={@stale}
-        on_close={JS.push("close_course_reminders")}
-      >
-        <.form
-          :if={@reminder_form}
-          for={@reminder_form}
-          id="course-reminder-form"
-          phx-change="validate_course_reminders"
-          phx-submit="send_course_reminders"
-          class="flex min-h-0 flex-1 flex-col"
-        >
-          <.drawer_body>
-            <p :if={@reminder_error} role="alert" class="text-error text-sm">{@reminder_error}</p>
-            <div
-              :for={{registration, email} <- @reminder_previews}
-              id={"reminder-#{registration.id}"}
-              class="border-base-content/12 space-y-2 border-t pt-4"
-            >
-              <p class="text-sm">
-                <span class="font-semibold">{registration.name}</span>
-                <span class="text-base-content/75 break-all">· {registration.email}</span>
-                <span :if={registration.reminder_emailed_at} class="text-base-content/75 block">
-                  {~t"Last sent #{time = Format.datetime(registration.reminder_emailed_at, @locale)}."}
-                </span>
-              </p>
-              <.customer_email
-                id={"reminder-#{registration.id}-email"}
-                form={booking_reminder_form(@reminder_form, registration)}
-                preview={email}
-                collapse_preview?={true}
-              />
-            </div>
-          </.drawer_body>
-          <.drawer_footer>
-            <.button type="submit" variant="primary" disabled={@reminder_previews == []}>
-              {~t"Send course reminder"}
-            </.button>
-            <.button
-              type="button"
-              variant="ghost"
-              phx-click={JS.exec("phx-hide", to: "#course-reminder-drawer") |> JS.push("close_course_reminders")}
-            >
-              {~t"Cancel"}
-            </.button>
-          </.drawer_footer>
-        </.form>
-      </.admin_drawer>
       <.cancel_drawer
         stale={@stale}
         title={~t"Cancel booking"}
@@ -326,46 +266,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
 
   def handle_event("record_payment", %{"payment" => params}, socket) do
     settle(socket, :payment_form, PaymentActions.submit(socket.assigns.payment_form, params))
-  end
-
-  def handle_event("open_course_reminders", _params, socket) do
-    {:noreply,
-     socket
-     |> assign(reminder_form: to_form(%{}, as: :reminder), reminder_error: nil)
-     |> assign_reminder_previews()
-     |> push_event("js-exec", %{to: "#course-reminder-drawer", attr: "phx-show"})}
-  end
-
-  def handle_event("close_course_reminders", _params, socket) do
-    {:noreply, assign(socket, reminder_form: nil, reminder_previews: [], reminder_error: nil)}
-  end
-
-  def handle_event("validate_course_reminders", params, socket) do
-    {:noreply, assign(socket, :reminder_form, to_form(Map.get(params, "reminder", %{}), as: :reminder))}
-  end
-
-  def handle_event("send_course_reminders", params, socket) do
-    edits =
-      for {id, booking_params} <- Map.get(params, "reminder", %{}),
-          edits = Drawers.email_edits(booking_params),
-          edits != %{},
-          into: %{},
-          do: {id, edits}
-
-    case Courses.send_course_reminders(socket.assigns.course.id, edits, socket.assigns.current_user) do
-      {:ok, _count} ->
-        {:noreply,
-         socket
-         |> reload_course()
-         |> assign(:stale, false)
-         |> assign(reminder_form: nil, reminder_previews: [], reminder_error: nil)
-         |> push_event("js-exec", %{to: "#course-reminder-drawer", attr: "phx-hide"})
-         |> put_flash(:success, ~t"Course reminders queued.")}
-
-      {:error, error} ->
-        Logger.error("Could not queue course reminders: #{inspect(error)}")
-        {:noreply, assign(socket, :reminder_error, ~t"Could not send the email. Try again in a moment.")}
-    end
   end
 
   def handle_event("open_payment_link", %{"id" => id}, socket) do
@@ -512,19 +412,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         |> put_flash(:error, ~t"Course not found.")
         |> push_navigate(to: ~p"/admin/courses")
     end
-  end
-
-  # Keep each booking's reminder edits separate so rewriting one email does not change the others.
-  defp booking_reminder_form(form, registration),
-    do: to_form(Map.get(form.params, registration.id, %{}), as: "reminder[#{registration.id}]")
-
-  defp assign_reminder_previews(socket) do
-    previews =
-      for registration <- socket.assigns.registrations do
-        {registration, Preview.build(:course_reminder, registration, %{})}
-      end
-
-    assign(socket, :reminder_previews, previews)
   end
 
   defp load_course(socket, id) do

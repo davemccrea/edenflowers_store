@@ -6,7 +6,6 @@ defmodule Edenflowers.Email.PreviewTest do
 
   alias Edenflowers.Courses
   alias Edenflowers.Courses.CourseRegistration
-  alias Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmail
   alias Edenflowers.Email.Edits
   alias Edenflowers.Email.Preview
   alias Edenflowers.Orders
@@ -35,7 +34,6 @@ defmodule Edenflowers.Email.PreviewTest do
     {:booking_payment_reminder_opening_link, []},
     {:booking_payment_link, []},
     {:booking_payment_link_already_open, []},
-    {:booking_course_reminder, []},
     {:booking_payment, [typst: true]},
     {:booking_part_payment, [typst: true]}
   ]
@@ -281,19 +279,6 @@ defmodule Edenflowers.Email.PreviewTest do
     }
   end
 
-  defp hand_sent(:booking_course_reminder, locale, admin) do
-    registration = generate(course_registration(status: :confirmed, locale: locale))
-
-    %{
-      preview: Preview.build(:course_reminder, registration, %{}),
-      send: fn ->
-        registration
-        |> Ash.update!(%{}, action: :email_course_reminder, actor: admin)
-        |> deliver_queued(Courses.Workers.SendReminderEmail)
-      end
-    }
-  end
-
   defp hand_sent(:booking_payment, locale, admin) do
     registration = generate(course_registration(status: :confirmed, locale: locale))
 
@@ -491,7 +476,7 @@ defmodule Edenflowers.Email.PreviewTest do
     assert [_receipt] = preview.attachments
   end
 
-  test "manual payment link confirmation and course reminder agree with the selected terms" do
+  test "manual payment link confirmation agrees with the selected terms" do
     admin = generate(admin_user())
     course = generate(course())
 
@@ -531,15 +516,5 @@ defmodule Edenflowers.Email.PreviewTest do
     assert_email_sent(fn email ->
       assert email.text_body == String.trim_trailing("Lovely to have you.\n\n" <> expected)
     end)
-
-    reminder = reminder(registration)
-    refute reminder.text_body =~ "You can pay when you come to the course."
-    assert reminder.text_body =~ EdenflowersWeb.PaymentLink.url_for(registration)
-  end
-
-  defp reminder(registration) do
-    registration
-    |> SendReminderEmail.load_for_send()
-    |> Edenflowers.Email.course_reminder()
   end
 end

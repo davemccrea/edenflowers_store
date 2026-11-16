@@ -1,7 +1,7 @@
 defmodule Edenflowers.Courses.CourseRegistration.Emails do
   @moduledoc """
   The emails a registration sends its customer: the booking's confirmation and
-  receipt, the reminder before the course, and payment reminders and receipts.
+  receipt, and payment reminders and receipts.
   """
 
   use Spark.Dsl.Fragment, of: Ash.Resource, extensions: [AshOban]
@@ -34,19 +34,6 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
         worker_module_name Edenflowers.Courses.Workers.SendPaymentReceivedEmail
         scheduler_module_name Edenflowers.Courses.Schedulers.SendPaymentReceivedEmail
         default_actor system_actor()
-      end
-
-      # Only queued when Jennie explicitly sends course reminders.
-      trigger :send_reminder_email do
-        action :send_reminder_email
-        queue :default
-        max_attempts 16
-        lock_for_update? false
-        scheduler_cron false
-        worker_module_name Edenflowers.Courses.Workers.SendReminderEmail
-        scheduler_module_name Edenflowers.Courses.Schedulers.SendReminderEmail
-        default_actor system_actor()
-        where expr(status == :confirmed)
       end
     end
   end
@@ -109,36 +96,6 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
       transaction? false
       require_atomic? false
       change Changes.SendConfirmationEmail
-    end
-
-    update :email_course_reminder do
-      description "Jennie explicitly queues a course reminder for a confirmed booking."
-      accept []
-
-      argument :subject, :string,
-        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
-
-      argument :body, :string,
-        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
-
-      validate attribute_equals(:status, :confirmed), message: "is not confirmed"
-      change {PaymentChanges.QueueEmail, trigger: :send_reminder_email}
-    end
-
-    update :send_reminder_email do
-      description "Sends the course reminder Jennie queued, in the booking's language, as she rewrote it if she did."
-      accept []
-
-      argument :subject, :string,
-        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
-
-      argument :body, :string,
-        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
-
-      validate attribute_equals(:status, :confirmed), message: "is not confirmed"
-      transaction? false
-      require_atomic? false
-      change Changes.SendReminderEmail
     end
 
     # The confirmation again, with its receipt.

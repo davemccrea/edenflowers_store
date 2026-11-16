@@ -44,7 +44,6 @@ defmodule Edenflowers.Email.Previews do
         cancellation_confirmed(locale) ++
         order_refunded(locale) ++
         course_confirmation(locale) ++
-        course_reminder(locale) ++
         booking_cancelled(locale) ++
         booking_refunded(locale) ++
         wedding_enquiry(locale) ++
@@ -515,22 +514,6 @@ defmodule Edenflowers.Email.Previews do
         registration(Map.merge(%{balance: Decimal.new(0), amount_paid: Decimal.new("45.00")}, attrs), locale)
 
       {"Booking confirmed", title, :course_confirmation, Email.course_confirmation(registration)}
-    end
-  end
-
-  defp course_reminder(locale) do
-    for {title, attrs} <- [
-          {"paid place", %{amount_paid: Decimal.new("45.00"), balance: Decimal.new(0)}},
-          {"unpaid manual booking", %{}},
-          {"unpaid, payment link", %{payment_terms: :payment_link, payment_link_token: "preview"}},
-          {"unpaid, bank transfer", %{payment_terms: :invoice}},
-          {"bank transfer outstanding",
-           %{
-             payment_terms: :invoice
-           }},
-          {"no first name", %{first_name: nil}}
-        ] do
-      {"Course reminder", title, :course_reminder, Email.course_reminder(registration(attrs, locale))}
     end
   end
 

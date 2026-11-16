@@ -15,7 +15,6 @@ defmodule Edenflowers.Email.Preview do
   alias Edenflowers.Courses.CourseRegistration.Changes.PriceBooking
   alias Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail
   alias Edenflowers.Courses.CourseRegistration.Changes.SendPaymentLinkEmail
-  alias Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmail
   alias Edenflowers.Email
   alias Edenflowers.Email.Edits
   alias Edenflowers.Orders.Order
@@ -163,13 +162,9 @@ defmodule Edenflowers.Email.Preview do
   defp booking_load(:refunded), do: [:course, :first_name, :payments, :paid_through_stripe]
   defp booking_load(:confirmation), do: SendConfirmationEmail.load()
   defp booking_load(:receipt), do: SendPaymentReceivedEmail.load(CourseRegistration)
-  defp booking_load(:course_reminder), do: SendReminderEmail.load()
   defp booking_load(_kind), do: SendPaymentLinkEmail.load()
 
   defp booking_email(:confirmation, registration, _inputs), do: SendConfirmationEmail.email(registration, "")
-
-  defp booking_email(:course_reminder, registration, _inputs),
-    do: Email.course_reminder(registration)
 
   defp booking_email(kind, registration, _inputs) when kind in [:payment_link, :payment_reminder] do
     url = SendPaymentLinkEmail.payment_link_url(registration, link_token(registration))

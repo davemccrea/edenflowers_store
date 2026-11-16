@@ -598,7 +598,7 @@ defmodule Edenflowers.Email do
   Confirms booked places, with a receipt attached by the sender only when money was recorded.
   The cancellation terms speak of refunds once something is paid, else of
   charges. Expects `:course` translated, `:first_name`, `:amount_paid` and
-  what `course_reminder/1` needs loaded.
+  `:balance` loaded.
   """
   def course_confirmation(registration) do
     terms =
@@ -610,18 +610,6 @@ defmodule Edenflowers.Email do
       email
       |> subject(~t"You're booked on #{course = registration.course.name}, #{date = course_day(registration)}")
       |> text_body(Templates.course_confirmation(Map.put(course_assigns(registration), :cancellation_terms, terms)))
-    end)
-  end
-
-  @doc """
-  Jennie's manual reminder of when and where a course is. Expects `:course`
-  translated, `:first_name` and `:balance` loaded.
-  """
-  def course_reminder(registration) do
-    customer_email(registration, from_address(), fn email ->
-      email
-      |> subject(~t"A reminder about #{course = registration.course.name}")
-      |> text_body(Templates.course_reminder(course_assigns(registration)))
     end)
   end
 

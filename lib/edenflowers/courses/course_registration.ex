@@ -119,7 +119,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
     end
 
     attribute :receipt_emailed_at, :utc_datetime
-    attribute :reminder_emailed_at, :utc_datetime
 
     timestamps()
   end
@@ -322,7 +321,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
                      :send_confirmation_email,
                      :email_payment_link,
                      :send_payment_received_email,
-                     :send_reminder_email,
                      :reconcile_payment,
                      :checkout
                    ])
@@ -390,7 +388,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
       :send_payment_received_email,
       :send_confirmation_email,
       :email_receipt,
-      :send_reminder_email,
       :remove_seat,
       :cancel
     ]
