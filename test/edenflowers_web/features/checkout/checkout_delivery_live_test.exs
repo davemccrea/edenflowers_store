@@ -415,5 +415,15 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       assert has_element?(view, ~s|#calendar button[phx-value-date="#{day_before}"][aria-disabled="true"]|)
       refute has_element?(view, ~s|#calendar button[phx-value-date="#{available_from}"][aria-disabled="true"]|)
     end
+
+    test "a product's Lead time closes the early days without a note",
+         %{conn: conn, step_3_order: order} do
+      product = generate(product(name: "Door wreath", lead_days: 2))
+      Orders.add_line_item!(order.id, generate(product_variant(product_id: product.id)).id, 1, authorize?: false)
+
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      refute has_element?(view, "[data-testid=available-from]")
+    end
   end
 end

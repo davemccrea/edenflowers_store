@@ -61,7 +61,7 @@ The first day Jennie can make a product again once she has run out of its flower
 _Avoid_: Sold out, out of stock, back in stock, restock date (for bouquets, which have no Stock)
 
 **Lead time**:
-How many days ahead customers must order a product, like 1 for a wreath that can't go out the same day. Counted in calendar days from today, so it never ends, unlike Available from; an order waits for whichever of the two is later. Orders Jennie creates in admin, Custom Orders and Occurrences aren't held to it. The store doesn't label it: only the checkout calendar and its note show it.
+How many days ahead customers must order a product, like 1 for a wreath that can't go out the same day. Counted in calendar days from today, so it never ends, unlike Available from; an order waits for whichever of the two is later. Orders Jennie creates in admin, Custom Orders and Occurrences aren't held to it. The store doesn't label it: only the checkout calendar shows it, by closing the earlier days.
 _Avoid_: Notice period, preparation time
 
 ### Subscriptions

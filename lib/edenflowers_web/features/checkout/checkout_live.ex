@@ -345,7 +345,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                           <% end %>
                         </legend>
                         <p
-                          :if={@order.available_from}
+                          :if={@order.available_from && @order.available_from == @order.waiting_until}
                           class="text-base-content/80 mb-2 text-sm"
                           data-testid="available-from"
                         >

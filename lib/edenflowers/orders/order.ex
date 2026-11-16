@@ -964,6 +964,12 @@ defmodule Edenflowers.Orders.Order do
       default Decimal.new("0")
     end
 
+    max :waiting_until, [:line_items, :product], :waiting_until do
+      description "The latest Available from among its products, leaving out Lead times: the day the flowers " <>
+                    "Jennie ran out of let her make every line. Checkout explains the closed days only when this " <>
+                    "sets the order's Available from. Nil when nothing waits for flowers."
+    end
+
     max :available_from, :line_items, :available_from do
       description "The latest Available from among its lines: the first day Jennie can make every line, once " <>
                     "the flowers she ran out of arrive and each product's Lead time has passed. Checkout refuses " <>

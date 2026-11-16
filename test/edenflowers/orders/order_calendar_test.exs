@@ -136,5 +136,18 @@ defmodule Edenflowers.Orders.OrderCalendarTest do
       assert Ash.load!(product, :first_open_day, authorize?: false).first_open_day == first_open_day
       assert Ash.load!(order, :first_open_day, authorize?: false).first_open_day == first_open_day
     end
+
+    test "Available from names the day checkout opens when a Lead time ends after it" do
+      today = Edenflowers.ShopTime.today()
+      product = generate(product(available_from: Date.add(today, 1), lead_days: 3))
+      variant = generate(product_variant(product_id: product.id))
+      order = generate(order(state: :delivery))
+      Edenflowers.Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+
+      product_day = Ash.load!(product, :first_open_day, authorize?: false).first_open_day
+
+      assert Date.compare(product_day, Date.add(today, 3)) != :lt
+      assert product_day == Ash.load!(order, :first_open_day, authorize?: false).first_open_day
+    end
   end
 end

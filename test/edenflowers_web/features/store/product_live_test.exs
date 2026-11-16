@@ -90,6 +90,15 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     assert [%LineItem{}] = line_items(order)
   end
 
+  test "a product's Lead time alone shows no Available from", %{conn: conn} do
+    product = generate(product(draft: false, lead_days: 2))
+    generate(product_variant(product_id: product.id, size: :medium))
+
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}")
+
+    refute has_element?(view, "[data-testid=available-from]")
+  end
+
   test "shows the chosen size's height and stems, leaving out what's not filled in", %{conn: conn} do
     flowers = generate(product_category(product_type: :flowers))
     product = generate(product(draft: false, product_category_id: flowers.id))

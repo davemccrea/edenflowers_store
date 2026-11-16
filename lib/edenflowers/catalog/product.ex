@@ -160,11 +160,26 @@ defmodule Edenflowers.Catalog.Product do
                     "\"Available from\" in place of Sold out."
     end
 
+    calculate :waiting_until_with_notice,
+              :date,
+              expr(
+                if not is_nil(waiting_until) and
+                     waiting_until < date_add(helsinki_today(), lead_days, :day) do
+                  date_add(helsinki_today(), lead_days, :day)
+                else
+                  waiting_until
+                end
+              ) do
+      description "Its Available from while that day is still ahead, moved later when its Lead time ends after " <>
+                    "it, else nil. A Lead time alone gives nil, as the store doesn't label it."
+    end
+
     calculate :first_open_day,
               :date,
-              {Edenflowers.Fulfillment.Calculations.FirstOpenDay, from: :waiting_until} do
-      description "The first day on or after its Available from that the shop calendar is open, else nil. " <>
-                    "The store names this day as \"Available from\", so it never names a day Jennie has closed."
+              {Edenflowers.Fulfillment.Calculations.FirstOpenDay, from: :waiting_until_with_notice} do
+      description "The first day on or after its Available from, and its Lead time while that day is ahead, that " <>
+                    "the shop calendar is open, else nil. The store names this day as \"Available from\", so it " <>
+                    "never names a day Jennie has closed or one checkout refuses."
     end
   end
 
