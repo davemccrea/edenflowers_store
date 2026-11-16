@@ -57,6 +57,37 @@ defmodule Edenflowers.Orders.OrderCalendarTest do
       assert {:ok, _order} = submit.(available_from)
     end
 
+    test "submit_delivery holds an order to a product's Lead time alone" do
+      pickup_option = generate(fulfillment_option(fulfillment_method: :pickup))
+
+      shop_calendar(
+        available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday],
+        same_day: true,
+        order_deadline: ~T[23:59:59],
+        disabled_dates: []
+      )
+
+      today = Edenflowers.ShopTime.today()
+      product = generate(product(lead_days: 1))
+      variant = generate(product_variant(product_id: product.id))
+      order = generate(order(state: :delivery))
+      Edenflowers.Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+
+      submit = fn date ->
+        order
+        |> Ash.Changeset.for_update(:submit_delivery, %{
+          fulfillment_option_id: pickup_option.id,
+          fulfillment_date: date,
+          contact_phone_number: "045 1234567"
+        })
+        |> Ash.update(authorize?: false)
+      end
+
+      assert {:error, %Ash.Error.Invalid{errors: errors}} = submit.(today)
+      assert Enum.any?(errors, &(&1.field == :fulfillment_date))
+      assert {:ok, _order} = submit.(Date.add(today, 1))
+    end
+
     test "submit_delivery holds an order to its products' Lead time, past an earlier Available from" do
       pickup_option = generate(fulfillment_option(fulfillment_method: :pickup))
       today = Edenflowers.ShopTime.today()

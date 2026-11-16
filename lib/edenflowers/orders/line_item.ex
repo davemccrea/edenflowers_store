@@ -134,19 +134,9 @@ defmodule Edenflowers.Orders.LineItem do
       description "Where the cart links the line to: its product's current slug. Nil for a custom item."
     end
 
-    calculate :available_from,
-              :date,
-              expr(
-                if product.lead_days > 0 and
-                     (is_nil(product.waiting_until) or
-                        product.waiting_until < date_add(helsinki_today(), product.lead_days, :day)) do
-                  date_add(helsinki_today(), product.lead_days, :day)
-                else
-                  product.waiting_until
-                end
-              ) do
-      description "The first day Jennie can make it: the later of its product's Available from and today plus its " <>
-                    "Lead time, else nil. Checkout names the line that holds back the order's fulfillment date."
+    calculate :available_from, :date, expr(product.ready_from) do
+      description "Its product's Ready from: the first day Jennie can make it, else nil. Checkout names the line " <>
+                    "that holds back the order's fulfillment date."
     end
 
     calculate :promotion_applied?, :boolean, expr(order.promotion_applied?) do
