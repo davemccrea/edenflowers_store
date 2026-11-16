@@ -526,6 +526,36 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     end
   end
 
+  test "lists the latest confirmed course bookings, linked to each, and leaves out unfinished checkouts", %{
+    conn: conn
+  } do
+    conn = log_in(conn, generate(admin_user()) |> with_token())
+    course = generate(course(name: "Spring posies"))
+
+    booking =
+      generate(
+        course_registration(
+          course_id: course.id,
+          status: :confirmed,
+          name: "Birgitta",
+          confirmed_at: DateTime.utc_now()
+        )
+      )
+
+    generate(course_registration(course_id: course.id, status: :pending, name: "Halfway Hanna"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin")
+
+    assert has_element?(
+             view,
+             ~s(#recent-bookings a[href="/admin/courses/#{course.id}?booking=#{booking.id}#registration-#{booking.id}"]),
+             "Birgitta"
+           )
+
+    assert has_element?(view, "#recent-bookings", "Spring posies")
+    refute has_element?(view, "#recent-bookings", "Halfway Hanna")
+  end
+
   test "shows paid sales and revenue for the current month only", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
 

@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.Admin.OverviewLive do
   @moduledoc """
   Back-office home page with a nine-day fulfillment calendar, items needing
-  attention, sales, Minimossen sales, the monthly accounting report and the bank
+  attention, sales, Minimossen sales, recent course bookings, the monthly accounting report and the bank
   connection.
   """
 
@@ -101,6 +101,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           </div>
           <%!-- A gap rather than space-y, so a hidden Minimossen card leaves no space behind. --%>
           <div class="flex min-w-0 flex-col gap-6 xl:col-start-2">
+            <.recent_bookings :if={@recent_bookings != []} bookings={@recent_bookings} locale={@locale} />
             <.sales_widget
               sales={@sales}
               last_month={@last_month_sales}
@@ -358,6 +359,10 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     |> assign(:days, Enum.to_list(Date.range(today, Date.add(today, 8))))
     |> assign(:orders_by_date, Enum.group_by(due, & &1.fulfillment_date))
     |> assign(:attention, attention)
+    |> assign(
+      :recent_bookings,
+      Translations.translate_assoc(Courses.list_recent_registrations!(actor: actor), :course)
+    )
     |> assign(:today, today)
     |> assign(:delivery_run, Orders.list_delivery_run!(today, actor: actor))
     |> assign(:owed, owed |> Enum.filter(&(&1.kind == :order)) |> sum_amounts())
@@ -554,6 +559,33 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       };
     </script>
     """
+  end
+
+  attr :bookings, :list, required: true, doc: "from `list_recent_registrations`, newest first"
+  attr :locale, :any, required: true
+
+  defp recent_bookings(assigns) do
+    ~H"""
+    <.widget id="recent-bookings" title={~t"Recent bookings"} navigate={~p"/admin/courses"}>
+      <ul class="divide-base-content/12 divide-y text-sm">
+        <.link_row
+          :for={booking <- @bookings}
+          id={"recent-booking-#{booking.id}"}
+          row={recent_booking_row(booking, @locale)}
+          locale={@locale}
+        />
+      </ul>
+    </.widget>
+    """
+  end
+
+  defp recent_booking_row(booking, locale) do
+    %{
+      who: booking.name,
+      what: "#{booking.course.name} · #{Format.day_month(booking.course.date, locale)}",
+      note: dngettext("admin", "%{count} seat", "%{count} seats", booking.seats_held),
+      href: ~p"/admin/courses/#{booking.course_id}?#{[booking: booking.id]}" <> "#registration-#{booking.id}"
+    }
   end
 
   attr :sales, :map, required: true, doc: "this month to today, from `sales_summary`"
@@ -929,7 +961,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   end
 
   attr :id, :string, required: true
-  attr :row, :map, required: true, doc: "`who`, `what` (or nil), `href`, and an optional `amount`"
+  attr :row, :map, required: true, doc: "`who`, `what` (or nil), `href`, and an optional `amount` or `note`"
   attr :locale, :any, required: true
 
   defp link_row(assigns) do
@@ -937,7 +969,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     <li id={@id}>
       <.link
         navigate={@row.href}
-        class="-mx-2 flex items-baseline justify-between gap-4 px-2 py-2 transition-colors hover:bg-base-content/5"
+        class="-mx-2 flex items-baseline justify-between gap-4 px-2 py-2 transition-colors hover:bg-base-200/60 focus-visible:bg-base-200/60"
       >
         <span class="min-w-0">
           <span class="text-base-content block truncate font-semibold">{@row.who}</span>
@@ -946,6 +978,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         <span :if={@row[:amount]} class="text-base-content shrink-0 tabular-nums">
           {Format.currency(Decimal.abs(@row.amount), @locale)}
         </span>
+        <span :if={@row[:note]} class="text-base-content/75 shrink-0 tabular-nums">{@row.note}</span>
       </.link>
     </li>
     """

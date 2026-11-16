@@ -39,6 +39,12 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
       prepare build(load: [:balance, :payment_overdue?, :course])
     end
 
+    read :recent do
+      description "The five confirmed bookings Jennie accepted or customers paid for most recently, for the admin Overview."
+      filter expr(status == :confirmed)
+      prepare build(sort: [confirmed_at: :desc_nils_last], limit: 5, load: [:course, :seats_held])
+    end
+
     read :search do
       description "Admin search for confirmed or cancelled bookings by the name, email or receipt reference on " <>
                     "them, newest first. Unfinished website checkouts are left out."

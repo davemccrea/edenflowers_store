@@ -70,6 +70,7 @@ defmodule Edenflowers.Courses do
     resource Edenflowers.Courses.CourseRegistration do
       define :list_my_registrations, action: :mine
       define :list_unsettled_registrations, action: :unsettled
+      define :list_recent_registrations, action: :recent
       define :search_registrations, action: :search, args: [:term]
       define :register_for_course, action: :register
       define :get_checkout_registration, action: :checkout, get_by: [:id, :course_id]
