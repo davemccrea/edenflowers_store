@@ -19,7 +19,7 @@ defmodule Edenflowers.ContactMessage.SendEmailsTest do
     assert_email_sent(fn email ->
       refute email.text_body =~ "Phone"
       assert email.to == [from_address]
-      assert email.reply_to == {"Karin Holm", "karin@example.com"}
+      assert email.headers["Reply-To"] == "karin@example.com"
       assert email.bcc == []
       assert email.text_body =~ "A white heart, please."
     end)

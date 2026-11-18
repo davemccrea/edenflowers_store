@@ -634,7 +634,8 @@ defmodule Edenflowers.Email do
     new()
     |> from(from_address())
     |> to(from_address())
-    |> reply_to({name, email})
+    # Swoosh's Scaleway adapter drops reply_to, so set the header itself; a bare address needs no encoding.
+    |> header("Reply-To", email)
     |> subject(~t"New wedding enquiry from #{name}")
     |> text_body(
       Templates.wedding_enquiry(%{
@@ -665,7 +666,8 @@ defmodule Edenflowers.Email do
     new()
     |> from(from_address())
     |> to(from_address())
-    |> reply_to({name, email})
+    # Swoosh's Scaleway adapter drops reply_to, so set the header itself; a bare address needs no encoding.
+    |> header("Reply-To", email)
     |> subject(~t"New message from #{name}")
     |> text_body(
       Templates.contact_message(%{

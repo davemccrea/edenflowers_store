@@ -23,7 +23,7 @@ defmodule Edenflowers.WeddingEnquiry.SendEmailsTest do
     assert_email_sent(fn email ->
       refute email.text_body =~ "Number of guests"
       assert email.to == [from_address]
-      assert email.reply_to == {"Anna Svensson", "anna@example.com"}
+      assert email.headers["Reply-To"] == "anna@example.com"
       assert email.bcc == []
       assert email.text_body =~ "Saturday 12.6.2027"
       assert email.text_body =~ "- 1 × Bridal bouquet"
