@@ -7,12 +7,12 @@ msgstr ""
 "Language: sv\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/edenflowers/email.ex:783
+#: lib/edenflowers/email.ex:785
 #, elixir-autogen, elixir-format
 msgid "%{code} is your email change code for Eden Flowers"
 msgstr "%{code} är din kod för att byta e-postadress hos Eden Flowers"
 
-#: lib/edenflowers/email.ex:775
+#: lib/edenflowers/email.ex:777
 #, elixir-autogen, elixir-format
 msgid "%{otp_code} is your Eden Flowers sign-in code"
 msgstr "%{otp_code} är din inloggningskod till Eden Flowers"
@@ -553,7 +553,7 @@ msgstr "Du betalar vid leveransen."
 msgid "You pay when you collect your order."
 msgstr "Du betalar när du hämtar din beställning."
 
-#: lib/edenflowers/email.ex:719
+#: lib/edenflowers/email.ex:721
 #, elixir-autogen, elixir-format
 msgid "You're already subscribed to the Eden Flowers newsletter"
 msgstr "Du prenumererar redan på Eden Flowers nyhetsbrev"
@@ -691,7 +691,7 @@ msgstr "Koden gäller till och med %{date}."
 msgid "As a welcome gift, you get %{percent} off one order. Enter the following code at checkout:"
 msgstr "Som välkomstgåva får du %{percent} rabatt på en beställning. Ange koden i kassan:"
 
-#: lib/edenflowers/email.ex:700
+#: lib/edenflowers/email.ex:702
 #, elixir-autogen, elixir-format
 msgid "Your %{percent} welcome code for Eden Flowers"
 msgstr "Din rabattkod för %{percent} rabatt hos Eden Flowers"
@@ -942,16 +942,6 @@ msgstr "Tack för din betalning. Kvittot för din beställning %{date} (%{produc
 msgid "Message:"
 msgstr "Meddelande:"
 
-#: lib/edenflowers/email.ex:669
-#, elixir-autogen, elixir-format
-msgid "New message from %{name}"
-msgstr "Nytt meddelande från %{name}"
-
-#: lib/edenflowers/email.ex:638
-#, elixir-autogen, elixir-format
-msgid "New wedding enquiry from %{name}"
-msgstr "Ny bröllopsförfrågan från %{name}"
-
 #: lib/edenflowers/email/templates/wedding_enquiry_received.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "Thank you for your enquiry. I'll get back to you with a quote as soon as I can. Nothing is booked until you've seen the quote and confirmed it."
@@ -962,12 +952,12 @@ msgstr "Tack för din förfrågan. Jag återkommer med en offert så snart jag k
 msgid "Thank you for your message. I'll get back to you as soon as I can."
 msgstr "Tack för ditt meddelande. Jag hör av mig så snart jag kan."
 
-#: lib/edenflowers/email.ex:686
+#: lib/edenflowers/email.ex:688
 #, elixir-autogen, elixir-format
 msgid "Your message to Eden Flowers"
 msgstr "Ditt meddelande till Eden Flowers"
 
-#: lib/edenflowers/email.ex:656
+#: lib/edenflowers/email.ex:657
 #, elixir-autogen, elixir-format
 msgid "Your wedding enquiry to Eden Flowers"
 msgstr "Din bröllopsförfrågan till Eden Flowers"
@@ -976,3 +966,13 @@ msgstr "Din bröllopsförfrågan till Eden Flowers"
 #, elixir-autogen, elixir-format
 msgid "You can pay when you come to the course."
 msgstr "Du kan betala på plats när du kommer till kursen."
+
+#: lib/edenflowers/email.ex:671
+#, elixir-autogen, elixir-format
+msgid "Message - %{name}"
+msgstr "Meddelande - %{name}"
+
+#: lib/edenflowers/email.ex:639
+#, elixir-autogen, elixir-format
+msgid "Wedding enquiry - %{name}"
+msgstr "Bröllopsförfrågan - %{name}"

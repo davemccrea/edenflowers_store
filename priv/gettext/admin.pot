@@ -1699,7 +1699,7 @@ msgstr ""
 msgid "Open directions in Google Maps"
 msgstr ""
 
-#: lib/edenflowers/email.ex:757
+#: lib/edenflowers/email.ex:759
 #, elixir-autogen, elixir-format
 msgid "Open in the admin:"
 msgstr ""

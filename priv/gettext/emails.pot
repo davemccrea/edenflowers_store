@@ -11,12 +11,12 @@
 msgid ""
 msgstr ""
 
-#: lib/edenflowers/email.ex:783
+#: lib/edenflowers/email.ex:785
 #, elixir-autogen, elixir-format
 msgid "%{code} is your email change code for Eden Flowers"
 msgstr ""
 
-#: lib/edenflowers/email.ex:775
+#: lib/edenflowers/email.ex:777
 #, elixir-autogen, elixir-format
 msgid "%{otp_code} is your Eden Flowers sign-in code"
 msgstr ""
@@ -557,7 +557,7 @@ msgstr ""
 msgid "You pay when you collect your order."
 msgstr ""
 
-#: lib/edenflowers/email.ex:719
+#: lib/edenflowers/email.ex:721
 #, elixir-autogen, elixir-format
 msgid "You're already subscribed to the Eden Flowers newsletter"
 msgstr ""
@@ -695,7 +695,7 @@ msgstr ""
 msgid "As a welcome gift, you get %{percent} off one order. Enter the following code at checkout:"
 msgstr ""
 
-#: lib/edenflowers/email.ex:700
+#: lib/edenflowers/email.ex:702
 #, elixir-autogen, elixir-format
 msgid "Your %{percent} welcome code for Eden Flowers"
 msgstr ""
@@ -946,16 +946,6 @@ msgstr ""
 msgid "Message:"
 msgstr ""
 
-#: lib/edenflowers/email.ex:669
-#, elixir-autogen, elixir-format
-msgid "New message from %{name}"
-msgstr ""
-
-#: lib/edenflowers/email.ex:638
-#, elixir-autogen, elixir-format
-msgid "New wedding enquiry from %{name}"
-msgstr ""
-
 #: lib/edenflowers/email/templates/wedding_enquiry_received.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "Thank you for your enquiry. I'll get back to you with a quote as soon as I can. Nothing is booked until you've seen the quote and confirmed it."
@@ -966,12 +956,12 @@ msgstr ""
 msgid "Thank you for your message. I'll get back to you as soon as I can."
 msgstr ""
 
-#: lib/edenflowers/email.ex:686
+#: lib/edenflowers/email.ex:688
 #, elixir-autogen, elixir-format
 msgid "Your message to Eden Flowers"
 msgstr ""
 
-#: lib/edenflowers/email.ex:656
+#: lib/edenflowers/email.ex:657
 #, elixir-autogen, elixir-format
 msgid "Your wedding enquiry to Eden Flowers"
 msgstr ""
@@ -979,4 +969,14 @@ msgstr ""
 #: lib/edenflowers/email/templates/course_payment.text.eex:2
 #, elixir-autogen, elixir-format
 msgid "You can pay when you come to the course."
+msgstr ""
+
+#: lib/edenflowers/email.ex:671
+#, elixir-autogen, elixir-format
+msgid "Message - %{name}"
+msgstr ""
+
+#: lib/edenflowers/email.ex:639
+#, elixir-autogen, elixir-format
+msgid "Wedding enquiry - %{name}"
 msgstr ""
