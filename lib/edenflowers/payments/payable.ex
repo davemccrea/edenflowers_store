@@ -139,6 +139,35 @@ defmodule Edenflowers.Payments.Payable do
       require_atomic? false
     end
 
+    update :link_stripe_payment do
+      description "Links a payment Jennie took in the Stripe app on her phone, which names no purchase, to this " <>
+                    "one: records it as a Stripe payment for what the customer paid, so it refunds through " <>
+                    "Stripe and shows its card, and names this purchase in the PaymentIntent's metadata. " <>
+                    "Refuses one already linked and more than is owed. Undo unlinks it again."
+
+      argument :payment_intent_id, :string,
+        allow_nil?: false,
+        description: "The Stripe app payment, from Payments.stripe_app_payments/0."
+
+      argument :email_receipt?, :boolean, default: false
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
+      argument :amount, :decimal, public?: false, description: "Set from Stripe: what the customer paid."
+      argument :paid_with, :map, public?: false, default: %{}
+
+      change Changes.LinkStripeAppPayment
+      validate Validations.Recordable, before_action?: true
+      change Changes.CancelOpenPaymentIntent
+      change {Changes.RecordPayment, method: :stripe, amount: :amount, stripe_app: true}
+      change Changes.EmailReceipt, where: [argument_equals(:email_receipt?, true)]
+      require_atomic? false
+    end
+
     update :pay_with_gift_voucher do
       description "Pays what's owed from the Gift voucher with this code, for a voucher handed over in the shop " <>
                     "or read out on the phone: min(what's left on it, Balance), as at checkout. It becomes the " <>
@@ -210,7 +239,8 @@ defmodule Edenflowers.Payments.Payable do
 
     update :undo_payment do
       description "Takes back a payment or refund Jennie recorded by mistake by recording the opposite amount. " <>
-                    "Once per payment, never a Stripe one."
+                    "Once per payment, never a checkout one. A Stripe app payment is unlinked, while it has no " <>
+                    "refunds, so it can be linked to the right purchase."
 
       argument :payment_id, :uuid, allow_nil?: false, description: "The payment or refund to take back."
 

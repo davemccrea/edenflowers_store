@@ -10,6 +10,7 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
       argument when not given.
     * `:goodwill` - whether it's a goodwill refund; read from the `:goodwill`
       argument when not given, as an undo of one is goodwill too.
+    * `:stripe_app` - whether it's a Stripe app payment Jennie linked herself.
 
   A refund carries the `:note` argument, Jennie's reason.
 
@@ -55,6 +56,7 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
             reverses_payment_id: Map.get(changeset.arguments, :reverses_payment_id),
             gift_voucher_id: Map.get(changeset.arguments, :gift_voucher_id),
             goodwill: goodwill,
+            stripe_app: Keyword.get(opts, :stripe_app, false),
             note: Map.get(changeset.arguments, :note)
           })
         )

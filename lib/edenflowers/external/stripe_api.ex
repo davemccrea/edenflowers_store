@@ -24,6 +24,10 @@ defmodule Edenflowers.External.StripeAPI.Behaviour do
   @callback update_payment_intent(payment_intent_id :: String.t(), amount_cents :: integer()) ::
               {:ok, map()} | {:error, term()}
   @callback cancel_payment_intent(payment_intent :: map()) :: {:ok, map()} | {:error, term()}
+  @callback list_payment_intents_page(created_from :: integer(), starting_after :: String.t() | nil) ::
+              {:ok, %{data: [map()], has_more: boolean()}} | {:error, term()}
+  @callback update_payment_intent_metadata(payment_intent_id :: String.t(), metadata :: map()) ::
+              {:ok, map()} | {:error, term()}
   @callback list_refunds(payment_intent_id :: String.t()) :: {:ok, [map()]} | {:error, term()}
   @callback create_refund(
               payment_intent_id :: String.t(),
@@ -186,6 +190,35 @@ defmodule Edenflowers.External.StripeAPI do
   @impl true
   def cancel_payment_intent(%{id: payment_intent_id}) do
     Stripe.PaymentIntent.cancel(payment_intent_id)
+  end
+
+  @doc """
+  Every PaymentIntent created since `created_from` (Unix seconds), newest
+  first, with its payment method expanded for its card, following Stripe's
+  pages to the end: checkout attempts fill pages too.
+  """
+  def list_payment_intents(created_from), do: list_payment_intents(created_from, nil, [])
+
+  defp list_payment_intents(created_from, starting_after, pages) do
+    with {:ok, %{data: data, has_more: has_more}} <- impl().list_payment_intents_page(created_from, starting_after) do
+      if has_more,
+        do: list_payment_intents(created_from, List.last(data).id, [data | pages]),
+        else: {:ok, [data | pages] |> Enum.reverse() |> Enum.concat()}
+    end
+  end
+
+  @impl true
+  def list_payment_intents_page(created_from, starting_after) do
+    params = %{created: %{gte: created_from}, limit: 100, expand: ["data.payment_method"]}
+    params = if starting_after, do: Map.put(params, :starting_after, starting_after), else: params
+
+    Stripe.PaymentIntent.list(params)
+  end
+
+  # An empty string removes a key from Stripe's metadata.
+  @impl true
+  def update_payment_intent_metadata(payment_intent_id, metadata) do
+    Stripe.PaymentIntent.update(payment_intent_id, %{metadata: metadata})
   end
 
   @impl true

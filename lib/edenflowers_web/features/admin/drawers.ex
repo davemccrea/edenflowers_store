@@ -370,15 +370,21 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :receipt_email?, :boolean, default: false, doc: "whether the customer can be emailed a receipt"
   attr :preview, Swoosh.Email, default: nil
 
+  attr :stripe_app_payments, :list,
+    default: [],
+    doc: "the Stripe app payments to link, from `PaymentActions.change_payment/4`; nil when Stripe can't be reached"
+
   @doc """
-  Records money Jennie took herself. Sends `record_payment` with `payment`
-  params, and `change_payment` with them as the form is filled in.
+  Records money Jennie took herself, or links a payment she took in the
+  Stripe app. Sends `record_payment` with `payment` params, and
+  `change_payment` with them as the form is filled in.
   """
   def record_payment_form(assigns) do
     voucher_sale? = PaymentActions.voucher_sale?(assigns.record)
 
     assigns =
       assign(assigns,
+        stripe_app?: assigns.form.source.action == :link_stripe_payment,
         voucher?: assigns.form.source.action == :pay_with_gift_voucher,
         voucher_sale?: voucher_sale?,
         voucher_part_paid?:
@@ -400,7 +406,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           options={payment_method_options(@record)}
         />
         <.input
-          :if={not @voucher?}
+          :if={not @voucher? and not @stripe_app?}
           field={@form[:amount]}
           value={@form.source.raw_params["amount"]}
           id={"#{@id}-amount"}
@@ -424,7 +430,23 @@ defmodule EdenflowersWeb.Admin.Drawers do
           required
           class="input w-full tabular-nums"
         />
+        <.input
+          :if={@stripe_app? and @stripe_app_payments not in [nil, []]}
+          field={@form[:payment_intent_id]}
+          id={"#{@id}-stripe-payment"}
+          type="select"
+          label={~t"Stripe payment"}
+          required
+          class="select w-full"
+          options={Enum.map(@stripe_app_payments, &{stripe_app_payment_label(&1, @locale), &1.id})}
+        />
       </div>
+      <p :if={@stripe_app? and @stripe_app_payments == []} id={"#{@id}-no-stripe-payments"} class="text-sm">
+        {~t"No unlinked Stripe app payments from the last 7 days."}
+      </p>
+      <p :if={@stripe_app? and is_nil(@stripe_app_payments)} id={"#{@id}-stripe-unreachable"} class="text-error text-sm">
+        {~t"Could not reach Stripe. Try again in a moment."}
+      </p>
       <.customer_email
         :if={@receipt_email? and not @voucher? and not @voucher_part_paid?}
         id={"#{@id}-email"}
@@ -439,40 +461,64 @@ defmodule EdenflowersWeb.Admin.Drawers do
       <.button
         type="submit"
         variant="primary"
+        disabled={@stripe_app? and @stripe_app_payments in [nil, []]}
         data-confirm={
-          if @voucher?,
-            do: ~t"Pay from this gift voucher? A voucher payment can't be undone.",
-            else: ~t"Record this payment? A mistake can be undone afterwards."
+          cond do
+            @voucher? -> ~t"Pay from this gift voucher? A voucher payment can't be undone."
+            @stripe_app? -> ~t"Link this Stripe payment? It can be unlinked afterwards."
+            true -> ~t"Record this payment? A mistake can be undone afterwards."
+          end
         }
       >
-        {~t"Record payment"}
+        {if @stripe_app?, do: ~t"Link payment", else: ~t"Record payment"}
       </.button>
     </.form>
     """
   end
 
   @doc """
-  Lists the payment methods Jennie can record manually. Stripe is excluded
-  because its payments are recorded automatically. Gift vouchers are included
+  Lists the payment methods Jennie can record. Stripe stands for a payment
+  she took in the Stripe app, which she links. Gift vouchers are included
   unless the record rejects them, as a gift voucher sale does; course bookings
   accept them.
   """
   def payment_method_options(record) do
-    excluded = if Map.get(record, :accepts_gift_voucher?, true), do: [:stripe], else: [:stripe, :voucher]
+    excluded = if Map.get(record, :accepts_gift_voucher?, true), do: [], else: [:voucher]
 
     Edenflowers.Payments.PaymentMethod.values()
     |> Kernel.--(excluded)
-    |> Enum.map(&{OrderLog.payment_method_label(&1), &1})
+    |> Enum.map(&{payment_method_option(&1), &1})
   end
 
-  @doc "Asks before undoing a payment Jennie recorded, naming it."
+  # Stripe's own checkout records itself; here it's a payment taken in the Stripe app, to link.
+  defp payment_method_option(:stripe), do: ~t"Stripe app"
+  defp payment_method_option(method), do: OrderLog.payment_method_label(method)
+
+  defp stripe_app_payment_label(payment, locale) do
+    amount = Edenflowers.Format.currency(payment.amount, locale)
+    paid_at = Edenflowers.Format.datetime(payment.paid_at, locale)
+
+    case payment do
+      %{card_last4: last4} -> "#{amount} · #{paid_at} · •••• #{last4}"
+      _no_card -> "#{amount} · #{paid_at}"
+    end
+  end
+
+  @doc "Asks before undoing a payment Jennie recorded or linked, naming it."
   def undo_confirmation(payment, locale) do
     amount = Edenflowers.Format.currency(Decimal.abs(payment.amount), locale)
     how = OrderLog.payment_method_label(payment.method)
 
-    if Decimal.negative?(payment.amount),
-      do: ~t"Undo the #{amount} refund by #{how}? This records the opposite amount.",
-      else: ~t"Undo the #{amount} payment by #{how}? This records the opposite amount."
+    cond do
+      payment.stripe_app ->
+        ~t"Unlink the #{amount} Stripe app payment? It can then be linked to the right order or booking."
+
+      Decimal.negative?(payment.amount) ->
+        ~t"Undo the #{amount} refund by #{how}? This records the opposite amount."
+
+      true ->
+        ~t"Undo the #{amount} payment by #{how}? This records the opposite amount."
+    end
   end
 
   attr :id, :string, required: true

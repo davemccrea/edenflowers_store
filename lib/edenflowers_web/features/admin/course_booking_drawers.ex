@@ -15,6 +15,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
   attr :mode, :atom, required: true, values: [:settle, :refund]
   attr :refund_form, Phoenix.HTML.Form, default: nil, doc: "for the booking being settled, when it is refundable"
   attr :payment_form, Phoenix.HTML.Form, default: nil, doc: "for the booking being settled, when it is to collect"
+  attr :stripe_app_payments, :list, default: [], doc: "for `record_payment_form`"
   attr :locale, :string, required: true
   attr :preview, Swoosh.Email, default: nil
 
@@ -50,6 +51,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
             locale={@locale}
             form={@payment_form}
             receipt_email?={true}
+            stripe_app_payments={@stripe_app_payments}
             preview={@preview}
           />
         </section>

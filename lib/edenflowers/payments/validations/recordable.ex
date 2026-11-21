@@ -5,7 +5,8 @@ defmodule Edenflowers.Payments.Validations.Recordable do
   Money handed back is a refund (Validations.Refundable).
 
   With `undo?: true`, for `undo_payment`, the balance doesn't limit it: an
-  undo takes back a payment recorded by mistake, whatever is owed.
+  undo takes back a payment recorded by mistake, whatever is owed. Undoing a
+  Stripe app payment is checked against Stripe's own refunds instead.
   """
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
@@ -25,6 +26,11 @@ defmodule Edenflowers.Payments.Validations.Recordable do
         error(~t"Nothing can be recorded until it's placed or confirmed.")
 
       not is_struct(amount, Decimal) ->
+        :ok
+
+      # Stripe money only goes back through Stripe (Validations.Refundable), so
+      # Changes.UndoPayment asks Stripe for a Stripe app payment's refunds.
+      opts[:undo?] == true and Ash.Changeset.get_argument(changeset, :payment_method) == :stripe ->
         :ok
 
       opts[:undo?] ->

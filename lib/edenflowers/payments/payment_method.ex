@@ -1,7 +1,8 @@
 defmodule Edenflowers.Payments.PaymentMethod do
   @moduledoc """
   How an order or course booking was paid. `:stripe` covers checkout and the payment link,
-  card or MobilePay alike, and is recorded from Stripe. `:voucher` is a Gift voucher, and
+  card or MobilePay alike, and is recorded from Stripe, as is a Stripe app payment Jennie
+  links herself. `:voucher` is a Gift voucher, and
   its payment names the voucher it came from. Jennie records the rest herself;
   `:mobilepay` is her own MobilePay number, outside Stripe, and `:zervant` is a bank
   transfer paying an invoice, usually one of the shop's own `Invoice`s.

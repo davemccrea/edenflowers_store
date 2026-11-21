@@ -62,6 +62,48 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     refute fresh.to_collect?
   end
 
+  test "a payment taken in the Stripe app is picked and linked to the order", %{conn: conn, admin: admin} do
+    order = placed_order(payment_intent_id: nil)
+    cents = StripeAPI.to_stripe_amount(order.grand_total)
+
+    tapped = %{
+      id: "pi_tapped",
+      status: "succeeded",
+      currency: "eur",
+      amount_received: cents,
+      created: DateTime.to_unix(DateTime.utc_now()),
+      metadata: %{},
+      payment_method: %{type: "card_present", card_present: %{brand: "visa", last4: "4242"}}
+    }
+
+    StripeAPI.Mock
+    # Asked once, when Stripe app is chosen, not on every change after.
+    |> Mox.expect(:list_payment_intents_page, fn _from, nil -> {:ok, %{data: [tapped], has_more: false}} end)
+    |> Mox.expect(:retrieve_payment_intent, fn %{payment_intent_id: "pi_tapped"} ->
+      {:ok, %{tapped | payment_method: "pm_tapped"}}
+    end)
+    |> Mox.stub(:retrieve_payment_method, fn "pm_tapped" -> {:ok, tapped.payment_method} end)
+    |> Mox.expect(:update_payment_intent_metadata, fn "pi_tapped", %{"order_id" => _id} -> {:ok, tapped} end)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    view |> element("button[phx-click=open_settlement]") |> render_click()
+
+    view
+    |> form("#order-balance-form", payment: %{payment_method: "stripe"})
+    |> render_change(%{"_target" => ["payment", "payment_method"]})
+
+    assert has_element?(view, ~s|#order-balance-stripe-payment option[value="pi_tapped"]|, "4242")
+
+    view
+    |> form("#order-balance-form", payment: %{payment_intent_id: "pi_tapped"})
+    |> render_change(%{"_target" => ["payment", "payment_intent_id"]})
+
+    view |> form("#order-balance-form") |> render_submit()
+
+    fresh = Orders.get_order_for_admin!(order.id, actor: admin)
+    refute fresh.to_collect?
+  end
+
   test "external changes leave saved data, settlement input and unsaved notes alone", %{conn: conn, admin: admin} do
     order = placed_order()
     {:ok, view, _} = live(conn, ~p"/admin/orders/#{order.id}")

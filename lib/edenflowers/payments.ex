@@ -79,6 +79,8 @@ defmodule Edenflowers.Payments do
   alias Edenflowers.Translations
 
   @metadata_keys ["order_id", "course_registration_id"]
+  # How far back Jennie can link a payment she took in the Stripe app.
+  @stripe_app_days 7
 
   @doc """
   Returns the PaymentIntent client secret for an order or course booking,
@@ -426,7 +428,7 @@ defmodule Edenflowers.Payments do
   defp stripe_refunds(payable) do
     payable
     |> payments_query()
-    |> Ash.Query.filter(not is_nil(payment_intent_id) and amount > 0)
+    |> Ash.Query.filter(not is_nil(payment_intent_id) and amount > 0 and is_nil(unlinked_at))
     |> Ash.read!(authorize?: false)
     |> Enum.reduce_while({:ok, []}, fn payment, {:ok, acc} ->
       case StripeAPI.impl().list_refunds(payment.payment_intent_id) do
@@ -565,7 +567,7 @@ defmodule Edenflowers.Payments do
   defp find_payment(payment_intent_id) do
     payment =
       Payment
-      |> Ash.Query.filter(payment_intent_id == ^payment_intent_id)
+      |> Ash.Query.filter(payment_intent_id == ^payment_intent_id and is_nil(unlinked_at))
       |> Ash.read_one(authorize?: false)
 
     case payment do
@@ -689,14 +691,8 @@ defmodule Edenflowers.Payments do
   """
   def paid_with(%{payment_method: payment_method_id}) when is_binary(payment_method_id) do
     case StripeAPI.impl().retrieve_payment_method(payment_method_id) do
-      {:ok, %{type: "card", card: %{brand: brand, last4: last4}}} ->
-        %{payment_method_type: "card", card_brand: brand, card_last4: last4}
-
-      {:ok, %{type: type}} when is_binary(type) ->
-        %{payment_method_type: type}
-
-      {:ok, _unknown} ->
-        %{}
+      {:ok, payment_method} ->
+        card_details(payment_method)
 
       {:error, reason} ->
         Logger.warning("Couldn't look up payment method #{payment_method_id}: #{inspect(reason)}")
@@ -705,6 +701,79 @@ defmodule Edenflowers.Payments do
   end
 
   def paid_with(_payment_intent), do: %{}
+
+  # A card tapped on Jennie's phone in the Stripe app is `card_present`; the
+  # customer paid by card all the same.
+  defp card_details(%{type: "card", card: %{brand: brand, last4: last4}}),
+    do: %{payment_method_type: "card", card_brand: brand, card_last4: last4}
+
+  defp card_details(%{type: "card_present", card_present: %{brand: brand, last4: last4}}),
+    do: %{payment_method_type: "card", card_brand: brand, card_last4: last4}
+
+  defp card_details(%{type: type}) when is_binary(type), do: %{payment_method_type: type}
+  defp card_details(_unknown), do: %{}
+
+  @doc """
+  The payments Jennie took in the Stripe app over the last #{@stripe_app_days} days that no
+  order or booking has yet, newest first, for her to link to one: each with its
+  `id`, `amount`, `paid_at` and card. A PaymentIntent the shop made names its
+  purchase in its metadata, so only one without is offered.
+  """
+  def stripe_app_payments do
+    from = DateTime.utc_now() |> DateTime.add(-@stripe_app_days, :day) |> DateTime.to_unix()
+
+    with {:ok, payment_intents} <- StripeAPI.list_payment_intents(from) do
+      candidates = Enum.filter(payment_intents, &stripe_app_payment?/1)
+      linked = linked_payment_intent_ids(Enum.map(candidates, & &1.id))
+
+      {:ok,
+       candidates
+       |> Enum.reject(&MapSet.member?(linked, &1.id))
+       |> Enum.map(&stripe_app_payment/1)}
+    end
+  end
+
+  @doc "Whether `payment_intent` succeeded in euros and names nothing in the shop, as a Stripe app payment does."
+  def stripe_app_payment?(payment_intent) do
+    payment_intent.status == "succeeded" and payment_intent.currency == "eur" and
+      match?({:error, :unknown_payable}, find_payable(payment_intent))
+  end
+
+  defp stripe_app_payment(payment_intent) do
+    Map.merge(
+      %{
+        id: payment_intent.id,
+        amount: StripeAPI.from_stripe_amount(payment_intent.amount_received),
+        paid_at: DateTime.from_unix!(payment_intent.created)
+      },
+      card_details(payment_intent.payment_method || %{})
+    )
+  end
+
+  defp linked_payment_intent_ids(payment_intent_ids) do
+    Payment
+    |> Ash.Query.filter(payment_intent_id in ^payment_intent_ids and is_nil(unlinked_at))
+    |> Ash.Query.select([:payment_intent_id])
+    |> Ash.read!(authorize?: false)
+    |> MapSet.new(& &1.payment_intent_id)
+  end
+
+  @doc """
+  Writes the order or booking a linked Stripe app payment pays for into its
+  PaymentIntent's metadata, or with nil takes it out again, so a refund made in
+  Stripe finds it. Only logged on failure: the shop's own record of the link is
+  the payment itself.
+  """
+  def write_stripe_app_link(payment_intent_id, key, value) do
+    case StripeAPI.impl().update_payment_intent_metadata(payment_intent_id, %{key => value || ""}) do
+      {:ok, _payment_intent} ->
+        :ok
+
+      {:error, reason} ->
+        Logger.error("Couldn't update the metadata of PaymentIntent #{payment_intent_id}: #{inspect(reason)}")
+        :error
+    end
+  end
 
   @doc """
   Returns the client secret of a new SetupIntent that saves a replacement card
@@ -739,9 +808,10 @@ defmodule Edenflowers.Payments do
 
   def save_subscription_card(_setup_intent, _actor), do: {:error, :not_a_saved_subscription_card}
 
-  defp recorded?(payment_intent_id) do
+  @doc "Whether `payment_intent_id` is already recorded as a payment that hasn't been unlinked."
+  def recorded?(payment_intent_id) do
     Payment
-    |> Ash.Query.filter(payment_intent_id == ^payment_intent_id)
+    |> Ash.Query.filter(payment_intent_id == ^payment_intent_id and is_nil(unlinked_at))
     |> Ash.exists?(authorize?: false)
   end
 

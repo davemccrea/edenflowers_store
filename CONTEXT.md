@@ -132,8 +132,12 @@ The part of a Refund beyond what was owed back, as when a customer wasn't happy.
 _Avoid_: Discount, compensation, credit
 
 **Undo** (a payment):
-Taking back a payment or refund Jennie recorded by mistake, by recording the opposite amount against it. Once per payment, never a Stripe one or a Gift voucher one. Not a refund: an undone payment never counted as money taken.
+Taking back a payment or refund Jennie recorded by mistake, by recording the opposite amount against it. Once per payment, never a checkout or Payment Link one or a Gift voucher one. Undoing a Stripe app payment unlinks it, while Stripe has no refunds on it, so it can be linked to the right order or booking. Not a refund: an undone payment never counted as money taken.
 _Avoid_: Void, reversal, correction
+
+**Stripe app payment**:
+A card payment Jennie takes in the Stripe app on her phone, which names no order or booking until she links it to one from Record payment, within 7 days and for no more than the Balance. Once linked it is a Stripe Payment like any other: it refunds through Stripe and its receipt shows the card.
+_Avoid_: Tap to Pay payment, terminal payment, manual Stripe payment
 
 **Gift voucher**:
 Money paid in advance, valid a year, that whoever holds its code spends on flowers, subscriptions and courses. It pays like money, not like a discount: each use is a Payment from it, and what it paid for being cancelled or refunded puts that money back on it, never into cash. What's left is its amount less those Payments. At checkout it only lowers what the card is asked for; it pays when the order is placed or the booking confirmed. Presentkort in Swedish, lahjakortti in Finnish.

@@ -43,6 +43,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
          |> assign(:page_title, socket.assigns.course.name)
          |> assign(:locale, Localize.get_locale())
          |> assign(settling_id: nil, settlement_mode: :settle, refund_form: nil, payment_form: nil)
+         |> assign(stripe_app_payments: [])
          |> assign(cancelling: nil, cancel_form: nil)
          |> assign(email_form: nil, email_kind: nil, emailing_id: nil, preview: nil)}
 
@@ -209,6 +210,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         mode={@settlement_mode}
         refund_form={@refund_form}
         payment_form={@payment_form}
+        stripe_app_payments={@stripe_app_payments}
         locale={@locale}
         preview={@preview}
       />
@@ -260,8 +262,9 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   end
 
   def handle_event("change_payment", %{"payment" => params} = event, socket) do
-    %{payment_form: form, current_user: actor} = socket.assigns
-    {:noreply, assign(socket, PaymentActions.change_payment(form, params, event["_target"], actor))}
+    %{payment_form: form, current_user: actor, stripe_app_payments: stripe_app_payments} = socket.assigns
+    state = PaymentActions.change_payment(form, params, event["_target"], actor, stripe_app_payments)
+    {:noreply, assign(socket, state)}
   end
 
   def handle_event("record_payment", %{"payment" => params}, socket) do
@@ -385,6 +388,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
 
     assign(socket,
       payment_form: if(registration.to_collect?, do: PaymentActions.payment_form(registration, actor)),
+      stripe_app_payments: [],
       refund_form: if(registration.refundable?, do: PaymentActions.refund_form(registration, actor))
     )
   end

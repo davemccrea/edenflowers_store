@@ -94,6 +94,35 @@ defmodule Edenflowers.Payments.PayableTest do
     |> Ash.update()
   end
 
+  defp link_stripe_payment(record, payment_intent_id, input \\ %{}) do
+    record
+    |> Ash.Changeset.for_update(:link_stripe_payment, Map.put(input, :payment_intent_id, payment_intent_id),
+      authorize?: false
+    )
+    |> Ash.update()
+  end
+
+  # A card tapped on Jennie's phone, naming nothing in the shop.
+  defp stripe_app_payment_intent(id, cents, metadata \\ %{}) do
+    %{
+      id: id,
+      status: "succeeded",
+      currency: "eur",
+      amount_received: cents,
+      created: DateTime.to_unix(DateTime.utc_now()),
+      metadata: metadata,
+      payment_method: "pm_tapped"
+    }
+  end
+
+  defp expect_stripe_app_payment(id, cents) do
+    StripeAPI.Mock
+    |> expect(:retrieve_payment_intent, fn %{payment_intent_id: ^id} -> {:ok, stripe_app_payment_intent(id, cents)} end)
+    |> stub(:retrieve_payment_method, fn "pm_tapped" ->
+      {:ok, %{type: "card_present", card_present: %{brand: "visa", last4: "4242"}}}
+    end)
+  end
+
   defp refund(record, amount, method \\ :cash, note \\ nil) do
     record
     |> Ash.Changeset.for_update(:refund, %{amount: amount, payment_method: method, note: note}, authorize?: false)
@@ -137,6 +166,12 @@ defmodule Edenflowers.Payments.PayableTest do
 
   defp with_email(registration), do: registration
 
+  # The receipt PDF dates an order by when it was ordered.
+  defp with_receipt_details(%Edenflowers.Orders.Order{} = order),
+    do: Ash.Seed.update!(order, %{ordered_at: DateTime.utc_now()})
+
+  defp with_receipt_details(registration), do: registration
+
   defp expect_stripe_refund(payment_intent_id, cents) do
     StripeAPI.Mock
     |> stub(:list_refunds, fn _pi -> {:ok, []} end)
@@ -151,6 +186,34 @@ defmodule Edenflowers.Payments.PayableTest do
     do: Enum.map(Edenflowers.Courses.list_unsettled_registrations!(authorize?: false), & &1.id)
 
   defp assert_money(actual, expected), do: assert(Decimal.equal?(actual, expected), "#{actual} != #{expected}")
+
+  describe "Stripe app payments to link" do
+    test "are the succeeded euro payments no purchase has, newest first, with their card" do
+      stripe_payment(:order, build(:order), "pi_linked", "10.00", DateTime.utc_now())
+
+      first_page = [
+        %{
+          stripe_app_payment_intent("pi_new", 4500)
+          | payment_method: %{type: "card_present", card_present: %{brand: "visa", last4: "4242"}}
+        },
+        stripe_app_payment_intent("pi_linked", 1000),
+        stripe_app_payment_intent("pi_checkout", 1000, %{"order_id" => Ash.UUID.generate()}),
+        %{stripe_app_payment_intent("pi_failed", 1000) | status: "requires_payment_method"}
+      ]
+
+      # Checkout attempts fill Stripe's pages, so an older app payment can be on a later one.
+      StripeAPI.Mock
+      |> expect(:list_payment_intents_page, fn _from, nil -> {:ok, %{data: first_page, has_more: true}} end)
+      |> expect(:list_payment_intents_page, fn _from, "pi_failed" ->
+        {:ok, %{data: [%{stripe_app_payment_intent("pi_old", 2000) | payment_method: nil}], has_more: false}}
+      end)
+
+      assert {:ok, [newest, older]} = Payments.stripe_app_payments()
+      assert %{id: "pi_new", card_last4: "4242"} = newest
+      assert_money(newest.amount, "45.00")
+      assert older.id == "pi_old"
+    end
+  end
 
   describe "shared ledger" do
     for payments <- [[stripe: "80.00"], [cash: "80.00"], [stripe: "50.00", mobilepay: "30.00"]] do
@@ -389,6 +452,116 @@ defmodule Edenflowers.Payments.PayableTest do
 
         assert {:error, _error} = undo_payment(record, stripe.id)
         assert {:error, _error} = undo_payment(record, other.id)
+      end
+
+      test "a Stripe app payment links as a Stripe payment with its card, and names the purchase in Stripe" do
+        record = @parent |> build() |> with_email() |> with_receipt_details()
+        key = to_string(parent_key(@parent))
+        record_id = record.id
+        expect_stripe_app_payment("pi_app", 5000)
+
+        expect(StripeAPI.Mock, :update_payment_intent_metadata, fn "pi_app", %{^key => ^record_id} ->
+          {:ok, %{id: "pi_app"}}
+        end)
+
+        assert {:ok, record} = link_stripe_payment(record, "pi_app", %{email_receipt?: true})
+        assert record.__metadata__[:receipt_emailed?]
+        Swoosh.TestAssertions.assert_email_sent(fn email -> email.text_body =~ "50" end)
+
+        assert_money(reload(record).balance, "30.00")
+        assert [payment] = payments(record)
+        assert payment.method == :stripe
+        assert payment.stripe_app
+        assert payment.payment_intent_id == "pi_app"
+        assert {payment.card_brand, payment.card_last4} == {"visa", "4242"}
+      end
+
+      test "a Stripe app payment for more than is owed, or one already linked, isn't linked" do
+        expect_stripe_app_payment("pi_big", 8001)
+        assert {:error, error} = link_stripe_payment(build(@parent), "pi_big")
+        assert Exception.message(error) =~ "That's more than is owed."
+
+        record = build(@parent, payments: [cash: "10.00"])
+        stripe_payment(@parent, build(@parent), "pi_taken", "10.00", DateTime.utc_now())
+        expect_stripe_app_payment("pi_taken", 1000)
+        assert {:error, _error} = link_stripe_payment(record, "pi_taken")
+
+        expect(StripeAPI.Mock, :retrieve_payment_intent, fn _ ->
+          {:ok, stripe_app_payment_intent("pi_checkout", 1000, %{"order_id" => Ash.UUID.generate()})}
+        end)
+
+        assert {:error, _error} = link_stripe_payment(record, "pi_checkout")
+      end
+
+      test "undoing a Stripe app payment unlinks it, so it can be linked to the right purchase" do
+        wrong = build(@parent)
+        right = build(@parent)
+        key = to_string(parent_key(@parent))
+        test_pid = self()
+
+        expect(StripeAPI.Mock, :update_payment_intent_metadata, 3, fn "pi_app", metadata ->
+          send(test_pid, {:metadata, metadata})
+          {:ok, %{id: "pi_app"}}
+        end)
+
+        expect_stripe_app_payment("pi_app", 8000)
+        {:ok, wrong} = link_stripe_payment(wrong, "pi_app")
+        [linked] = payments(wrong)
+
+        expect(StripeAPI.Mock, :list_refunds, fn "pi_app" -> {:ok, [%{status: "failed", amount: 8000}]} end)
+
+        assert {:ok, wrong} = undo_payment(wrong, linked.id)
+        assert_money(reload(wrong).balance, "80.00")
+
+        expect_stripe_app_payment("pi_app", 8000)
+        assert {:ok, right} = link_stripe_payment(right, "pi_app")
+        assert reload(right).settled?
+
+        wrong_id = wrong.id
+        right_id = right.id
+        assert_received {:metadata, %{^key => ^wrong_id}}
+        assert_received {:metadata, %{^key => ""}}
+        assert_received {:metadata, %{^key => ^right_id}}
+
+        # A refund made in Stripe goes to the purchase it's linked to now.
+        assert {:ok, :recorded} = Payments.record_stripe_refund(stripe_refund("pi_app", 1000))
+        assert Enum.any?(payments(right), &(&1.stripe_refund_id != nil))
+        refute Enum.any?(payments(wrong), &(&1.stripe_refund_id != nil))
+      end
+
+      test "a Stripe app payment Stripe has refunds on isn't unlinked" do
+        expect(StripeAPI.Mock, :update_payment_intent_metadata, fn id, _metadata -> {:ok, %{id: id}} end)
+        expect_stripe_app_payment("pi_app", 8000)
+        {:ok, record} = link_stripe_payment(build(@parent), "pi_app")
+        [linked] = payments(record)
+
+        expect(StripeAPI.Mock, :list_refunds, fn "pi_app" -> {:ok, [%{status: "pending", amount: 1000}]} end)
+
+        assert {:error, error} = undo_payment(record, linked.id)
+        assert Exception.message(error) =~ "It has refunds"
+        assert reload(record).settled?
+      end
+
+      test "a relinked Stripe app payment refunds from admin against the purchase it's linked to now" do
+        stub(StripeAPI.Mock, :update_payment_intent_metadata, fn id, _metadata -> {:ok, %{id: id}} end)
+        stub(StripeAPI.Mock, :list_refunds, fn "pi_app" -> {:ok, []} end)
+        expect_stripe_app_payment("pi_app", 8000)
+        {:ok, wrong} = link_stripe_payment(build(@parent), "pi_app")
+        [linked] = payments(wrong)
+        {:ok, wrong} = undo_payment(wrong, linked.id)
+
+        expect_stripe_app_payment("pi_app", 8000)
+        {:ok, right} = link_stripe_payment(build(@parent), "pi_app")
+
+        expect(StripeAPI.Mock, :create_refund, fn "pi_app", 2000, _key, _metadata ->
+          {:ok, stripe_refund("pi_app", 2000)}
+        end)
+
+        assert {:ok, _right} = refund(right, "20.00", :stripe)
+        assert Enum.any?(payments(right), &(&1.stripe_refund_id != nil))
+        refute Enum.any?(payments(wrong), &(&1.stripe_refund_id != nil))
+        # Nothing of the unlinked payment is left to refund on the wrong purchase.
+        refute reload(wrong).refundable?
       end
 
       test "recording cancels the open PaymentIntent, which charged the old balance" do

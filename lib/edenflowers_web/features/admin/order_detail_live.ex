@@ -198,6 +198,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           mode={@settlement_mode}
           payment_form={@payment_form}
           refund_form={@refund_form}
+          stripe_app_payments={@stripe_app_payments}
           locale={@locale}
           preview={@preview}
         />
@@ -690,11 +691,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("change_payment", %{"payment" => params} = event, socket) do
-    %{payment_form: form, current_user: actor} = socket.assigns
+    %{payment_form: form, current_user: actor, stripe_app_payments: stripe_app_payments} = socket.assigns
 
     {:noreply,
      socket
-     |> assign(PaymentActions.change_payment(form, params, event["_target"], actor))}
+     |> assign(PaymentActions.change_payment(form, params, event["_target"], actor, stripe_app_payments))}
   end
 
   def handle_event("open_settlement", params, socket) do
@@ -913,6 +914,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       order |> AshPhoenix.Form.for_update(:update_florist_note, as: "note", actor: actor) |> to_form()
     )
     |> assign(:payment_form, if(order.to_collect?, do: PaymentActions.payment_form(order, actor)))
+    |> assign(:stripe_app_payments, [])
     |> assign(:refund_form, if(order.refundable?, do: PaymentActions.refund_form(order, actor)))
     |> assign(:voucher_form, voucher_form(order, actor))
     |> assign(:pickup_message_urls, pickup_message_urls(order))

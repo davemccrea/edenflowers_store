@@ -50,9 +50,12 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
         params
       )
 
-    action = if params["payment_method"] == "voucher", do: :pay_with_gift_voucher, else: :record_payment
-    form(payable, action, "payment", actor, params)
+    form(payable, payment_action(params["payment_method"]), "payment", actor, params)
   end
+
+  defp payment_action("voucher"), do: :pay_with_gift_voucher
+  defp payment_action("stripe"), do: :link_stripe_payment
+  defp payment_action(_method), do: :record_payment
 
   @doc """
   The record payment form and its matching preview as Jennie changes it.
@@ -60,12 +63,48 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   hear nothing; any other method unticks it, as she was there in person. On a
   Gift voucher sale it's ticked while the amount pays it off, so its buyer
   gets the voucher, and off for a part payment, which can't email it.
-  Choosing or leaving Gift voucher swaps the form's action.
+  Choosing or leaving Gift voucher or Stripe app swaps the form's action.
+
+  Choosing Stripe app asks Stripe for the `stripe_app_payments` Jennie can
+  link, nil when it can't be reached, which the page keeps and passes back
+  in as `stripe_app_payments` with later changes. The newest is picked until
+  she chooses one; its amount is what the receipt preview shows.
   """
-  def change_payment(form, params, target, actor) do
+  def change_payment(form, params, target, actor, stripe_app_payments \\ []) do
+    stripe_app_payments = stripe_app_payments(params, target, stripe_app_payments)
+    params = with_stripe_app_payment(params, stripe_app_payments)
     form = change_payment_form(form, params, target, actor)
-    [payment_form: form] ++ DrawerPreview.changed(:payment, form.source.data, form, target)
+
+    [payment_form: form, stripe_app_payments: stripe_app_payments] ++
+      DrawerPreview.changed(:payment, form.source.data, form, target)
   end
+
+  defp stripe_app_payments(%{"payment_method" => "stripe"}, ["payment", "payment_method"], _kept) do
+    case Edenflowers.Payments.stripe_app_payments() do
+      {:ok, payments} ->
+        payments
+
+      {:error, reason} ->
+        Logger.error("Couldn't list Stripe app payments: #{inspect(reason)}")
+        nil
+    end
+  end
+
+  defp stripe_app_payments(%{"payment_method" => "stripe"}, _target, kept), do: kept
+  defp stripe_app_payments(_params, _target, _kept), do: []
+
+  defp with_stripe_app_payment(%{"payment_method" => "stripe"} = params, payments) do
+    payments = payments || []
+    picked = Enum.find(payments, &(&1.id == params["payment_intent_id"])) || List.first(payments)
+    Map.merge(params, picked_params(picked))
+  end
+
+  defp with_stripe_app_payment(params, _payments), do: params
+
+  defp picked_params(nil), do: %{"payment_intent_id" => "", "amount" => ""}
+
+  defp picked_params(payment),
+    do: %{"payment_intent_id" => payment.id, "amount" => Decimal.to_string(payment.amount, :normal)}
 
   defp change_payment_form(form, params, ["payment", "payment_method"], actor) do
     payable = form.source.data
@@ -143,7 +182,7 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   defp recorded(:refund, _payable, %{"payment_method" => "stripe"}), do: {:success, ~t"Refunded with Stripe."}
   defp recorded(:refund, _payable, _params), do: {:success, ~t"Refund recorded."}
 
-  defp recorded(:record_payment, payable, _params) do
+  defp recorded(action, payable, _params) when action in [:record_payment, :link_stripe_payment] do
     case payable.__metadata__[:receipt_emailed?] do
       true -> {:success, ~t"Payment recorded and receipt emailed."}
       false -> {:error, ~t"Payment recorded, but the receipt could not be emailed."}

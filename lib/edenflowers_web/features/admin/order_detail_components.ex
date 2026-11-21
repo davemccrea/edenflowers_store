@@ -167,6 +167,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   attr :mode, :atom, required: true, values: [:settle, :refund]
   attr :stale, :boolean, default: false
   attr :payment_form, Phoenix.HTML.Form, default: nil, doc: "nil when there is nothing to collect"
+  attr :stripe_app_payments, :list, default: [], doc: "for `record_payment_form`"
   attr :refund_form, Phoenix.HTML.Form, default: nil, doc: "nil when there is nothing to refund"
   attr :locale, :string, required: true
   attr :preview, Swoosh.Email, default: nil
@@ -209,6 +210,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           locale={@locale}
           form={@payment_form}
           receipt_email?={!!@order.customer_email}
+          stripe_app_payments={@stripe_app_payments}
           preview={@preview}
         />
         <p :if={nothing_to_settle?(@order, @mode)} class="text-base-content/75 text-sm">

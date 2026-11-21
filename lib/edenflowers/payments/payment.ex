@@ -1,7 +1,8 @@
 defmodule Edenflowers.Payments.Payment do
   @moduledoc """
   Money that moved for an order, course booking or standalone invoice: paid through Stripe
-  (checkout or a payment link), recorded by Jennie, or handed back. A refund is
+  (checkout, a payment link, or the Stripe app on Jennie's phone, which she links herself),
+  recorded by Jennie, or handed back. A refund is
   a negative payment. It belongs to exactly one order, registration or invoice.
 
   Only money that actually moved is recorded. A PaymentIntent still waiting
@@ -77,6 +78,19 @@ defmodule Edenflowers.Payments.Payment do
       default &DateTime.utc_now/0
     end
 
+    attribute :stripe_app, :boolean do
+      description "Whether Jennie took it in the Stripe app on her phone and linked it to its purchase herself, " <>
+                    "so she can unlink it again."
+
+      allow_nil? false
+      default false
+    end
+
+    attribute :unlinked_at, :utc_datetime do
+      description "When Jennie unlinked this Stripe app payment from its purchase, which an Undo records as " <>
+                    "the opposite amount. Its PaymentIntent can then be linked again. Nil otherwise."
+    end
+
     attribute :bank_transaction_id, :string do
       description "The bank's id for the transfer the bank sync recorded this from, so it's recorded once. " <>
                     "Nil for anything Jennie entered or Stripe took."
@@ -115,14 +129,18 @@ defmodule Edenflowers.Payments.Payment do
   calculations do
     calculate :undoable?,
               :boolean,
-              expr(method not in [:stripe, :voucher] and is_nil(reverses_payment_id) and not exists(reversal, true)) do
-      description "Whether Jennie can Undo it: one she recorded, not a Stripe or Gift voucher one, that is " <>
-                    "neither an Undo itself nor already undone."
+              expr(
+                (method not in [:stripe, :voucher] or stripe_app) and is_nil(reverses_payment_id) and
+                  not exists(reversal, true)
+              ) do
+      description "Whether Jennie can Undo it: one she recorded or linked from the Stripe app, not a checkout " <>
+                    "or Gift voucher one, that is neither an Undo itself nor already undone."
     end
   end
 
   identities do
-    identity :unique_payment_intent, [:payment_intent_id]
+    # An unlinked Stripe app payment's PaymentIntent can be linked again.
+    identity :unique_payment_intent, [:payment_intent_id], where: expr(is_nil(unlinked_at))
     # A Stripe refund beyond what was owed back is split off as goodwill.
     identity :unique_stripe_refund, [:stripe_refund_id, :goodwill]
     identity :unique_reversal, [:reverses_payment_id]
@@ -152,10 +170,21 @@ defmodule Edenflowers.Payments.Payment do
         :invoice_id,
         :paid_at,
         :bank_transaction_id,
-        :gift_voucher_id
+        :gift_voucher_id,
+        :stripe_app
       ]
 
       validate Edenflowers.Payments.Validations.InvoicePayment, before_action?: true
+    end
+
+    update :unlink do
+      description "Marks a Stripe app payment unlinked as its Undo is recorded, so its PaymentIntent can be " <>
+                    "linked again. Run by undo_payment, never on its own."
+
+      accept []
+      validate attribute_equals(:stripe_app, true)
+      validate absent(:unlinked_at)
+      change set_attribute(:unlinked_at, &DateTime.utc_now/0)
     end
   end
 
@@ -178,6 +207,7 @@ defmodule Edenflowers.Payments.Payment do
     repo Edenflowers.Repo
     table "payments"
     migration_types amount: :decimal
+    identity_wheres_to_sql unique_payment_intent: "unlinked_at IS NULL"
 
     custom_indexes do
       index [:order_id], concurrently: true
