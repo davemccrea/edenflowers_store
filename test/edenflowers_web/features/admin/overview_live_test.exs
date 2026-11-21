@@ -521,9 +521,10 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     end
   end
 
-  test "lists the latest confirmed course bookings, linked to each, and leaves out unfinished checkouts", %{
-    conn: conn
-  } do
+  test "lists the latest confirmed bookings on upcoming courses, linked to each, and leaves out unfinished checkouts",
+       %{
+         conn: conn
+       } do
     conn = log_in(conn, generate(admin_user()) |> with_token())
     course = generate(course(name: "Spring posies"))
 
@@ -539,6 +540,18 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
     generate(course_registration(course_id: course.id, status: :pending, name: "Halfway Hanna"))
 
+    past_course =
+      generate(course(name: "Autumn wreaths")) |> Ash.Seed.update!(%{date: Date.add(Edenflowers.ShopTime.today(), -1)})
+
+    generate(
+      course_registration(
+        course_id: past_course.id,
+        status: :confirmed,
+        name: "Past Paula",
+        confirmed_at: DateTime.utc_now()
+      )
+    )
+
     {:ok, view, _html} = live(conn, ~p"/admin")
 
     assert has_element?(
@@ -549,6 +562,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
     assert has_element?(view, "#recent-bookings", "Spring posies")
     refute has_element?(view, "#recent-bookings", "Halfway Hanna")
+    refute has_element?(view, "#recent-bookings", "Past Paula")
   end
 
   test "shows paid sales and revenue for the current month only", %{conn: conn} do

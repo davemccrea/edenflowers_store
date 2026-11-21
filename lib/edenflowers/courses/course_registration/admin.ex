@@ -40,8 +40,10 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
     end
 
     read :recent do
-      description "The five confirmed bookings Jennie accepted or customers paid for most recently, for the admin Overview."
-      filter expr(status == :confirmed)
+      description "The five confirmed bookings on courses from today on, in Helsinki time, that Jennie accepted or " <>
+                    "customers paid for most recently, for the admin Overview."
+
+      filter expr(status == :confirmed and course.date >= helsinki_today())
       prepare build(sort: [confirmed_at: :desc_nils_last], limit: 5, load: [:course, :seats_held])
     end
 
