@@ -35,6 +35,32 @@
     mode: "0644"
     force: false
 
+- name: Create Caddy directories
+  ansible.builtin.file:
+    path: "/opt/{{ project_name }}/caddy/site/images"
+    state: directory
+    owner: "{{ user }}"
+    mode: "0755"
+
+- name: Place Caddyfile
+  ansible.builtin.template:
+    src: Caddyfile.j2
+    dest: "/opt/{{ project_name }}/caddy/Caddyfile"
+    owner: "{{ user }}"
+    mode: "0644"
+  notify: Restart caddy
+
+# Caddy serves these while the app is down, so it can't fetch them from the app.
+- name: Place the page shown while the app restarts
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "/opt/{{ project_name }}/caddy/site/{{ item.dest }}"
+    owner: "{{ user }}"
+    mode: "0644"
+  loop:
+    - { src: caddy/updating.html, dest: updating.html }
+    - { src: "{{ playbook_dir }}/../priv/static/images/logo-eden-flowers-wide.svg", dest: images/logo-eden-flowers-wide.svg }
+
 - name: Place docker-compose.yml
   ansible.builtin.template:
     src: docker-compose.yml.j2

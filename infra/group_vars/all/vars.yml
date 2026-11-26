@@ -8,6 +8,8 @@ user: david
 project_url: edenflowers.fi
 image_tag: latest
 app_port: 4000
+# Caddy in front of the app; the tunnel's edenflowers.fi hostname points here
+proxy_port: 4001
 secret_key_base: "{{ vault_secret_key_base }}"
 token_signing_secret: "{{ vault_token_signing_secret }}"
 release_cookie: "{{ vault_release_cookie }}"

@@ -50,6 +50,21 @@
         ],
         "createdAt": "2026-11-08T11:36:31.874Z",
         "reason": "Agent: preserve the existing Arc-style appearance-picker popover motion documented beside .admin-picker-popover; unchanged by the navigation work."
+      },
+      {
+        "rule": "overused-font",
+        "value": "open sans",
+        "createdAt": "2026-11-26T07:30:24.921Z",
+        "reason": "matches the shop's own font in assets/css/theme.css; the page copies /back-soon"
+      },
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "infra/roles/common/files/caddy/updating.html"
+        ],
+        "createdAt": "2026-11-26T07:30:25.038Z",
+        "reason": "copies the shop's --color-base-200 from assets/css/app.css to match /back-soon"
       }
     ]
   }

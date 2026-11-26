@@ -94,6 +94,14 @@ services:
       HOSTNAME: 127.0.0.1
       DISABLE_TELEMETRY: 1
 
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/site:/srv:ro
+
   cloudflared:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped

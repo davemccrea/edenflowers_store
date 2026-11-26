@@ -1,6 +1,6 @@
 # Infrastructure
 
-Ansible provisioning for the production server (Ubuntu/Debian). Docker Compose in `/opt/edenflowers_store` runs the app, `imgproxy`, `papra`, `umami` and `cloudflared`. Postgres runs on the host. Deploys don't go through Ansible, see [Deploy](#deploy).
+Ansible provisioning for the production server (Ubuntu/Debian). Docker Compose in `/opt/edenflowers_store` runs the app, `caddy`, `imgproxy`, `papra`, `umami` and `cloudflared`. Postgres runs on the host. Deploys don't go through Ansible, see [Deploy](#deploy).
 
 Remote commands connect through this alias in `~/.ssh/config`. Server IPs stay out of this public repo; the origin is behind Cloudflare.
 
@@ -30,6 +30,12 @@ just provision          # extra args go to ansible-playbook
 ```
 
 This updates packages (rebooting if needed), hardens SSH, fail2ban and UFW (only SSH and Tailscale are open, Cloudflare Tunnel brings the traffic), joins Tailscale, sets up Postgres and its 02:00 `pg_dump` (kept 30 days), installs Docker and logs in to ghcr.io, and writes `docker-compose.yml`.
+
+## Updating page
+
+The tunnel's `edenflowers.fi` hostname points at Caddy on `http://localhost:4001` (`proxy_port`), not straight at the app. Caddy passes everything to the app on 4000. When the app doesn't answer, for example while a deploy restarts it, Caddy serves `roles/common/files/caddy/updating.html` with a 503 and `Retry-After`, and the page reloads itself every 10 s. Error responses from the app itself pass through unchanged. The page can't load anything from the app, so its styles are inline and provisioning copies the logo next to it. Because the page answers whenever the app is down, its wording suits a crash as well as a deploy.
+
+On a new server, provision before adding the public hostname `edenflowers.fi` → `http://localhost:4001` in the Cloudflare Zero Trust dashboard.
 
 ## Umami analytics
 

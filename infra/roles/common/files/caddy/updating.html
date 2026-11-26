@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Reloads until the app is back after a deploy. -->
+    <meta http-equiv="refresh" content="10" />
+    <title>Eden Flowers</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: oklch(97% 0.008 75);
+        color: oklch(22% 0.015 75);
+        font-family: "Open Sans", system-ui, sans-serif;
+        font-size: 1.125rem;
+        line-height: 1.6;
+      }
+      header {
+        display: flex;
+        justify-content: center;
+        padding: 2rem 1.5rem;
+      }
+      header img {
+        width: 16rem;
+        max-width: 100%;
+        height: auto;
+      }
+      main {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1.5rem 8rem;
+        text-align: center;
+      }
+      main div {
+        max-width: 36rem;
+      }
+      p {
+        margin: 0 0 1.25rem;
+      }
+      a {
+        color: inherit;
+      }
+      .contact {
+        margin-top: 2.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="/images/logo-eden-flowers-wide.svg" alt="Eden Flowers" width="256" height="80" />
+    </header>
+    <main>
+      <div>
+        <p lang="sv">Vi uppdaterar webbplatsen och är tillbaka om en stund.</p>
+        <p lang="fi">Päivitämme verkkosivuja ja palaamme hetken kuluttua.</p>
+        <p lang="en">We're updating the website and will be back in a moment.</p>
+        <p class="contact">
+          <a href="mailto:info@edenflowers.fi">info@edenflowers.fi</a>
+          <a href="tel:+358402209494">040 220 9494</a>
+        </p>
+      </div>
+    </main>
+  </body>
+</html>

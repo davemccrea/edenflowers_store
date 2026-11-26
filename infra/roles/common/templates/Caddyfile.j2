@@ -1,0 +1,34 @@
+{
+	admin off
+	auto_https off
+}
+
+# cloudflared sends the shop's traffic here instead of straight to the app, so
+# visitors get a holding page while the app restarts during a deploy.
+http://:{{ proxy_port }} {
+	bind 127.0.0.1
+
+	reverse_proxy 127.0.0.1:{{ app_port }}
+
+	# Only errors Caddy raises itself land here: the app being unreachable.
+	# Error responses the app sends pass through untouched.
+	handle_errors 502 503 504 {
+		root * /srv
+
+		@logo path /images/logo-eden-flowers-wide.svg
+		handle @logo {
+			file_server {
+				status 200
+			}
+		}
+
+		handle {
+			rewrite * /updating.html
+			header Retry-After 10
+			header Cache-Control no-store
+			file_server {
+				status 503
+			}
+		}
+	}
+}
