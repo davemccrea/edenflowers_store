@@ -17,7 +17,8 @@ defmodule Edenflowers.Orders.Order.Calculations.AdminMenuActions do
       :refundable?,
       :pass_it_on_card_removable?,
       :cancellable?,
-      :invoiced?
+      :invoiced?,
+      :repeating?
     ]
   end
 
@@ -36,6 +37,7 @@ defmodule Edenflowers.Orders.Order.Calculations.AdminMenuActions do
             {:view_receipt, order.receipt_available?},
             {:refund, order.refundable?},
             {:unlink_card, order.pass_it_on_card_removable?},
+            {:stop_repeating, order.repeating?},
             {:cancel, order.cancellable? && !order.invoiced?}
           ],
           available?,

@@ -4,8 +4,9 @@ defmodule Edenflowers.Orders.ShopNotice do
   where it is in the admin. A notice is `{:new, order}`, `{:new, subscription}`,
   `{:new, registration}`, for a course booking a customer paid for,
   `{:reminder, order}`, for an order with a time that starts within the hour,
-  or `{:cancelled, order}` or `{:cancelled, subscription}`, for one its
-  customer cancelled.
+  `{:cancelled, order}` or `{:cancelled, subscription}`, for one its
+  customer cancelled, or `{:repeat_failed, order}`, for a Repeating order whose
+  next copy of `order` couldn't be placed.
   """
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
@@ -14,12 +15,17 @@ defmodule Edenflowers.Orders.ShopNotice do
   alias Edenflowers.Format
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders.OrderRepeat
   alias Edenflowers.Orders.Subscription
 
   @doc "Serializes the notice kind and record ID into arguments for the notification workers."
   def args({kind, %Order{id: id}}), do: %{"notice" => to_string(kind), "order_id" => id}
   def args({kind, %Subscription{id: id}}), do: %{"notice" => to_string(kind), "subscription_id" => id}
   def args({kind, %CourseRegistration{id: id}}), do: %{"notice" => to_string(kind), "registration_id" => id}
+
+  # A Repeating order is told about through the order its next one would copy.
+  def args({kind, %OrderRepeat{} = repeat}),
+    do: args({kind, Ash.load!(repeat, :latest_order, authorize?: false).latest_order})
 
   def fetch!(%{"notice" => kind} = args), do: {String.to_existing_atom(kind), record!(args)}
 
@@ -47,6 +53,9 @@ defmodule Edenflowers.Orders.ShopNotice do
     do: ~t"Order #{reference = order.order_reference} cancelled by the customer"
 
   def title({:cancelled, %Subscription{}}, _locale), do: ~t"Subscription cancelled by the customer"
+
+  def title({:repeat_failed, %Order{} = order}, _locale),
+    do: ~t"Couldn't place the next repeat of order #{reference = order.order_reference}"
 
   def title({:reminder, %Order{} = order}, locale) do
     time = Format.fulfillment_time(order, locale)

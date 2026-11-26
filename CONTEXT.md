@@ -42,6 +42,10 @@ _Avoid_: Web order, cart order
 An order Jennie enters in the admin on a customer's behalf, however the request reached her (phone, in the shop, email, message). It may contain catalogue items, items she describes and prices herself, or both. A sale over the counter is a Custom Order too; occasional weddings and bespoke work can instead be billed through a standalone Invoice.
 _Avoid_: Phone order, manual order, bespoke order, walk-in sale, till sale
 
+**Repeating order**:
+A Custom Order Jennie sets to repeat every one, two or four weeks, such as weekly flowers for a business paying by invoice. Its own schedule holds the next date: 14 days before it, a copy of the latest order is placed for it, with the same lines, details and payment terms but no email to the customer (Jennie sends its Order details from its page if they need them), so editing the latest order changes the ones after it, but moving one order's date moves only that order. Cancelling one order skips it unless Jennie also stops repeating; Stop repeating on any of its orders ends it, keeping the orders already placed. If a copy can't be placed, Jennie is told, and it is tried again the next day. Unlike a Subscription, it holds no card and creates Custom Orders, not Occurrences.
+_Avoid_: Subscription (for these), standing order
+
 **Florist Note**:
 Jennie's private working note on any order — what was agreed, constraints like "deliver by 10:30, service at 11:00". Never shown to the Customer or Recipient.
 _Avoid_: Comment, internal note, order notes (and distinct from the Card Message and Delivery Instructions, which come from the Customer)

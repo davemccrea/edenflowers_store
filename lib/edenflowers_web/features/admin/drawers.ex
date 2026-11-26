@@ -19,6 +19,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :email, :string, default: nil, doc: "the customer's address, or nil when they have none"
   attr :locale, :string, required: true
   attr :preview, Swoosh.Email, default: nil
+  attr :repeating, :boolean, default: false, doc: "whether the order belongs to a Repeating order that can be stopped"
 
   @doc """
   Cancels an order or a booking: the cancellation charge to keep, Jennie's
@@ -76,6 +77,12 @@ defmodule EdenflowersWeb.Admin.Drawers do
             rows="2"
             label={~t"Reason (for your records)"}
             class="textarea w-full"
+          />
+          <.input
+            :if={@repeating}
+            field={@form[:stop_repeating?]}
+            type="checkbox"
+            label={~t"Also stop repeating (otherwise only this date is skipped)"}
           />
           <.customer_email
             :if={@email}

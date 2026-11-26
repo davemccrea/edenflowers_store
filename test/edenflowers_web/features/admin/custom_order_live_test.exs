@@ -418,6 +418,39 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert order.payment_link_open?
     end
 
+    test "places a repeating order Jennie can stop from its page", ctx do
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+
+      view |> element(~s|button[phx-click="add_line"][phx-value-kind="catalogue"]|) |> render_click()
+
+      fields = %{
+        customer_name: "Office Oy",
+        customer_phone_number: "040 123 4567",
+        locale: "sv-FI",
+        fulfillment_option_id: ctx.pickup.id,
+        fulfillment_date: Date.to_iso8601(tomorrow()),
+        payment_terms: "invoice",
+        repeat_every_weeks: "1",
+        line_items: %{"0" => %{"product_variant_id" => ctx.variant.id, "quantity" => "1"}}
+      }
+
+      assert {:error, {:live_redirect, %{to: path}}} =
+               view |> form("#order-form", form: fields) |> render_submit()
+
+      {:ok, view, _html} = live(ctx.conn, path)
+      assert view |> element("#order-repeat") |> render() =~ "Every week"
+
+      view |> element(~s|button[phx-click="open_cancel"]|) |> render_click()
+      assert has_element?(view, ~s|#cancel-form input[name="cancel[stop_repeating?]"]|)
+
+      view |> element(~s|button[phx-click="stop_repeating"]|) |> render_click()
+
+      [repeat] = Ash.read!(Edenflowers.Orders.OrderRepeat, authorize?: false)
+      assert repeat.next_on == nil
+      refute has_element?(view, ~s|button[phx-click="stop_repeating"]|)
+      refute has_element?(view, "#order-repeat")
+    end
+
     test "a catalogue line can carry the bow colour the product offers", ctx do
       wreath =
         generate(product(tax_rate_id: ctx.tax_rate.id, name: "Christmas wreath", bow_colours: [:red_satin, :jute]))

@@ -182,6 +182,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           keep_label={~t"Keep order"}
           form={@cancel_form}
           payable={@cancelling}
+          repeating={@order.repeating?}
           email={@order.customer_email}
           locale={@locale}
           preview={@preview}
@@ -238,6 +239,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                     label={fulfillment_relative(@order.fulfillment_date, @locale, @order.fulfillment_status)}
                     tone={date_tone(@order.fulfillment_date)}
                   />
+                </.summary_fact>
+                <.summary_fact :if={@order.repeating?} label={~t"Repeat"}>
+                  <span id="order-repeat">
+                    {repeat_interval(@order.order_repeat.every_weeks)}
+                    <span class="text-base-content/75 block text-sm">
+                      {~t"Next order: #{date = Format.weekday_day_month(@order.order_repeat.next_on, @locale)}"}
+                    </span>
+                  </span>
                 </.summary_fact>
                 <.summary_fact :if={Format.fulfillment_time_range(@order, @locale)} label={~t"Time"}>
                   <span id="order-fulfillment-time" class="tabular-nums">
@@ -655,6 +664,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
+  def handle_event("stop_repeating", _params, socket) do
+    %{order: order, current_user: actor} = socket.assigns
+    Orders.stop_order_repeat!(order.order_repeat, actor: actor)
+    {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:success, ~t"Order no longer repeats.")}
+  end
+
   def handle_event("open_cancel", _params, socket) do
     form = PaymentActions.cancel_form(socket.assigns.order, socket.assigns.current_user)
 
@@ -823,6 +838,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_info(_message, socket), do: {:noreply, socket}
+
+  defp repeat_interval(1), do: ~t"Every week"
+  defp repeat_interval(2), do: ~t"Every 2 weeks"
+  defp repeat_interval(4), do: ~t"Every 4 weeks"
 
   defp redeems_card?(%{data: %Order{promotion_id: card_id}}, %Order{pass_it_on_card: %{id: card_id}}), do: true
   defp redeems_card?(_payload, _order), do: false

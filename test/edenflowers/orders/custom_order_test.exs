@@ -383,6 +383,144 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     end
   end
 
+  describe "repeating" do
+    alias Edenflowers.Orders.OrderRepeat
+    alias Edenflowers.Orders.Schedulers.PlaceNextRepeat, as: ScheduleRepeats
+    alias Edenflowers.Orders.Workers.EmailShop
+    alias Edenflowers.Orders.Workers.PlaceNextRepeat
+
+    defp all_orders do
+      Edenflowers.Orders.Order
+      |> Ash.read!(authorize?: false, load: [:grand_total, :line_items])
+      |> Enum.sort_by(& &1.inserted_at, DateTime)
+    end
+
+    defp repeat_of(order), do: Ash.load!(order, :order_repeat, authorize?: false).order_repeat
+
+    defp scheduled_repeats do
+      assert :ok = perform_job(ScheduleRepeats, %{})
+      for job <- all_enqueued(worker: PlaceNextRepeat), do: job.args["primary_key"]["id"]
+    end
+
+    defp place_next(repeat, opts \\ []),
+      do: perform_job(PlaceNextRepeat, %{"primary_key" => %{"id" => repeat.id}}, opts)
+
+    defp today, do: Edenflowers.ShopTime.today()
+
+    test "places a copy of the latest order two weeks before its date, emailing only the first", ctx do
+      {:ok, first} =
+        place(ctx, %{
+          customer_email: "office@example.com",
+          payment_terms: :invoice,
+          fulfillment_date: today(),
+          repeat_every_weeks: 2
+        })
+
+      repeat = repeat_of(first)
+      assert repeat.next_on == Date.add(today(), 14)
+      assert repeat.id in scheduled_repeats()
+      assert {:ok, _repeat} = place_next(repeat)
+
+      assert [first, next] = all_orders()
+      assert next.fulfillment_date == Date.add(today(), 14)
+      assert next.order_repeat_id == repeat.id
+      assert next.payment_terms == :invoice
+      assert next.order_reference != first.order_reference
+      assert Decimal.eq?(next.grand_total, first.grand_total)
+      assert next.line_items |> Enum.map(& &1.product_name) |> Enum.sort() == ["Funeral spray", "Spring Bouquet"]
+
+      assert repeat_of(next).next_on == Date.add(today(), 28)
+      assert [_first_only] = all_enqueued(worker: SendOrderDetailsEmail)
+    end
+
+    test "waits until the next date is two weeks away", ctx do
+      {:ok, order} = place(ctx, %{repeat_every_weeks: 4})
+
+      refute repeat_of(order).id in scheduled_repeats()
+    end
+
+    test "keeps its own schedule when Jennie moves one delivery", ctx do
+      {:ok, order} = place(ctx, %{fulfillment_date: today(), repeat_every_weeks: 1})
+      repeat = repeat_of(order)
+
+      Ash.Changeset.for_update(order, :edit, %{
+        fulfillment_date: Date.add(today(), 2),
+        line_items: [catalogue_line(ctx.variant), custom_line(ctx.tax_rate)]
+      })
+      |> Ash.update!(actor: ctx.admin)
+
+      assert {:ok, _repeat} = place_next(repeat)
+      assert [_moved, next] = all_orders()
+      assert next.fulfillment_date == Date.add(today(), 7)
+    end
+
+    test "places from today when the job missed its dates", ctx do
+      {:ok, order} = place(ctx, %{repeat_every_weeks: 1})
+      repeat = repeat_of(order)
+      Ecto.Adapters.SQL.query!(Edenflowers.Repo, "UPDATE order_repeats SET next_on = $1", [Date.add(today(), -10)])
+
+      assert {:ok, _repeat} = place_next(repeat)
+      assert [_first, next] = all_orders()
+      assert next.fulfillment_date == Date.add(today(), 4)
+    end
+
+    test "copies the gift card", ctx do
+      small = card(ctx, size: :small, price: "3.00")
+
+      {:ok, order} =
+        place(ctx, %{gift: true, recipient_name: "Ada", card_variant_id: small.id, repeat_every_weeks: 1})
+
+      assert {:ok, _repeat} = place_next(repeat_of(order))
+      assert [_first, next] = all_orders()
+      assert [%{product_variant_id: id}] = card_lines(next)
+      assert id == small.id
+    end
+
+    test "stops when Jennie stops it, from the order or by cancelling with it", ctx do
+      {:ok, stopped} = place(ctx, %{repeat_every_weeks: 1})
+      Orders.stop_order_repeat!(repeat_of(stopped), actor: ctx.admin)
+
+      {:ok, cancelled} = place(ctx, %{repeat_every_weeks: 1})
+      Orders.cancel_order!(cancelled, %{email_customer?: false, stop_repeating?: true}, actor: ctx.admin)
+
+      {:ok, skipped} = place(ctx, %{repeat_every_weeks: 1})
+      Orders.cancel_order!(skipped, %{email_customer?: false}, actor: ctx.admin)
+
+      scheduled = scheduled_repeats()
+      refute repeat_of(stopped).id in scheduled
+      refute repeat_of(cancelled).id in scheduled
+      assert repeat_of(skipped).id in scheduled
+    end
+
+    test "tells Jennie when the next order can't be placed, and tries again tomorrow", ctx do
+      stub_geocoding(8_000)
+
+      {:ok, order} =
+        place(ctx, %{
+          fulfillment_option_id: ctx.delivery.id,
+          delivery_address: "Kyrkvägen 5",
+          recipient_phone_number: "040 765 4321",
+          repeat_every_weeks: 1
+        })
+
+      repeat = repeat_of(order)
+      stub_geocoding(50_000)
+
+      assert_raise Ash.Error.Invalid, ~r/Outside delivery range/, fn -> place_next(repeat) end
+      refute_enqueued(worker: EmailShop, args: %{"notice" => "repeat_failed"})
+      assert :ok = place_next(repeat, attempt: 3)
+
+      assert_enqueued(worker: EmailShop, args: %{"notice" => "repeat_failed", "order_id" => order.id})
+      assert [_only_the_first] = all_orders()
+      assert Ash.reload!(repeat, authorize?: false).next_on == repeat.next_on
+    end
+
+    test "takes only every 1, 2 or 4 weeks", ctx do
+      assert {:error, _error} = place(ctx, %{repeat_every_weeks: 3})
+      assert Ash.read!(OrderRepeat, authorize?: false) == []
+    end
+  end
+
   describe "the time of day" do
     test "is any time, an exact time or a window", ctx do
       {:ok, any} = place(ctx, %{fulfillment_time: :any, fulfillment_time_start: ~T[14:00:00]})

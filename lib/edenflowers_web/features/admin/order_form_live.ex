@@ -238,6 +238,15 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                     />
                   </div>
                 </div>
+                <.input
+                  :if={@mode == :new}
+                  field={@form[:repeat_every_weeks]}
+                  type="select"
+                  label={~t"Repeat"}
+                  prompt={~t"Doesn't repeat"}
+                  options={[{~t"Every week", 1}, {~t"Every 2 weeks", 2}, {~t"Every 4 weeks", 4}]}
+                  class="select w-full"
+                />
                 <div :if={@method == :delivery} class="sm:col-span-2">
                   <.input
                     field={@form[:delivery_address]}

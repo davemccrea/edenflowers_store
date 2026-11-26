@@ -142,6 +142,10 @@ defmodule Edenflowers.Orders do
 
     resource Edenflowers.Orders.Subscription.Version
 
+    resource Edenflowers.Orders.OrderRepeat do
+      define :stop_order_repeat, action: :stop
+    end
+
     resource Edenflowers.Orders.LineItem do
       define :add_line_item, action: :add_to_cart, args: [:order_id, :product_variant_id, :quantity]
       define :increment_line_item, action: :increment_quantity

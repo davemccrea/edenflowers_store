@@ -313,6 +313,10 @@ defmodule Edenflowers.Orders.Order do
   def checkout_states, do: @checkout_states
 
   relationships do
+    belongs_to :order_repeat, Edenflowers.Orders.OrderRepeat do
+      description "The Repeating order this one belongs to, if Jennie set it to repeat."
+    end
+
     belongs_to :user, Edenflowers.Accounts.User do
       description "The Customer's account: found or created from customer_email, or attached with `customer_id` " <>
                     "when Jennie places a Custom Order. Signed in or not. Nil for a cart before its first step, " <>
@@ -538,6 +542,10 @@ defmodule Edenflowers.Orders.Order do
 
     calculate :cancelled?, :boolean, expr(fulfillment_status == :cancelled) do
       description "Cancelled by Jennie or by the Customer."
+    end
+
+    calculate :repeating?, :boolean, expr(order_repeat.active? == true) do
+      description "Part of a Repeating order that will place more orders, so Jennie can stop it from here."
     end
 
     calculate :cancellable?,

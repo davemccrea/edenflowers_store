@@ -884,6 +884,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       </.actions_menu_button>
 
       <.actions_menu_button
+        :if={:stop_repeating in @order.admin_menu_actions}
+        menu="order-actions"
+        phx-click="stop_repeating"
+        data-confirm={~t"Stop repeating? No more orders will be placed; the ones already placed stay."}
+      >
+        {~t"Stop repeating"}
+      </.actions_menu_button>
+
+      <.actions_menu_button
         :if={:cancel in @order.admin_menu_actions}
         menu="order-actions"
         phx-click="open_cancel"

@@ -44,6 +44,8 @@ defmodule Edenflowers.Orders.Order.Admin do
 
   @admin_show_load [
     :admin_menu_actions,
+    :repeating?,
+    :order_repeat,
     :payment_status,
     :amount_paid,
     :amount_held,
@@ -357,9 +359,13 @@ defmodule Edenflowers.Orders.Order.Admin do
     create :place_custom do
       description "Jennie enters a Custom Order, placed at once and possibly unpaid: opens a payment link if " <>
                     "its terms are a payment link, takes stock, pays what it can from a Gift voucher whose code " <>
-                    "came with it, and queues the Order details email unless `email_customer?` is false."
+                    "came with it, and queues the Order details email unless `email_customer?` is false. " <>
+                    "With `repeat_every_weeks`, it starts a Repeating order (OrderRepeat); the repeat's job " <>
+                    "places each later one with `order_repeat_id`."
 
-      accept [:payment_terms | @custom_order_fields]
+      accept [:payment_terms, :order_repeat_id | @custom_order_fields]
+
+      argument :repeat_every_weeks, :integer, description: "Starts a Repeating order this many weeks apart: 1, 2 or 4."
 
       argument :line_items, {:array, :map}, default: []
       validate argument_does_not_equal(:line_items, []), message: "Add at least one item"
@@ -431,6 +437,9 @@ defmodule Edenflowers.Orders.Order.Admin do
 
       change {PaymentChanges.QueueEmail, trigger: :send_order_details_email},
         where: [argument_equals(:email_customer?, true)]
+
+      validate argument_in(:repeat_every_weeks, [1, 2, 4]), where: [present(:repeat_every_weeks)]
+      change Changes.StartRepeat, where: [present(:repeat_every_weeks)]
     end
 
     create :sell_gift_voucher do
@@ -725,6 +734,12 @@ defmodule Edenflowers.Orders.Order.Admin do
       change set_attribute(:fulfillment_status, :cancelled)
       change PaymentChanges.Cancel
       change {Changes.AdjustStock, direction: :return}
+
+      argument :stop_repeating?, :boolean,
+        default: false,
+        description: "Also ends its Repeating order. Without it, cancelling only skips this date."
+
+      change Changes.StopRepeat, where: [argument_equals(:stop_repeating?, true)]
       change load(@admin_show_load)
       require_atomic? false
     end
