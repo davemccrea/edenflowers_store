@@ -57,17 +57,22 @@ defmodule Edenflowers.Orders.OrderRepeat.Changes.PlaceNext do
   defp fulfillment_time(%{fulfillment_time_end: nil}), do: :at
   defp fulfillment_time(_order), do: :between
 
-  defp line(%{product_variant_id: variant_id} = line) when not is_nil(variant_id) do
-    %{kind: :catalogue, product_variant_id: variant_id, quantity: line.quantity, bow_colour: line.bow_colour}
-  end
-
-  defp line(line) do
+  defp line(%{product_variant_id: nil} = line) do
     %{
       kind: :custom,
       product_name: line.product_name,
       unit_price: line.unit_price,
       quantity: line.quantity,
       tax_rate_id: tax_rate_id(line.tax_rate)
+    }
+  end
+
+  defp line(line) do
+    %{
+      kind: :catalogue,
+      product_variant_id: line.product_variant_id,
+      quantity: line.quantity,
+      bow_colour: line.bow_colour
     }
   end
 
