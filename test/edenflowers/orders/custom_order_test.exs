@@ -506,9 +506,14 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       repeat = repeat_of(order)
       stub_geocoding(50_000)
 
-      assert_raise Ash.Error.Invalid, ~r/Outside delivery range/, fn -> place_next(repeat) end
-      refute_enqueued(worker: EmailShop, args: %{"notice" => "repeat_failed"})
-      assert :ok = place_next(repeat, attempt: 3)
+      log =
+        capture_log(fn ->
+          assert_raise Ash.Error.Invalid, ~r/Outside delivery range/, fn -> place_next(repeat) end
+          refute_enqueued(worker: EmailShop, args: %{"notice" => "repeat_failed"})
+          assert :ok = place_next(repeat, attempt: 3)
+        end)
+
+      assert log =~ "Outside delivery range"
 
       assert_enqueued(worker: EmailShop, args: %{"notice" => "repeat_failed", "order_id" => order.id})
       assert [_only_the_first] = all_orders()
