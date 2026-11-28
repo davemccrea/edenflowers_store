@@ -4,7 +4,7 @@ title: Create and manage standalone invoices in admin
 status: in-progress
 assignee: []
 created_date: '2026-11-01 20:39'
-updated_date: '2026-11-02 15:42'
+updated_date: '2026-11-28 10:25'
 labels:
   - spec
   - admin
@@ -29,7 +29,7 @@ Jennie creates and manages standalone invoices in admin for weddings and bespoke
 - Editable drafts have no official number and do not count as receivables. Issuing assigns the sequential number and freezes the invoice, seller, buyer, lines and numeric VAT totals. An email failure does not undo issuance. Issuing and sending are distinct operations.
 - Buyer entry supports consumers and businesses directly on the invoice, with name, email, address, company details where applicable and optional customer reference. Language is fi, sv or en. No customer directory is required.
 - Lines have description, quantity, VAT-inclusive unit price and VAT rate. Invoice total is calculated from lines, not entered as an unrelated amount. Supply/advance date information belongs to the invoice rather than being inferred from a purchase.
-- Retain the configured seller details, bank-transfer-only payment block, viitenumero, virtual barcode, Typst renderer, 14-day default due date, manual reminders and shared sequential invoice/credit-note numbering from 1337. Retain the current configured interest field; no interest collection engine is added.
+- Retain the configured seller details, bank-transfer-only payment block, viitenumero, virtual barcode, Typst renderer, 14-day default due date, manual reminders and shared sequential invoice/credit-note numbering from 1339. Retain the current configured interest field; no interest collection engine is added.
 - Invoice payments belong directly to the invoice. Existing order/course payments retain their ownership and behaviour.
 - Extend the existing monthly accounting report to include standalone invoice payments using the invoice's frozen VAT breakdown, alongside existing shop sales, exactly once. Keep the existing cash-based reporting convention and month-end receivables. Update ADR 0004 to describe both sources.
 - A credit note reverses one entire issued invoice with no money recorded against it, including its frozen base and VAT per rate. No partial credits or crediting paid/part-paid invoices. Jennie consults the accountant if such an exceptional correction arises; no undo-and-rebook workaround is required.
@@ -89,6 +89,8 @@ Cancelling now asks for the cancellation charge Jennie keeps (0 to the Total due
 The invoice PDF was simplified after comparing with Zervant's invoice 1336: no buyer email, order number, subtotal, BIC or payee field; the delivery date, viitenumero and late payment interest are facts beside the buyer; the VAT table always shows; the payment block has IBAN, viitenumero, due date, amount, virtual barcode digits and bar code. The seller (name, address, Y-tunnus, IBAN) lives in config :edenflowers, :seller, which receipts and invoices both print; shop.toml keeps only the pickup place and contact details.
 
 Standalone implementation TASK-168.9–14 complete. TASK-168.15 automated verification passed, including 1766 tests and actual offline localized PDFs in the built release image. It is ready-for-human for native/Jennie review, seller/bank confirmation and live Zervant cutover numbering; parent AC8 remains open. Evidence and remaining checks: TASK-168.15 notes.
+
+Zervant cutover (2026-11-28): Zervant's last invoice is 1338, so shop invoices now start at 1339 (config :edenflowers, :invoices, first_number). Jennie invoices from admin from now on.
 <!-- SECTION:NOTES:END -->
 
 ## Comments

@@ -112,10 +112,10 @@ config :edenflowers, :seller, %{
 }
 
 # Edenflowers.Payments.Invoice continues Zervant's invoice numbering, which
-# ended at 1336. Only the first shop invoice uses `first_number`; later invoices
+# ended at 1338. Only the first shop invoice uses `first_number`; later invoices
 # increment the last invoice number.
 config :edenflowers, :invoices,
-  first_number: 1337,
+  first_number: 1339,
   late_interest_rate: "0.08"
 
 # Admin photo uploads. Dev keeps them out of images/, the photos synced to the
