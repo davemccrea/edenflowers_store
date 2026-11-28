@@ -14,6 +14,7 @@ defmodule Edenflowers.Payments.InvoiceLabels do
   defp own_labels(locale) do
     EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
       %{
+        "item" => item(),
         "unit-price-incl-vat" => dgettext("receipts", "Unit price incl. VAT"),
         "invoice" => dgettext("receipts", "Invoice"),
         "invoice-number" => dgettext("receipts", "Invoice number"),
@@ -42,6 +43,14 @@ defmodule Edenflowers.Payments.InvoiceLabels do
 
   # One function per commented label: gettext_comment/1 attaches to the next
   # message extracted, so it has to be a statement of its own.
+
+  defp item do
+    gettext_comment(
+      "Heading of an invoice's line column. Jennie writes each line herself, such as a booking advance or wedding flowers, so it is a description rather than a product."
+    )
+
+    dgettext("receipts", "Description")
+  end
 
   defp your_reference do
     gettext_comment(

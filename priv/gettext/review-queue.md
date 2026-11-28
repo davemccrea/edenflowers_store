@@ -55,7 +55,7 @@ Optional suggestions may be rejected without changing usable copy.
 | T19 | sv, fi | Home hero subtitle `Bouquets made fresh on delivery day[, from %{price}].` (storefront, no context): AI-drafted `Färska buketter gjorda på leveransdagen` / `Tuoreet kimput tehtyinä toimituspäivänä`, 29 Oct 2026; Jennie (sv meaning) and native fi review remain. |
 | T20 | sv, fi | Privacy policy processors (storefront, no context) `Scaleway sends our emails, such as sign-in codes and order confirmations.` and `MailerLite sends the newsletter. It stores newsletter subscribers' contact details, language and purchase statistics, and nobody else's.`, replacing the Brevo line, plus `Updated 31 October 2026.`: AI-drafted from the reviewed Brevo wording, 31 Oct 2026; legal meaning (Jennie) and native sv/fi review remain. |
 | R05 | sv, fi | Standalone invoice PDF labels (`receipts`, empty context) in `InvoiceLabels`: `Invoice`, `Invoice number`, `Invoice date`, `Due date`, `Your reference`, `Due on this invoice`, `Payment details`, `Account (IBAN)`, `Reference number`, `Amount` and `Virtual barcode`, plus the shared line/VAT headings. New `Unit price incl. VAT` is AI-drafted as `à-pris inkl. moms` / `Verollinen à-hinta` (3 Nov 2026, replacing `Styckepris inkl. moms` / `Yksikköhinta sis. alv` to match the à-pris / à-hinta pattern of the receipt and of laskutys, a Finnish invoice template); the column prints the supplied VAT-inclusive unit price, including sub-cent precision. Finnish `Invoice date` is AI-drafted as `Laskupäivä` (3 Nov 2026, replacing `Laskun päivämäärä`) to match the receipt's `-päivä` date labels (`Tilauspäivä`, `Toimituspäivä`, `Noutopäivä`) and `Eräpäivä`. Each ordinary booking-advance or remainder invoice prints only its own lines and VAT. Native sv/fi review and Jennie (sv meaning) remain; date/interest labels are R09. Removed purchase deductions are retired under R11. |
-| T21 | sv, fi | Standalone invoice email (`emails`, empty context) in `Email.invoice/2` and `invoice.text.eex`: subject `Invoice %{number}` and new body `My invoice %{number} is attached.` (`Min faktura %{number} finns bifogad.` / `Laskuni %{number} on liitteenä.`), then the invoice amount, due date and frozen payment details, ending `If anything on it looks wrong, just reply to this email.` AI-drafted, 2 Nov 2026. Labels retain `Förfallodag`, `Mottagare`, `Er referens` / `Eräpäivä`, `Saaja`, `Viitteenne`; check company-reference wording beside the personal du/sinä voice. Subjects referring to an order date or course, whole-purchase/part-of-total claims and automatic cancellation-charge introductions are removed and retired. Native sv/fi review and Jennie (sv meaning) remain. |
+| T21 | sv, fi | Standalone invoice email (`emails`, empty context) in `Email.invoice/2` and `invoice.text.eex`: subject `Invoice %{number}` and body `Invoice %{number} is attached.` (`Faktura %{number} finns bifogad.` / `Lasku %{number} on liitteenä.`), ending `If anything on it looks wrong, just reply to this email.` AI-drafted, 2 Nov 2026. Labels retain `Förfallodag`, `Mottagare`, `Er referens` / `Eräpäivä`, `Saaja`, `Viitteenne`; check company-reference wording beside the personal du/sinä voice. Subjects referring to an order date or course, whole-purchase/part-of-total claims and automatic cancellation-charge introductions are removed and retired. Native sv/fi review and Jennie (sv meaning) remain. |
 | R06 | sv, fi | Full credit-note PDF labels (`receipts`, empty context) in `InvoiceLabels`: `Credit note`, `Credit note number`, `Credited`, `Reason`, `Date`, and the original `Invoice number` / `Invoice date`. AI-drafted, 2 Nov 2026, including `Hyvityslasku`, `Hyvitetään` / `Kreditnota`, `Krediteras`. The document prints original billed lines and exactly negative frozen gross, base and VAT per rate; it reverses a whole issued invoice with zero net recorded money. Check accounting terms, verb forms and the shared VAT/unit-price labels (R05). Paid/part-paid corrections go to the accountant. Native sv/fi review and Jennie (sv meaning) remain. |
 | T22 | sv, fi | Standalone credit-note email (`emails`, empty context): subject `Invoice %{number} is cancelled`; body `I've cancelled invoice %{number} from %{date}, so you don't need to pay it. My credit note %{credit_note} is attached for your records.` and `If anything is still to pay, I'll send you a new invoice.` in `credit_note.text.eex`. AI-drafted, 2 Nov 2026. Existing `peruttu`/`makulerat` consumer wording and attachment names `Hyvityslasku`/`Kreditnota` need to read as one story. This is a full unpaid standalone invoice reversal, with no purchase cancellation or automatic replacement relationship. Native sv/fi review and Jennie (sv meaning) remain. |
 | T23 | sv, fi | Standalone manual invoice reminder (`emails`, empty context): current subject `A reminder about invoice %{number}` (`En påminnelse om faktura %{number}` / `Muistutus laskusta %{number}`), plus `Just a friendly reminder that it was due on %{date}, and I haven't seen the payment yet. If you've already paid, thank you, and please ignore this email.` in `Email.invoice/2` and `invoice.text.eex`. AI-drafted, 2 Nov 2026. Review the gentle tone, weekday/date forms and the part-paid variant in T25. Removed reminder subjects naming an order date or course are retired; this reminder follows the standalone invoice due date. Native sv/fi review and Jennie (sv meaning) remain. |
@@ -275,6 +275,32 @@ Swedish editorial approval are still outstanding. No email copy changed.
   `The order has changed. Check its status and try again.` entries in the
   accompanying catalogue diff. Ready means the whole order is prepared, not
   delivered, collected, paid or that a message was sent. This follows up S05.
+
+## Invoice AI review — 28 November 2026
+
+AI review (Claude) of every current sv/fi invoice and credit-note string before
+Jennie's first live invoice (1339), against revision `v1.35.2`: the PDF labels
+(R05, R06, R09, R12, R13, R14, with the shared receipt headings) and the
+rendered emails (T21, T22, T23, T25's part-paid reminder). Finnish and all PDF
+labels were left unchanged. Changed in Swedish (`emails`, empty context):
+
+- `If you've already paid, thank you, and please ignore this email.` and the
+  invoice reminder ending the same way: `…, tack, och bortse från det här
+  mejlet.` → `…, tack! Då kan du bortse från det här mejlet.`, as the Finnish
+  already does. This also changes the order and booking payment reminders.
+- T22 `I've cancelled invoice %{number} from %{date}, …`: `faktura %{number}
+  från %{date}` → `faktura %{number}, daterad %{date},`, and `Kreditnotan
+  %{credit_note} är bifogad` → `Kreditnota %{credit_note} finns bifogad`,
+  matching T21's `Faktura %{number} finns bifogad.`
+- T25 part-paid reminder: `och %{amount} av den är ännu obetalt` → `och det
+  återstår %{amount} att betala`, the phrase the other payment emails use.
+
+Invoice and credit-note lines no longer print the receipt's `Item` heading
+(`Produkt` / `Tuote`), which read oddly over a booking advance or a service:
+`InvoiceLabels` now gives them their own `Description` (`receipts`, empty
+context), AI-drafted as `Beskrivning` / `Kuvaus`, the usual invoice wording. R07's Finnish admin headings are moot,
+since admin has no Finnish catalogue. Native sv/fi review and Jennie's approval
+of the meaning remain open for every item above.
 
 ## Remaining coverage
 

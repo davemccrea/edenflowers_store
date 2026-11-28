@@ -267,7 +267,7 @@ msgstr "Om du behöver ändra något, svara så berättar jag vad som går att o
 #: lib/edenflowers/email/templates/payment_reminder.text.eex:6
 #, elixir-autogen, elixir-format
 msgid "If you've already paid, thank you, and please ignore this email."
-msgstr "Om du redan har betalat, tack, och bortse från det här mejlet."
+msgstr "Om du redan har betalat, tack! Då kan du bortse från det här mejlet."
 
 #: lib/edenflowers/email/templates/email_change_code.text.eex:7
 #: lib/edenflowers/email/templates/otp_sign_in.text.eex:7
@@ -748,7 +748,7 @@ msgstr "Faktura %{number}"
 #: lib/edenflowers/email/templates/credit_note.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "I've cancelled invoice %{number} from %{date}, so you don't need to pay it. My credit note %{credit_note} is attached for your records."
-msgstr "Jag har makulerat faktura %{number} från %{date}, så du behöver inte betala den. Kreditnotan %{credit_note} är bifogad för kännedom."
+msgstr "Jag har makulerat faktura %{number}, daterad %{date}, så du behöver inte betala den. Kreditnota %{credit_note} finns bifogad för kännedom."
 
 #: lib/edenflowers/email/templates/credit_note.text.eex:5
 #, elixir-autogen, elixir-format
@@ -763,7 +763,7 @@ msgstr "Faktura %{number} är makulerad"
 #: lib/edenflowers/email/templates/invoice.text.eex:7
 #, elixir-autogen, elixir-format
 msgid "Just a friendly reminder that it was due on %{date}, and I haven't seen the payment yet. If you've already paid, thank you, and please ignore this email."
-msgstr "Bara en vänlig påminnelse om att den skulle betalas senast %{date}, och jag har inte sett betalningen ännu. Om du redan har betalat, tack, och bortse från det här mejlet."
+msgstr "Bara en vänlig påminnelse om att den skulle betalas senast %{date}, och jag har inte sett betalningen ännu. Om du redan har betalat, tack! Då kan du bortse från det här mejlet."
 
 #: lib/edenflowers/email/templates.ex:66
 #: lib/edenflowers/email/templates/course_payment.text.eex:2
@@ -775,7 +775,7 @@ msgstr "Jag hör av mig om hur du kan betala."
 #: lib/edenflowers/email/templates/invoice.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "Just a friendly reminder that it was due on %{date}, and %{amount} of it is still to pay. Thank you for what you've paid so far."
-msgstr "Bara en vänlig påminnelse om att den skulle betalas senast %{date}, och %{amount} av den är ännu obetalt. Tack för det du redan har betalat."
+msgstr "Bara en vänlig påminnelse om att den skulle betalas senast %{date}, och det återstår %{amount} att betala. Tack för det du redan har betalat."
 
 #: lib/edenflowers/email.ex:146
 #, elixir-autogen, elixir-format

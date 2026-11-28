@@ -49,7 +49,7 @@ msgid "Customer"
 msgstr ""
 
 #: lib/edenflowers/orders/receipt_labels.ex:19
-#: lib/edenflowers/payments/invoice_labels.ex:36
+#: lib/edenflowers/payments/invoice_labels.ex:37
 #, elixir-autogen, elixir-format
 msgid "Date"
 msgstr ""
@@ -186,89 +186,89 @@ msgstr ""
 msgid "VAT rate"
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:29
+#: lib/edenflowers/payments/invoice_labels.ex:30
 #, elixir-autogen, elixir-format
 msgid "Account (IBAN)"
 msgstr ""
 
 #. The sum to transfer, as a field of the payment details.
-#: lib/edenflowers/payments/invoice_labels.ex:66
+#: lib/edenflowers/payments/invoice_labels.ex:75
 #, elixir-autogen, elixir-format
 msgid "Amount"
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:21
+#: lib/edenflowers/payments/invoice_labels.ex:22
 #, elixir-autogen, elixir-format
 msgid "Due date"
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:24
+#: lib/edenflowers/payments/invoice_labels.ex:25
 #, elixir-autogen, elixir-format
 msgid "Due on this invoice"
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:18
+#: lib/edenflowers/payments/invoice_labels.ex:19
 #, elixir-autogen, elixir-format
 msgid "Invoice"
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:20
+#: lib/edenflowers/payments/invoice_labels.ex:21
 #, elixir-autogen, elixir-format
 msgid "Invoice date"
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:19
+#: lib/edenflowers/payments/invoice_labels.ex:20
 #, elixir-autogen, elixir-format
 msgid "Invoice number"
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:27
+#: lib/edenflowers/payments/invoice_labels.ex:28
 #, elixir-autogen, elixir-format
 msgid "Payment details"
 msgstr ""
 
 #. The Finnish viitenumero the payer types into their bank, not the order reference.
-#: lib/edenflowers/payments/invoice_labels.ex:61
+#: lib/edenflowers/payments/invoice_labels.ex:70
 #, elixir-autogen, elixir-format
 msgid "Reference number"
 msgstr ""
 
 #. The 54-digit virtuaaliviivakoodi a payer can paste into their bank instead of typing the details.
-#: lib/edenflowers/payments/invoice_labels.ex:71
+#: lib/edenflowers/payments/invoice_labels.ex:80
 #, elixir-autogen, elixir-format
 msgid "Virtual barcode"
 msgstr ""
 
 #. The buying company's own reference for the purchase, such as a purchase order number (viitteenne).
-#: lib/edenflowers/payments/invoice_labels.ex:51
+#: lib/edenflowers/payments/invoice_labels.ex:60
 #, elixir-autogen, elixir-format
 msgid "Your reference"
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:34
+#: lib/edenflowers/payments/invoice_labels.ex:35
 #, elixir-autogen, elixir-format
 msgid "Credit note"
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:35
+#: lib/edenflowers/payments/invoice_labels.ex:36
 #, elixir-autogen, elixir-format
 msgid "Credit note number"
 msgstr ""
 
 #. The total a credit note takes off, printed as a negative amount (hyvitetään).
-#: lib/edenflowers/payments/invoice_labels.ex:81
+#: lib/edenflowers/payments/invoice_labels.ex:90
 #, elixir-autogen, elixir-format
 msgid "Credited"
 msgstr ""
 
 #. Why Jennie cancelled the invoice, as she wrote it.
-#: lib/edenflowers/payments/invoice_labels.ex:76
+#: lib/edenflowers/payments/invoice_labels.ex:85
 #, elixir-autogen, elixir-format
 msgid "Reason"
 msgstr ""
 
 #. The yearly interest charged on a late payment (viivästyskorko), printed beside a rate such as 8,00 %.
-#: lib/edenflowers/payments/invoice_labels.ex:89
+#: lib/edenflowers/payments/invoice_labels.ex:98
 #, elixir-autogen, elixir-format
 msgid "Late payment interest"
 msgstr ""
@@ -278,28 +278,28 @@ msgstr ""
 msgid "Questions? Just reply to the email this came with, or write to info@edenflowers.fi."
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:22
+#: lib/edenflowers/payments/invoice_labels.ex:23
 #, elixir-autogen, elixir-format
 msgid "Date of supply"
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:17
+#: lib/edenflowers/payments/invoice_labels.ex:18
 #, elixir-autogen, elixir-format
 msgid "Unit price incl. VAT"
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:26
+#: lib/edenflowers/payments/invoice_labels.ex:27
 #, elixir-autogen, elixir-format
 msgid "Still to pay"
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:25
+#: lib/edenflowers/payments/invoice_labels.ex:26
 #, elixir-autogen, elixir-format
 msgid "Paid"
 msgstr ""
 
 #. Who the bank transfer goes to, beside the account number in the payment details (saaja).
-#: lib/edenflowers/payments/invoice_labels.ex:56
+#: lib/edenflowers/payments/invoice_labels.ex:65
 #, elixir-autogen, elixir-format
 msgid "Payee"
 msgstr ""
@@ -415,4 +415,10 @@ msgstr ""
 #: lib/edenflowers/orders/receipt_labels.ex:83
 #, elixir-autogen, elixir-format
 msgid "Thank you for your booking"
+msgstr ""
+
+#. Heading of an invoice's line column. Jennie writes each line herself, such as a booking advance or wedding flowers, so it is a description rather than a product.
+#: lib/edenflowers/payments/invoice_labels.ex:52
+#, elixir-autogen, elixir-format
+msgid "Description"
 msgstr ""
